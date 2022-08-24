@@ -1,0 +1,24 @@
+# The `micsr` Package - Companion package to the forthcoming book "Microeconometrics With R", CRC/Chapman
+
+## About
+
+`micsr` provides methods described in the book that are not available in R. This includes:
+
+- testing functions:
+  - `scoretest` for score (or Lagrange Multiplier) tests,
+  - `cmtest` for conditional moment tests,
+  - `sargantest` for Sargan-Hansen's test of overidentified moment
+    conditions,
+  - `hausmantest` for Hausman's test,
+  - `ndvtest` for non-degenerate Vuong test of Shi,
+  - `endogtest` tests for endogeneity (for probit and tobit model).
+- function to estimate models:
+  - `expreg` exponentional mean regression model,
+  - `escount` endogenous switching model for count data,
+  - `ivldv` instrumental variable estimators for probit and logit,
+  - `tobit1` one-equation tobit model,
+  - `binomreg` binomal variable regression,
+  - `ordreg` ordered variable regression,
+  - `bivprobit` bivariate probit model
+- more than 30 data sets
+
