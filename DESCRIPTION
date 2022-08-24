@@ -1,0 +1,24 @@
+Package: micsr
+Version: 0.1-1
+Date: 2022-06-25
+Title: Companion package to Microeconometrics with R
+Authors@R: person("Yves",
+                  "Croissant",
+		  role = c("aut", "cre"),
+		  email = "yves.croissant@univ-reunion.fr",
+		  comment = c(ORCID = "0000-0002-4857-7736"))
+Depends: R (>= 4.0.0)
+Imports: Formula, Rdpack, maxLik, numDeriv, sandwich, generics, tibble, Rcpp, statmod
+Suggests: knitr, rmarkdown, dplyr, modelsummary, bookdown, AER, ggplot2, censReg, sampleSelection
+Description: A set of estimation and test functions that were developped while writing the book.
+             A lot of data sets are also provided in order to illustrate the features of these functions.
+Encoding: UTF-8
+License: GPL (>=2)
+URL: https://www.r-project.org
+VignetteBuilder: knitr
+NeedsCompilation: yes
+RoxygenNote: 7.1.2
+LinkingTo: Rcpp
+Roxygen: list(markdown = TRUE)
+LazyData: true
+RdMacros: Rdpack
