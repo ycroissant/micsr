@@ -22,3 +22,10 @@
   - `bivprobit` bivariate probit model
 - more than 30 data sets
 
+# Installation
+
+The `micsr` is not yet on CRAN. To install it, first install the `remotes` package and enter:
+
+```
+remotes::install_github("ycroissant/micsr", build_vignettes = TRUE)
+```
