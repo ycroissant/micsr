@@ -2,7 +2,7 @@ mills <- function(x) exp(dnorm(x, log = TRUE) - pnorm(x, log.p = TRUE))
 dmills <- function(x) - mills(x) * (x + mills(x))
 d2mills <- function(x) mills(x) * ( (x + mills(x)) * (x + 2 * mills(x)) - 1)
 
-newton <- function(fun, coefs, trace, direction = c("min", "max"), tol = sqrt(.Machine$double.eps), ...){
+newton <- function(fun, coefs, trace = 0, direction = c("min", "max"), tol = sqrt(.Machine$double.eps), ...){
     if (trace){
         cat("Initial values of the coefficients:\n")
     }

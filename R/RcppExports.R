@@ -2,15 +2,15 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 unorm <- function(x) {
-    .Call('_micsr_unorm', PACKAGE = 'micsr', x)
+    .Call(`_micsr_unorm`, x)
 }
 
 bnorm <- function(h1, h2, r) {
-    .Call('_micsr_bnorm', PACKAGE = 'micsr', h1, h2, r)
+    .Call(`_micsr_bnorm`, h1, h2, r)
 }
 
 punorm <- function(x) {
-    .Call('_micsr_punorm', PACKAGE = 'micsr', x)
+    .Call(`_micsr_punorm`, x)
 }
 
 #' Bivariate normal probability
@@ -19,6 +19,6 @@ punorm <- function(x) {
 #' @param rho the coefficient of correlation
 #' @return the probability
 pbnorm <- function(z1, z2, rho) {
-    .Call('_micsr_pbnorm', PACKAGE = 'micsr', z1, z2, rho)
+    .Call(`_micsr_pbnorm`, z1, z2, rho)
 }
 
