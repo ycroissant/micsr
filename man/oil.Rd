@@ -27,6 +27,6 @@ Journal of Applied Econometrics Data Archive : \url{http://qed.econ.queensu.ca/j
 a cross-section of 53 oil fields from 1969 to 1992
 }
 \references{
-\insertRef{FAVE:PESA:SHAR:94}{edf.duration}
+\insertRef{FAVE:PESA:SHAR:94}{micsr}
 }
 \keyword{dataset}

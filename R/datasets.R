@@ -11,7 +11,7 @@
 #' - wage: the last daily wage before unemployment
 #' @source The Royal Statistical Society Datasets Website \url{http://www.blackwellpublishing.com/rss/}
 #' @references
-#' \insertRef{WICH:WILK:08}{edf.duration}
+#' \insertRef{WICH:WILK:08}{micsr}
 #' @importFrom Rdpack reprompt
 NULL
 
@@ -35,7 +35,7 @@ NULL
 #' - nobs: number of observations on the first spell of unemployment for the record
 #' @source Journal of Applied Econometrics Data Archive : \url{http://qed.econ.queensu.ca/jae/}
 #' @references
-#' \insertRef{ROME:99}{edf.duration}
+#' \insertRef{ROME:99}{micsr}
 #' @importFrom Rdpack reprompt
 NULL
 
@@ -579,7 +579,7 @@ NULL
 #' - varp98: volatility of the adaptative expectations (with parameter theta=0.98) for real after tax oil prices measured as the squared recursive standard errors of the regression of pt on pte(theta)
 #' @source Journal of Applied Econometrics Data Archive : \url{http://qed.econ.queensu.ca/jae/}
 #' @references
-#' \insertRef{FAVE:PESA:SHAR:94}{edf.duration}
+#' \insertRef{FAVE:PESA:SHAR:94}{micsr}
 #' @importFrom Rdpack reprompt
 NULL
 
