@@ -11,7 +11,7 @@
 #' - wage: the last daily wage before unemployment
 #' @source The Royal Statistical Society Datasets Website \url{http://www.blackwellpublishing.com/rss/}
 #' @references
-#' \insertRef{WICH:WILK:08}{micsr}
+#' \insertRef{WICH:WILK:08}{edf.duration}
 #' @importFrom Rdpack reprompt
 NULL
 
@@ -35,7 +35,30 @@ NULL
 #' - nobs: number of observations on the first spell of unemployment for the record
 #' @source Journal of Applied Econometrics Data Archive : \url{http://qed.econ.queensu.ca/jae/}
 #' @references
-#' \insertRef{ROME:99}{micsr}
+#' \insertRef{ROME:99}{edf.duration}
+#' @importFrom Rdpack reprompt
+NULL
+
+#' Adoptees education 
+#' @name adoptees
+#' @docType data
+#' @keywords dataset
+#' @description  a cross-section of 16481 individuals from 1992 
+#' @format a tibble containing:
+#' - adopt: is the child adopted ?
+#' - educ: years of education
+#' - coll: college graduate
+#' - stinsch: still in school
+#' - gender: one of 'male' and 'female'
+#' - age: the age in years
+#' - feduc: father's education
+#' - meduc: mother's education
+#' - fcoll: is the father college graduate ?
+#' - mcoll: is the mother college graduate ?
+#' - linc: log of income
+#' @source American Economic Association Data Archive : \url{https://www.aeaweb.org/aer/}
+#' @references
+#' \insertRef{PLUG:04}{micsr}
 #' @importFrom Rdpack reprompt
 NULL
 
@@ -58,6 +81,28 @@ NULL
 #' @source American Economic Association Data Archive : \url{https://www.aeaweb.org/aer/}
 #' @references
 #' \insertRef{EDEL:LUCA:SVIR:17}{micsr}
+#' @importFrom Rdpack reprompt
+NULL
+
+#' Apple production
+#' @name apples
+#' @docType data
+#' @keywords dataset
+#' @description  yearly observations of 173 farms from 1984 to 1986 
+#' @format a tibble containing:
+#' - id: farm's id
+#' - year: year
+#' - capital: capital stock
+#' - labor: quantity of labor
+#' - materials: quantity of materials
+#' - apples: production of apples
+#' - otherprod: other productions
+#' - pc: price of capital
+#' - pl: price of labor
+#' - pm: price of materials
+#' @source Journal of Applied Econometrics Data Archive : \url{http://qed.econ.queensu.ca/jae/}
+#' @references
+#' \insertRef{IVAL:LADO:OSSA:SIMI:96}{micsr}
 #' @importFrom Rdpack reprompt
 NULL
 
@@ -534,7 +579,7 @@ NULL
 #' - varp98: volatility of the adaptative expectations (with parameter theta=0.98) for real after tax oil prices measured as the squared recursive standard errors of the regression of pt on pte(theta)
 #' @source Journal of Applied Econometrics Data Archive : \url{http://qed.econ.queensu.ca/jae/}
 #' @references
-#' \insertRef{FAVE:PESA:SHAR:94}{micsr}
+#' \insertRef{FAVE:PESA:SHAR:94}{edf.duration}
 #' @importFrom Rdpack reprompt
 NULL
 
@@ -621,6 +666,28 @@ NULL
 #' @source JAE data archive
 #' @references
 #' \insertRef{HAN:LEE:19}{micsr}
+#' @importFrom Rdpack reprompt
+NULL
+
+#' Canadian Manufacturing
+#' @name prod_canada
+#' @docType data
+#' @keywords dataset
+#' @description  a time series of 25 yearly observations from 1946 to 1970 
+#' @format a tibble containing:
+#' - year: year
+#' - po: output price
+#' - qo: output volume
+#' - pm: price index for materials
+#' - qm: quantity of materials
+#' - pl: price index of productive labor
+#' - ql: quantity of productive labor
+#' - pn: price index of non-productive labor
+#' - qn: quantity of non-productive labor
+#' - k: capital stock
+#' @source original paper, p.375
+#' @references
+#' \insertRef{WOOD:77}{micsr}
 #' @importFrom Rdpack reprompt
 NULL
 
