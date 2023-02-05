@@ -11,7 +11,7 @@
 #' - wage: the last daily wage before unemployment
 #' @source The Royal Statistical Society Datasets Website \url{http://www.blackwellpublishing.com/rss/}
 #' @references
-#' \insertRef{WICH:WILK:08}{micsr}
+#' \insertRef{WICH:WILK:08}{edf.duration}
 #' @importFrom Rdpack reprompt
 NULL
 
@@ -35,7 +35,7 @@ NULL
 #' - nobs: number of observations on the first spell of unemployment for the record
 #' @source Journal of Applied Econometrics Data Archive : \url{http://qed.econ.queensu.ca/jae/}
 #' @references
-#' \insertRef{ROME:99}{micsr}
+#' \insertRef{ROME:99}{edf.duration}
 #' @importFrom Rdpack reprompt
 NULL
 
@@ -579,7 +579,7 @@ NULL
 #' - varp98: volatility of the adaptative expectations (with parameter theta=0.98) for real after tax oil prices measured as the squared recursive standard errors of the regression of pt on pte(theta)
 #' @source Journal of Applied Econometrics Data Archive : \url{http://qed.econ.queensu.ca/jae/}
 #' @references
-#' \insertRef{FAVE:PESA:SHAR:94}{micsr}
+#' \insertRef{FAVE:PESA:SHAR:94}{edf.duration}
 #' @importFrom Rdpack reprompt
 NULL
 
@@ -865,6 +865,75 @@ NULL
 #' \insertRef{TERZ:98}{micsr}
 #' 
 #' \insertRef{TERZ:WILS:90}{micsr}
+#' @importFrom Rdpack reprompt
+NULL
+
+#' Education and earnings of british twins
+#' @name twins
+#' @docType data
+#' @keywords dataset
+#' @description  a pseudo-panel of 214 families from 1999 
+#' @format a tibble containing:
+#' - family: family index
+#' - earning: hourly wage rate
+#' - educ: reported years of schooling
+#' - educt: estimated years of schooling
+#' - age: age
+#' - londse: lives in
+#' - part: part-time job ?
+#' - married: married ?
+#' - tenure: tenure in years
+#' @source American Economic Review data archive : \url{http://aeaweb.org/aer/}
+#' @references
+#' \insertRef{BONJ:CHER:HASK:HAWK:SPEC:03}{micsr}
+#' @importFrom Rdpack reprompt
+NULL
+
+#' Education and earnings of american twins
+#' @name twinsburg
+#' @docType data
+#' @keywords dataset
+#' @description  a cross-section of 340 families from 1991 to 1993 
+#' @format a tibble containing:
+#' - age: age in years
+#' - white: =1 for white twins (note than one value is 0.5)
+#' - female: =1 for female twins (note than one value is 0.33)
+#' - daded: years of education of the father
+#' - momed: years of education of the mother
+#' - educ1: self reported education for the first twin
+#' - educ2t: education for the second twin reported by his twin
+#' - educ1t: education for the first twin reported by his twin
+#' - educ2: self reported education for the second twin
+#' - lwage1: log of the hourly wage for the first twin
+#' - uncov1: =1 if the first twin is covered by a union
+#' - married1: = 1 if the first twin is married
+#' - tenure1: tenure in years for the first twin
+#' - lwage2: log of the hourly wage for the second twin
+#' - uncov2: =1 if the second twin is covered by a union
+#' - married2: = 1 if the second twin is married
+#' - tenure2: tenure in years for the second twin
+#' @source Industrial Relations Secion, Princeton University \url{http://www.irs.princeton.edu/publications/datasets}
+#' @references
+#' \insertRef{ASHE:ROUS:98}{micsr}
+#' @importFrom Rdpack reprompt
+NULL
+
+#' Density and distance to the CBD in Alabama
+#' @name urban_gradient
+#' @docType data
+#' @keywords dataset
+#' @description  a cross-section of 2315 blocks from 1999 
+#' @format a tibble containing:
+#' - msa: msa name
+#' - county: county name
+#' - tract: tract id
+#' - blkg: blkg id
+#' - area: area in square km
+#' - population: number of inhabitants
+#' - distance: distance to the CBD in km
+#' @source American Economic Association Data Archive : \url{https://www.aeaweb.org/aer/}
+#' @references
+#' \insertRef{DURA:PUGA:20}{micsr}
 #' @importFrom Rdpack reprompt
 NULL
 

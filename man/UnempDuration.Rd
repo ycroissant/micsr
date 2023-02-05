@@ -21,6 +21,6 @@ The Royal Statistical Society Datasets Website \url{http://www.blackwellpublishi
 a cross-section of 21685 individuals from 1996 to 1997
 }
 \references{
-\insertRef{WICH:WILK:08}{micsr}
+\insertRef{WICH:WILK:08}{edf.duration}
 }
 \keyword{dataset}
