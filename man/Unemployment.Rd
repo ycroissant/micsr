@@ -28,6 +28,6 @@ Journal of Applied Econometrics Data Archive : \url{http://qed.econ.queensu.ca/j
 a cross-section of 452 individuals from 1993
 }
 \references{
-\insertRef{ROME:99}{edf.duration}
+\insertRef{ROME:99}{micsr}
 }
 \keyword{dataset}
