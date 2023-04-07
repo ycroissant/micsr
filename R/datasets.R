@@ -11,7 +11,7 @@
 #' - wage: the last daily wage before unemployment
 #' @source The Royal Statistical Society Datasets Website \url{http://www.blackwellpublishing.com/rss/}
 #' @references
-#' \insertRef{WICH:WILK:08}{edf.duration}
+#' \insertRef{WICH:WILK:08}{micsr}
 #' @importFrom Rdpack reprompt
 NULL
 
@@ -35,7 +35,7 @@ NULL
 #' - nobs: number of observations on the first spell of unemployment for the record
 #' @source Journal of Applied Econometrics Data Archive : \url{http://qed.econ.queensu.ca/jae/}
 #' @references
-#' \insertRef{ROME:99}{edf.duration}
+#' \insertRef{ROME:99}{micsr}
 #' @importFrom Rdpack reprompt
 NULL
 
@@ -579,7 +579,7 @@ NULL
 #' - varp98: volatility of the adaptative expectations (with parameter theta=0.98) for real after tax oil prices measured as the squared recursive standard errors of the regression of pt on pte(theta)
 #' @source Journal of Applied Econometrics Data Archive : \url{http://qed.econ.queensu.ca/jae/}
 #' @references
-#' \insertRef{FAVE:PESA:SHAR:94}{edf.duration}
+#' \insertRef{FAVE:PESA:SHAR:94}{micsr}
 #' @importFrom Rdpack reprompt
 NULL
 
@@ -653,6 +653,7 @@ NULL
 #' - age: age
 #' - sex: sex
 #' - educ: number of years of education
+#' - wage: wage
 #' - nbemp: number of employees in the firm
 #' - pluriloc: a dummy for firms with multiple locations
 #' - privateins: a dummy for private insurance
@@ -886,35 +887,6 @@ NULL
 #' @source American Economic Review data archive : \url{http://aeaweb.org/aer/}
 #' @references
 #' \insertRef{BONJ:CHER:HASK:HAWK:SPEC:03}{micsr}
-#' @importFrom Rdpack reprompt
-NULL
-
-#' Education and earnings of american twins
-#' @name twinsburg
-#' @docType data
-#' @keywords dataset
-#' @description  a cross-section of 340 families from 1991 to 1993 
-#' @format a tibble containing:
-#' - age: age in years
-#' - white: =1 for white twins (note than one value is 0.5)
-#' - female: =1 for female twins (note than one value is 0.33)
-#' - daded: years of education of the father
-#' - momed: years of education of the mother
-#' - educ1: self reported education for the first twin
-#' - educ2t: education for the second twin reported by his twin
-#' - educ1t: education for the first twin reported by his twin
-#' - educ2: self reported education for the second twin
-#' - lwage1: log of the hourly wage for the first twin
-#' - uncov1: =1 if the first twin is covered by a union
-#' - married1: = 1 if the first twin is married
-#' - tenure1: tenure in years for the first twin
-#' - lwage2: log of the hourly wage for the second twin
-#' - uncov2: =1 if the second twin is covered by a union
-#' - married2: = 1 if the second twin is married
-#' - tenure2: tenure in years for the second twin
-#' @source Industrial Relations Secion, Princeton University \url{http://www.irs.princeton.edu/publications/datasets}
-#' @references
-#' \insertRef{ASHE:ROUS:98}{micsr}
 #' @importFrom Rdpack reprompt
 NULL
 

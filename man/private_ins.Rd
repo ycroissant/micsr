@@ -12,6 +12,7 @@ a tibble containing:
 \item age: age
 \item sex: sex
 \item educ: number of years of education
+\item wage: wage
 \item nbemp: number of employees in the firm
 \item pluriloc: a dummy for firms with multiple locations
 \item privateins: a dummy for private insurance
