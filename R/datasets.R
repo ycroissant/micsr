@@ -106,6 +106,33 @@ NULL
 #' @importFrom Rdpack reprompt
 NULL
 
+#' Economic effects of terrorism in the Basque country
+#' @name basque_country
+#' @docType data
+#' @keywords dataset
+#' @description  a pseudo-panel of 17 regions from 1955 to 1997 
+#' @format a tibble containing:
+#' - id: region's id
+#' - region: regions's name
+#' - year: the year
+#' - gdpcap: gdp per capita
+#' - agriculture: NA
+#' - energy: 
+#' - industry: NA
+#' - construction: NA
+#' - services: NA
+#' - administration: NA
+#' - illit_educ: NA
+#' - prim_educ: NA
+#' - medium_educ: NA
+#' - high_educ: NA
+#' - popdens: population density
+#' @source Synth package
+#' @references
+#' \insertRef{ABAD:GARD:03}{micsr}
+#' @importFrom Rdpack reprompt
+NULL
+
 #' Cigarette smoking and birth weight
 #' @name birthwt
 #' @docType data
@@ -560,6 +587,52 @@ NULL
 #' @importFrom Rdpack reprompt
 NULL
 
+#' Mortgage Defaults
+#' @name mortgage_defaults
+#' @docType data
+#' @keywords dataset
+#' @description  yearly observations of 457 counties from 2007 to 2011 
+#' @format a tibble containing:
+#' - fips: county id
+#' - year: year
+#' - default: rate of mortgage default
+#' - fico: fico
+#' - impl1: impl1
+#' - ur: ur
+#' - loans: loans
+#' @source American Economic Association Data Archive : \url{https://www.aeaweb.org/aer/}
+#' @references
+#' \insertRef{KUMA:18}{micsr}
+#' @importFrom Rdpack reprompt
+NULL
+
+#' National supported work demonstration
+#' @name nsw
+#' @docType data
+#' @keywords dataset
+#' @description  a cross-section of 19204 individuals from 1978 
+#' @format a tibble containing:
+#' - smpl: the sample, one of `nws` (the experimental NWS sample), `psid` (PSID control group) and `cps` (CPS control group)
+#' - sub: an integer to select a subsample used by Dehejia and Wahba: `sub == 1` select the whole sample, `smpl == "nws"
+#' - group: one of `"control"` and `"treated"`
+#' - ethnicity: a factor with levels `"other"`, `"black"` and `"hispanic"`
+#' - age: ag in years
+#' - education: years of education
+#' - married: a dummy for married individuals
+#' - nodegree: a dummy for individuals who left high school without a degre
+#' - re74: income in 1974
+#' - re75: income in 1975
+#' - re78: income in 1978
+#' @source `https://users.nber.org/~rdehejia/data/.nswdata2.html`
+#' @references
+#' \insertRef{LALO:86}{micsr}
+#' 
+#' \insertRef{DEHE:WAHB:99}{micsr}
+#' 
+#' \insertRef{DEHE:WAHB:02}{micsr}
+#' @importFrom Rdpack reprompt
+NULL
+
 #' Oil investment
 #' @name oil
 #' @docType data
@@ -580,6 +653,36 @@ NULL
 #' @source Journal of Applied Econometrics Data Archive : \url{http://qed.econ.queensu.ca/jae/}
 #' @references
 #' \insertRef{FAVE:PESA:SHAR:94}{micsr}
+#' @importFrom Rdpack reprompt
+NULL
+
+#' Voucher and private school
+#' @name paces
+#' @docType data
+#' @keywords dataset
+#' @description  a cross-section of 1577 households from 1995 
+#' @format a tibble containing:
+#' - id: NA
+#' - privsch: NA
+#' - educyrs: NA
+#' - voucher: NA
+#' - pilot: NA
+#' - housvisit: NA
+#' - city: NA
+#' - phone: NA
+#' - age: NA
+#' - sex: NA
+#' - strata: NA
+#' - smpl: NA
+#' - month: NA
+#' - married: NA
+#' - finish8: V
+#' - repetitions: NA
+#' - in_school: NA
+#' - year: NA
+#' @source Joshua Angrist's web site
+#' @references
+#' \insertRef{ANGR:BETT:BLOO:KING:KREM:02}{micsr}
 #' @importFrom Rdpack reprompt
 NULL
 
@@ -733,6 +836,27 @@ NULL
 #' @importFrom Rdpack reprompt
 NULL
 
+#' Solow's growth model with spatial correlation
+#' @name sp_solow
+#' @docType data
+#' @keywords dataset
+#' @description  a cross-section of 91 countries from 1995 
+#' @format a tibble containing:
+#' - name: the name of the country
+#' - code: the id of the country
+#' - capital: name of the capital
+#' - gdp60: per capita gdp in 1960
+#' - gdp95: per capita gdp in 1995
+#' - saving: saving rate
+#' - labgwth: growth rate of the labor force
+#' - point: the coordinates of the capital
+#' - border: the coordinates of the country
+#' @source JAE data archive
+#' @references
+#' \insertRef{ERTU:KOCH:07}{micsr}
+#' @importFrom Rdpack reprompt
+NULL
+
 #' Railroad tracks and segregation
 #' @name tracks_side
 #' @docType data
@@ -869,6 +993,44 @@ NULL
 #' @importFrom Rdpack reprompt
 NULL
 
+#' Temporary help jobs and permanent employment
+#' @name twa
+#' @docType data
+#' @keywords dataset
+#' @description  a cross-section of 2030 individuals 
+#' @format a tibble containing:
+#' - id: identification code
+#' - age: age
+#' - sex: a factor with levels `"female"` and `"male"`
+#' - marital: marital status, `"married"` or `"single"`
+#' - children: number of children
+#' - feduc: father's education
+#' - fbluecol: father blue-color
+#' - femp: father employed at time 1
+#' - educ: years of education
+#' - pvoto: mark in last degree as fraction of max mark
+#' - training: received professional training before treatment
+#' - dist: distance from nearest agency
+#' - nyu: fraction of school-to-work without employment
+#' - hour: weekly hours of work
+#' - wage: monthly wage
+#' - hwage: hourly wage at time 1
+#' - contact: contacted a temporary work agency
+#' - region: one of  `"Tuscany"` and `"Sicily"`
+#' - city: the city
+#' - group: one of `"control"` and `"treated"
+#' - sector: NA
+#' - occup: occupation, one of `"nojob"`, `"selfemp"`, `"bluecol"` and `"whitecol"`
+#' - empstat: employment status, one of `"empl"`, `"unemp"` and `"olf"` (out of labor force)
+#' - contract: job contract, one of `"nojob"`, `"atyp"` (atypical) and `"perm"` (permanent)
+#' - loc: localisation, one of `"nord"`, `"centro"`, `"sud"` and `"estero"`
+#' - outcome: one of `"none"`, `"other"`, `"fterm"` and `"perm"`
+#' @source Journal of Applied Econometrics Data Archive : \url{http://qed.econ.queensu.ca/jae/}
+#' @references
+#' \insertRef{ICHI:MEAL:NANN:08}{micsr}
+#' @importFrom Rdpack reprompt
+NULL
+
 #' Education and earnings of british twins
 #' @name twins
 #' @docType data
@@ -906,6 +1068,21 @@ NULL
 #' @source American Economic Association Data Archive : \url{https://www.aeaweb.org/aer/}
 #' @references
 #' \insertRef{DURA:PUGA:20}{micsr}
+#' @importFrom Rdpack reprompt
+NULL
+
+#' US Counties
+#' @name us_counties
+#' @docType data
+#' @keywords dataset
+#' @description  a cross-section of 3141 counties 
+#' @format a tibble containing:
+#' - fips: fips code
+#' - gid: gadm code
+#' - state: state name
+#' - county: county name
+#' - geometry: a sfc containing the coordinates of counties border
+#' @source gadm of the geodata package
 #' @importFrom Rdpack reprompt
 NULL
 
@@ -970,3 +1147,28 @@ NULL
 #' @importFrom Rdpack reprompt
 NULL
 
+#' Economies and diseconomies of scale for US counties
+#' @name agglo_growth
+#' @docType data
+#' @keywords dataset
+#' @description  a cross-section of 3106 counties from 1990 
+#' @format a tibble containing:
+#' - fips: county fips code
+#' - emp_gr: employment growth rate
+#' - pop_gr: population growth rate
+#' - emp: employment in 1980
+#' - pop: population in 1980
+#' - college: fraction of adult population with bachelor's degree or more in 1980
+#' - manuf: fraction of employment in manufacturing in 1980
+#' - unemp: unemployment rate in 1980
+#' - income: per capita income in 1979
+#' - educ_sh: share of local government spending on education in 1982
+#' - hw_sh: share of local government spending on highways in 1982
+#' - pol_sh: share of local government spending on police in 1982
+#' - notwhite: fraction of population that is not white in 1980
+#' - type: a factor with levels `"rural"` and `"urban"`
+#' @source JAE data archive
+#' @references
+#' \insertRef{WHEE:03}{micsr}
+#' @importFrom Rdpack reprompt
+NULL
