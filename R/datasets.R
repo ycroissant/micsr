@@ -836,27 +836,6 @@ NULL
 #' @importFrom Rdpack reprompt
 NULL
 
-#' Solow's growth model with spatial correlation
-#' @name sp_solow
-#' @docType data
-#' @keywords dataset
-#' @description  a cross-section of 91 countries from 1995 
-#' @format a tibble containing:
-#' - name: the name of the country
-#' - code: the id of the country
-#' - capital: name of the capital
-#' - gdp60: per capita gdp in 1960
-#' - gdp95: per capita gdp in 1995
-#' - saving: saving rate
-#' - labgwth: growth rate of the labor force
-#' - point: the coordinates of the capital
-#' - border: the coordinates of the country
-#' @source JAE data archive
-#' @references
-#' \insertRef{ERTU:KOCH:07}{micsr}
-#' @importFrom Rdpack reprompt
-NULL
-
 #' Railroad tracks and segregation
 #' @name tracks_side
 #' @docType data
