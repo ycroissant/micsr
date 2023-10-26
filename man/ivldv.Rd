@@ -68,16 +68,24 @@ binomial or censored
 }
 \examples{
 inst <- ~ sic3 + k_serv + inv + engsci + whitecol + skill + semskill + cropland + 
-    pasture + forest + coal + petro + minerals + scrconc + bcrconc + scrcomp + bcrcomp + meps + 
-    kstock + puni + geog2 + tenure + klratio + bunion
+    pasture + forest + coal + petro + minerals + scrconc + bcrconc + scrcomp +
+    bcrcomp + meps + kstock + puni + geog2 + tenure + klratio + bunion
 trade_protection <- dplyr::mutate(trade_protection,
                                  y = ntb / (1 + ntb),
                                  x1 = exports / imports / elast,
                                  x2 = cap * x1)
-GH <- ivldv(Formula::as.Formula(y  ~  x1 + x2, inst), trade_protection, method = "twosteps", model = "tobit") 
-Full <- ivldv(Formula::as.Formula(y ~ x1 + x2 + labvar, inst), trade_protection, method = "twosteps", model = "tobit") 
+GH <- ivldv(Formula::as.Formula(y  ~  x1 + x2, inst), trade_protection,
+            method = "twosteps", model = "tobit") 
+Full <- ivldv(Formula::as.Formula(y ~ x1 + x2 + labvar, inst), trade_protection,
+              method = "twosteps", model = "tobit") 
 Short <- ivldv(Formula::as.Formula(y ~ x1 + I(x2 + labvar), inst),
-                 trade_protection, method = "twosteps", model = "tobit") 
+                 trade_protection, method = "twosteps", model = "tobit")
+bank_msq <- ivldv(federiv ~ eqrat + optval + bonus + ltass + linsown + linstown +
+                  roe + mktbk + perfor + dealdum + div + year | . - eqrat - bonus -
+                  optval + no_emp + no_subs + no_off + ceo_age + gap + cfa,
+                  data = federiv, method = "minchisq")
+bank_ml <- update(bank_msq, method = "ml")
+bank_2st <- update(bank_msq, method = "twosteps")
 }
 \references{
 \insertRef{SMIT:BLUN:86}{micsr}

@@ -23,6 +23,10 @@
 #'     `micsr::micsr` for further details
 #' @importFrom stats glm plogis
 #' @importFrom Formula Formula
+#' @examples
+#' pbt <- binomreg(mode ~ cost + ivtime + ovtime, data = mode_choice, link = 'probit')
+#' lpm <- binomreg(mode ~ cost + ivtime + ovtime, data = mode_choice, link = 'lm')
+#' summary(pbt, vcov = "opg")
 #' @export
 binomreg <- function(formula, data, weights, subset, na.action, offset,
                      link = c("lm", "probit", "logit"), start = NULL, ...){

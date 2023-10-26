@@ -27,7 +27,7 @@ a tibble containing:
 \item region: one of  \code{"Tuscany"} and \code{"Sicily"}
 \item city: the city
 \item group: one of \code{"control"} and `"treated"
-\item sector: NA
+\item sector: the sector
 \item occup: occupation, one of \code{"nojob"}, \code{"selfemp"}, \code{"bluecol"} and \code{"whitecol"}
 \item empstat: employment status, one of \code{"empl"}, \code{"unemp"} and \code{"olf"} (out of labor force)
 \item contract: job contract, one of \code{"nojob"}, \code{"atyp"} (atypical) and \code{"perm"} (permanent)

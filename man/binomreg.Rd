@@ -59,3 +59,8 @@ A unified interface perform binomial regression calling \code{lm} to fit
 the linear-probability model and \code{glm} to fit the probit and the
 logit model.
 }
+\examples{
+pbt <- binomreg(mode ~ cost + ivtime + ovtime, data = mode_choice, link = 'probit')
+lpm <- binomreg(mode ~ cost + ivtime + ovtime, data = mode_choice, link = 'lm')
+summary(pbt, vcov = "opg")
+}

@@ -3,14 +3,16 @@
 \docType{import}
 \name{reexports}
 \alias{reexports}
+\alias{mutate}
+\alias{\%>\%}
 \alias{glance}
 \alias{tidy}
 \alias{bread}
 \alias{estfun}
 \alias{vcovHC}
+\alias{llcont}
 \alias{model.part}
 \alias{meat}
-\alias{llcont}
 \title{Objects exported from other packages}
 \keyword{internal}
 \description{
@@ -18,11 +20,15 @@ These objects are imported from other packages. Follow the links
 below to see their documentation.
 
 \describe{
+  \item{dplyr}{\code{\link[dplyr]{mutate}}}
+
   \item{Formula}{\code{\link[Formula:model.frame.Formula]{model.part}}}
 
   \item{generics}{\code{\link[generics]{glance}}, \code{\link[generics]{tidy}}}
 
-  \item{nonnest2}{\code{\link[nonnest2]{llcont}}}
+  \item{magrittr}{\code{\link[magrittr:pipe]{\%>\%}}}
+
+  \item{nonnest2}{\code{\link[nonnest2]{llcont}}, \code{\link[nonnest2]{llcont}}}
 
   \item{sandwich}{\code{\link[sandwich]{bread}}, \code{\link[sandwich]{bread}}, \code{\link[sandwich]{estfun}}, \code{\link[sandwich]{estfun}}, \code{\link[sandwich]{meat}}, \code{\link[sandwich]{vcovHC}}}
 }}

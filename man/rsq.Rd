@@ -24,3 +24,9 @@ a numeric scalar
 \description{
 A generic function to compute different flavors of coefficients of determination
 }
+\examples{
+pbt <- binomreg(mode ~ cost + ivtime + ovtime, data = mode_choice, link = 'probit')
+rsq(pbt)
+rsq(pbt, "estrella")
+rsq(pbt, "veall_zimm")
+}

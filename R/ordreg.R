@@ -22,6 +22,14 @@
 #'     details
 #' @importFrom stats glm plogis
 #' @importFrom Formula Formula
+#' @examples
+#' fin_reform <- fin_reform %>%
+#'    mutate(dum_bop = ifelse(bop | lag(bop) | (! is.na(lag(bop, 2)) && lag(bop, 2)), 1, 0),
+#'           dum_bank = ifelse(bank | lag(bank) | (! is.na(lag(bank, 2)) && lag(bank, 2)), 1, 0),
+#'           dum_1yofc = ifelse(!is.na(yofc) & yofc == 1, 1, 0),
+#'           recession = ifelse(gdpg <= 0, 1, 0),
+#'           hinfl = ifelse(infl > 50, 1, 0))
+#' mod1 <- ordreg(factor(dindx) ~ rhs1 + catchup, fin_reform, link = "logit")
 #' @export
 ordreg <- function(formula, data, weights, subset, na.action, offset,
                    link = c("probit", "logit"), start = NULL, ...){

@@ -19,8 +19,6 @@
 #' @references
 #' \insertRef{HAUS:78}{micsr}
 #' @examples
-#' #charitable <- dplyr::mutate(charitable,
-#' #                            logdon = log(donation) - log(25))
 #' charitable$logdon <- with(charitable, log(donation) - log(25))
 #' char_form <- logdon ~ log(donparents) + log(income) +
 #'     education + religion + married + south
@@ -56,7 +54,6 @@ haustest <- function(x, y, omit = NULL){
 }
 
 
-
 #' Score test
 #'
 #' Score test, also knowned as Lagrange multiplier tests
@@ -77,6 +74,14 @@ haustest <- function(x, y, omit = NULL){
 #' @keywords htest
 #' @author Yves Croissant
 #' @importFrom stats pchisq
+#' @examples
+#' mode_choice <- mode_choice %>%
+#'    mutate(cost = cost * 8.42,
+#'           gcost = (ivtime + ovtime) * 8 + cost)
+#' pbt_unconst <- binomreg(mode ~ cost + ivtime + ovtime, data = mode_choice, link = "probit")
+#' pbt_const <- binomreg(mode ~ gcost, data = mode_choice, link = "logit")
+#' scoretest(pbt_const , . ~ . + ivtime + ovtime)
+
 #' @export
 scoretest <- function(x, y, ...){
     UseMethod("scoretest")

@@ -20,6 +20,17 @@ a tibble containing:
 \item imf: IMF program dummy
 \item usint: international interest rates
 \item open: trade openess
+\item dindx: difference of the inflation rate
+\item indx: inflation rate divided by 18
+\item indxl: lag value of indx
+\item rhs1: indxl * (1 - indxl)
+\item max_indxl: maximumum value of indxl by year and region
+\item catchup: difference between max_indxl and indxl
+\item dum_bop: balance of paiement crisis in the first two previous years
+\item dum_bank: bank crises in the first two previous years
+\item dum_1yofc: dummy for first year of office
+\item recession: dummy for recessions
+\item hinfl: dummy for inflation rate greater than 50 percent
 }
 }
 \source{

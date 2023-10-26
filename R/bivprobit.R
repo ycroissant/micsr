@@ -12,6 +12,11 @@
 #' @param object a `bivprobit` object
 #' @param type for the `logLik` method
 #' @return an object of class `micsr`, see `micsr::micsr` for further details
+#' @examples
+#' pins <- bivprobit(doctor | privateins ~ size + smsa + age + sex + educ + log(wage) |
+#'                   . -privateins + pluriloc + nbemp, private_ins)
+#' pins <- bivprobit(doctor | privateins ~ privateins + size + smsa + age + sex + educ + log(wage) |
+#'                   . - privateins + pluriloc + nbemp, private_ins)
 #' @export
 bivprobit <- function(formula, data, weights, subset, na.action, offset, ...){
     .call <- match.call()

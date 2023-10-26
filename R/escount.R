@@ -45,6 +45,10 @@
 #' 
 #' \insertRef{GREE:01}{micsr}
 #' @importFrom Rdpack reprompt
+#' @examples
+#' trips_2s <- escount(trips | car ~ workschl + size + dist + smsa + fulltime + distnod +
+#' realinc + weekend + car | . - car - weekend + adults, data = trips, method = "twosteps")
+#' trips_ml <- update(trips_2s, method = "ml")
 #' @export
 escount <- function(formula,
                     data,

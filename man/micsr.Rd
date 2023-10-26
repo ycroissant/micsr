@@ -19,6 +19,7 @@
 \alias{vcovHC.micsr}
 \alias{bread.micsr}
 \alias{nobs.micsr}
+\alias{llcont.micsr}
 \alias{tidy.micsr}
 \alias{glance.micsr}
 \title{\code{micsr} class}
@@ -61,6 +62,8 @@
 \method{bread}{micsr}(x, ...)
 
 \method{nobs}{micsr}(object, ...)
+
+\method{llcont}{micsr}(x, ...)
 
 \method{tidy}{micsr}(x, conf.int = FALSE, conf.level = 0.95, ...)
 

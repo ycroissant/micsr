@@ -7,6 +7,11 @@
 #' @param type the type of coefficient of determination
 #' @return a numeric scalar
 #' @importFrom stats model.response model.frame resid logLik
+#' @examples
+#' pbt <- binomreg(mode ~ cost + ivtime + ovtime, data = mode_choice, link = 'probit')
+#' rsq(pbt)
+#' rsq(pbt, "estrella")
+#' rsq(pbt, "veall_zimm")
 #' @export
 rsq <- function(x, type){
     UseMethod("rsq")

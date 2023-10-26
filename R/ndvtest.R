@@ -2,7 +2,6 @@
 #' 
 #' The Shi test correct the bias of the Vuong test
 #' 
-#' 
 #' @aliases ndvtest
 #' @param x a first fitted model,
 #' @param y a second fitted model,
@@ -32,19 +31,9 @@
 #' @importFrom stats ecdf logLik optimize qnorm quantile rnorm uniroot
 #' @keywords htest
 #' @examples
-#' 
-#' # A poisson model example from the nonnest2 man page
-#' data("housing", package = "MASS")
-#' house1 <- glm(Freq ~ Infl + Type + Cont, family = poisson, data = housing)
-#' house2 <- glm(Freq ~ Infl + Sat,         family = poisson, data = housing)
-#' nonnest2::vuongtest(house1, house2)
-#' ndvtest(house1, house2)
-#' data("bioChemists", package = "pscl")
-#' bio1 <- glm(art ~ fem + mar + phd + ment, family=poisson, data=bioChemists)
-#' bio2 <- pscl::hurdle(art ~ fem + mar + phd + ment, data=bioChemists)
-#' bio3 <- pscl::zeroinfl(art ~ fem + mar + phd + ment, data=bioChemists)
-#' nonnest2::vuongtest(bio3, bio2)
-#' ndvtest(bio3, bio2)
+#' ll <- lm(dist ~ log(speed), cars)
+#' loglin <- loglm(dist ~ log(speed), cars)
+#' ndvtest(ll, loglin)
 #' @export
 ndvtest <- function(x, y, size = 0.05, pval = TRUE,
                     nested = FALSE, vartest = FALSE,
@@ -219,7 +208,7 @@ ndvtest <- function(x, y, size = 0.05, pval = TRUE,
         }
         else{
             Tvuong <-sqrt(N) * LR / sqrt(w2)
-            pval_vuong <- pnorm(abs(Tvuong), lower.tail = FALSE) * 2
+            pval_vuong <- pnorm(abs(Tvuong), lower.tail = FALSE)# * 2 unilaterale
             if (nd){
                 if (! pval){
                     results <- seekpval(size)

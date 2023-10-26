@@ -37,6 +37,15 @@
 #' @useDynLib micsr, .registration=TRUE
 NULL
 
+#' @importFrom dplyr mutate
+#' @export
+dplyr::mutate
+
+#' @importFrom magrittr %>%
+#' @export
+magrittr::`%>%`
+
+
 #' @importFrom generics glance
 #' @export
 generics::glance
@@ -57,6 +66,9 @@ sandwich::estfun
 #' @export
 sandwich::vcovHC
 
+#' @importFrom nonnest2 llcont
+#' @export
+nonnest2::llcont
 
 #' @importFrom Formula model.part
 #' @export
@@ -376,7 +388,11 @@ bread.micsr <- function(x, ...){
 #' @export
 nobs.micsr <- function(object, ...) nrow(object$model)#length(object$residuals)
 
-    
+#' @rdname micsr
+#' @export
+llcont.micsr <- function(x, ...) x$logLik
+
+
 #' @rdname micsr
 #' @method tidy micsr
 #' @export

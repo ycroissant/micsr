@@ -61,6 +61,11 @@ Heckman's like estimator are extended to count data, using either
 non-linear least squares, using a correction term computed from a
 first-stage probit estimation or maximum likelihood
 }
+\examples{
+trips_2s <- escount(trips | car ~ workschl + size + dist + smsa + fulltime + distnod +
+realinc + weekend + car | . - car - weekend + adults, data = trips, method = "twosteps")
+trips_ml <- update(trips_2s, method = "ml")
+}
 \references{
 \insertRef{TERZ:98}{micsr}
 

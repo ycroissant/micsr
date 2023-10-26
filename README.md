@@ -9,7 +9,7 @@
   - `cmtest` for conditional moment tests,
   - `sargantest` for Sargan-Hansen's test of overidentified moment
     conditions,
-  - `hausmantest` for Hausman's test,
+  - `haustest` for Hausman's test,
   - `ndvtest` for non-degenerate Vuong test of Shi,
   - `endogtest` tests for endogeneity (for probit and tobit model).
 - function to estimate models:

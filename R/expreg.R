@@ -170,6 +170,16 @@ expreg <- function(formula,
 #' @param object a model fitted by GMM
 #' @param ... further arguments
 #' @return an `htest` object
+#' @examples
+#' cigmales <- cigmales %>%
+#'        mutate(age2 = age ^ 2, educ2 = educ ^ 2,
+#'               age3 = age ^ 3, educ3 = educ ^ 3,
+#'               educage = educ * age)
+#' gmm_cig <- expreg(cigarettes ~ habit + price + restaurant + income + age + age2 +
+#'                  educ + educ2 + famsize + race | . - habit + age3 + educ3 +
+#'                  educage + lagprice + reslgth, data = cigmales,
+#'                  twosteps = FALSE)
+#' sargantest(gmm_cig)
 #' @export
 sargantest <- function(object, ...){
     if (! object$est_method %in% c("iv", "gmm")) stop("Sargan test only relevant for GMM models")

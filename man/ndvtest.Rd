@@ -67,19 +67,9 @@ an object of class \code{"htest"}
 The Shi test correct the bias of the Vuong test
 }
 \examples{
-
-# A poisson model example from the nonnest2 man page
-data("housing", package = "MASS")
-house1 <- glm(Freq ~ Infl + Type + Cont, family = poisson, data = housing)
-house2 <- glm(Freq ~ Infl + Sat,         family = poisson, data = housing)
-nonnest2::vuongtest(house1, house2)
-ndvtest(house1, house2)
-data("bioChemists", package = "pscl")
-bio1 <- glm(art ~ fem + mar + phd + ment, family=poisson, data=bioChemists)
-bio2 <- pscl::hurdle(art ~ fem + mar + phd + ment, data=bioChemists)
-bio3 <- pscl::zeroinfl(art ~ fem + mar + phd + ment, data=bioChemists)
-nonnest2::vuongtest(bio3, bio2)
-ndvtest(bio3, bio2)
+ll <- lm(dist ~ log(speed), cars)
+loglin <- loglm(dist ~ log(speed), cars)
+ndvtest(ll, loglin)
 }
 \references{
 \insertRef{VUON:89}{micsr}

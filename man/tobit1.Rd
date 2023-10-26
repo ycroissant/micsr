@@ -82,6 +82,13 @@ Estimation of models for which the response is truncated, either on
 censored or truncated samples using linear models, maximum
 likelihood or two-steps estimators
 }
+\examples{
+charitable$logdon <- with(charitable, log(donation) - log(25))
+ml <- tobit1(logdon ~ log(donparents) + log(income) + education +
+             religion + married + south, data = charitable)
+scls <- update(ml, method = "trimmed")
+tr <- update(ml, sample = "truncated")
+}
 \author{
 Yves Croissant
 }

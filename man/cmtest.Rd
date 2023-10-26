@@ -88,17 +88,11 @@ convenient for the probit and the tobit model to test for
 functional form, omitted variables, heteroscedasticity and normaliy.
 }
 \examples{
-# replication of Wells (2003) and Pagan and Vella (1989) using Fair's data
-library("AER")
-data("Affairs", package = "AER")
-z <- tobit(affairs ~ gender + age + yearsmarried + children + religiousness +
-                     education + occupation + rating, data = Affairs)
-cmtest(z, test = "normality")
-cmtest(z, test = "skewness", OPG = TRUE)
-cmtest(z, test = "kurtosis", OPG = TRUE)
-cmtest(z, test = "reset", powers = 2, OPG = TRUE)
-cmtest(z, test = "reset", powers = 3, OPG = TRUE)
-cmtest(z, test = "heterosc", OPG = TRUE, heter_cov = ~ gender)
+charitable$logdon <- with(charitable, log(donation) - log(25))
+ml <- tobit1(logdon ~ log(donparents) + log(income) + education +
+             religion + married + south, data = charitable)
+cmtest(ml, test = "heterosc")
+cmtest(ml, test = "normality", OPG = TRUE)
 }
 \references{
 \insertRef{NEWE:85}{micsr}

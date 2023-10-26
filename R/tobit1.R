@@ -55,6 +55,12 @@
 #' - xlevels: a record of the levels of the factors used in fitting
 #' - na.action: intormation returned by `model.frame` on the special handling of `NA`'s.
 #' @author Yves Croissant
+#' @examples
+#' charitable$logdon <- with(charitable, log(donation) - log(25))
+#' ml <- tobit1(logdon ~ log(donparents) + log(income) + education +
+#'              religion + married + south, data = charitable)
+#' scls <- update(ml, method = "trimmed")
+#' tr <- update(ml, sample = "truncated")
 #' @export
 tobit1 <- function(formula, data, subset = NULL, weights = NULL,
                    start = NULL, left = 0, right = Inf,
@@ -372,4 +378,3 @@ tobit1 <- function(formula, data, subset = NULL, weights = NULL,
     }
     structure(result, class = c("micsr"))
 }
-
