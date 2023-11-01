@@ -40,7 +40,7 @@ bivprobit <- function(formula, data, weights, subset, na.action, offset, ...){
     K1 <- ncol(X1)
     K2 <- ncol(X2)
     .npar <- c(eq1 = K1, eq2 = K2, vcov = 1)
-    attr(.npar, "default") <- c("eq1", "vcov")    
+    attr(.npar, "default") <- c("eq1", "eq2", "vcov")    
     N <- length(y1)
     pbt1 <- glm(y1 ~ X1 - 1, family = binomial(link = "probit"))
     pbt2 <- glm(y2 ~ X2 - 1, family = binomial(link = "probit"))
