@@ -1,7 +1,7 @@
 Package: micsr
 Version: 0.1-1
 Date: 2023-10-26
-Title: Companion package to Microeconometrics with R
+Title: Companion Package to Microeconometrics with R
 Authors@R: person("Yves",
                   "Croissant",
 		  role = c("aut", "cre"),

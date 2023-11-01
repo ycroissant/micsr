@@ -15,7 +15,7 @@ a tibble containing:
 }
 }
 \source{
-GAMS's website \url{http://www.gams.com/modlib/libhtml/mws.htm}
+GAMS's website \url{https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_mws.html}
 }
 \description{
 a cross-section of 842 individuals

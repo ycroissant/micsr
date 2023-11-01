@@ -55,6 +55,7 @@
 #' - xlevels: a record of the levels of the factors used in fitting
 #' - na.action: intormation returned by `model.frame` on the special handling of `NA`'s.
 #' @author Yves Croissant
+#' @references \insertRef{POWE:86}{micsr}
 #' @examples
 #' charitable$logdon <- with(charitable, log(donation) - log(25))
 #' ml <- tobit1(logdon ~ log(donparents) + log(income) + education +

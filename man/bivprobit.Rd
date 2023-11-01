@@ -30,8 +30,6 @@ an object of class \code{micsr}, see \code{micsr::micsr} for further details
 Estimation of bivariate probit models by maximum likelihood
 }
 \examples{
-pins <- bivprobit(doctor | privateins ~ size + smsa + age + sex + educ + log(wage) |
-                  . -privateins + pluriloc + nbemp, private_ins)
 pins <- bivprobit(doctor | privateins ~ privateins + size + smsa + age + sex + educ + log(wage) |
                   . - privateins + pluriloc + nbemp, private_ins)
 }

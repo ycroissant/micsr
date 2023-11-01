@@ -42,7 +42,8 @@ data("PSID1976", package = "AER")
 Mroz <- PSID1976 \%>\% as_tibble \%>\%
       mutate(participation = as.numeric(participation == "yes"),
              nwincome = (fincome - hours * wage) / 1000, exper2 = I(experience ^ 2))
-rrols <- rrreg(participation ~ age + education + youngkids + oldkids | . - education + meducation + feducation, data = Mroz)
+rrols <- rrreg(participation ~ age + education + youngkids + oldkids | .
+               - education + meducation + feducation, data = Mroz)
 rriv <- update(rrols, method = "iv")
 rrgmm <- update(rrols, method = "gmm")
 # Adkins (2012) : Bank
@@ -53,4 +54,7 @@ rrols <- rrreg(federiv ~ eqrat + optval + bonus + ltass + linsown + linstown +
                data = federiv, method = "ols")
 rriv <- update(rrols, method = "iv")
 rrgmm <- update(rriv, method = "gmm")
+}
+\references{
+\insertRef{IWAT:01}{micsr}
 }

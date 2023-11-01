@@ -66,6 +66,9 @@ expreg(cigarettes ~ habit + price + restaurant + income + age + age2 + educ + ed
 expreg(birthwt ~ cigarettes + parity + race + sex | parity + race + sex +
                   edmother + edfather + faminc + cigtax, data = birthwt)
 }
+\references{
+\insertRef{MULL:97}{micsr}
+}
 \author{
 Yves Croissant
 }

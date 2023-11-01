@@ -89,6 +89,9 @@ ml <- tobit1(logdon ~ log(donparents) + log(income) + education +
 scls <- update(ml, method = "trimmed")
 tr <- update(ml, sample = "truncated")
 }
+\references{
+\insertRef{POWE:86}{micsr}
+}
 \author{
 Yves Croissant
 }

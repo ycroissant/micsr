@@ -172,7 +172,7 @@ NULL
 #' - ivtime: transit in-vehicule travel time minus in-vehicule travel time (minutes)
 #' - ovtime: transit out-of vehicule time minus out-of vehicule travel time (minutes)
 #' - cars: number of cars owned by the traveler's household
-#' @source GAMS's website \url{http://www.gams.com/modlib/libhtml/mws.htm}
+#' @source GAMS's website \url{https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_mws.html}
 #' @references
 #' \insertRef{HORO:93}{micsr}
 #' @importFrom Rdpack reprompt

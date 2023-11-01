@@ -32,6 +32,7 @@
 #' @importFrom stats .getXlevels coef glm model.matrix model.response
 #'     nobs optim pchisq pnorm poisson printCoefmat vcov model.frame
 #' @importFrom Formula Formula
+#' @references \insertRef{MULL:97}{micsr}
 #' @author Yves Croissant
 #' @examples
 #' cigmales <- dplyr::mutate(cigmales,
