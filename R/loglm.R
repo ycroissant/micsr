@@ -17,11 +17,13 @@ loglm <- function(formula, data){
     X <- model.matrix(formula, mf)
     K <- ncol(X)
     y <- model.response(mf)
+    ofs <- model.offset(mf)
+    if (is.null(ofs)) ofs <- 0
     N <- length(y)
     .form <- update(formula, log(.) ~ .)
     lm_reg <- lm(.form, data)
     sig <- sqrt(mean(resid(lm_reg) ^ 2))
-    mu <- drop(X %*% coef(lm_reg))
+    mu <- drop(X %*% coef(lm_reg)) + ofs
     z <- (log(y) - mu) / sig
     .lnl <-  dnorm(z, log = TRUE) - log(sig) - log(y)
     .grad_beta <- z / sig
