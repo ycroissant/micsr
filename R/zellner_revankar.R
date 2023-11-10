@@ -17,6 +17,7 @@
 #'     the constant return to scale hypothesis implies that two
 #'     coefficients are 0
 #' @author Yves Croissant
+#' @references \insertRef{ZELL:REVA:69}{micsr}
 #' @return An object of class `micsr`
 #' @export
 zellner_revankar <- function(theta, y, Z, sum = FALSE, gradient = TRUE,
