@@ -28,19 +28,19 @@ zellner_revankar <- function(theta, y, Z, sum = FALSE, gradient = TRUE,
     .lambda <- theta[K + 2]
     .sigma <- theta[K + 3]
     if (repar){
-        log_ystar <- log(y) - Z[, K + 1]
         Z[, 2:K] <- Z[, 2:K] - Z[, K + 1]
-    } else log_ystar <- log(y)
+    }
     mu <- drop(Z %*% .gamma)
-    eps <- log_ystar + .lambda * y - mu
-    l <- - log(.sigma) + log(1 + .lambda * y) - log_ystar +
+    if (repar) mu <- mu + Z[, K + 1]
+    eps <- log(y) + .lambda * y - mu
+    l <- - log(.sigma) + log(1 + .lambda * y) - log(y) +
         dnorm(eps / .sigma, log = TRUE)
     if (sum) l <- sum(l)
     if (gradient){
         g_beta <- eps / .sigma ^ 2 * Z
-        g_gam <- y / (1 + .lambda * y) - eps / .sigma ^ 2 * y
+        g_lam <- y / (1 + .lambda * y) - eps / .sigma ^ 2 * y
         g_sigma <- - 1 / .sigma + eps ^ 2 / .sigma ^ 3
-        .gradient <- cbind(g_beta, gam = g_gam, sigma = g_sigma)
+        .gradient <- cbind(g_beta, lambda = g_lam, sigma = g_sigma)
         if (sum) .gradient <- apply(.gradient, 2, sum)
         attr(l, "gradient") <- .gradient
     }

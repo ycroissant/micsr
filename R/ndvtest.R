@@ -326,9 +326,11 @@ nonnest2::llcont
 
 #' Simulated pdfs for the Vuong statistics using linear models
 #'
-#' This function can be used to reproduce the examples given of Shi (2015) which illustrate the fact that the distribution of the Vuong statistic may be very different from a standard normal
+#' This function can be used to reproduce the examples given of Shi
+#' (2015) which illustrate the fact that the distribution of the Vuong
+#' statistic may be very different from a standard normal
 #' 
-#' @aliases sim_lm
+#' @aliases vuong_sim
 #' @param N sample size
 #' @param R the number of replications
 #' @param Kf the number of covariates for the first model
@@ -346,7 +348,7 @@ nonnest2::llcont
 #' @examples
 #' sim_lm(N = 100, R = 10, Kf = 10, Kg = 2, a = 0.5)
 #' @export
-sim_lm <- function(N = 1E03, R = 1E03, Kf = 15, Kg = 1, a = 0.125){
+vuong_sim <- function(N = 1E03, R = 1E03, Kf = 15, Kg = 1, a = 0.125){
     Zf <- array(rnorm(R * Kf * N, sd = a / sqrt(Kf)), dim = c(N, Kf, R))
     Zg <- array(rnorm(R * Kg * N, sd = a / sqrt(Kg)), dim = c(N, Kg, R))
     eps <- matrix(rnorm(R * N, sd = sqrt(1 - a ^ 2)), N, R)
