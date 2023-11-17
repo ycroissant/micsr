@@ -63,7 +63,7 @@
 
 \method{nobs}{micsr}(object, ...)
 
-\method{llcont}{micsr}(x, ...)
+llcont.micsr(x, ...)
 
 \method{tidy}{micsr}(x, conf.int = FALSE, conf.level = 0.95, ...)
 
