@@ -380,7 +380,7 @@ vcovHC.micsr <- function(x, type, omega = NULL, sandwich = TRUE, ...){
 #' @export
 bread.micsr <- function(x, ...){
     if (x$est_method == "twosteps") stop("no meat method for two-steps models")
-    if (! is.null(x$info)) solve(x$info) * nobs(x)
+    if (! is.null(x$info)) x$info * nobs(x)
     else solve(- x$hessian) * nobs(x)
 }
 
@@ -389,6 +389,7 @@ bread.micsr <- function(x, ...){
 nobs.micsr <- function(object, ...) nrow(object$model)#length(object$residuals)
 
 #' @rdname micsr
+#' @method llcont micsr
 #' @export
 llcont.micsr <- function(x, ...) x$logLik
 
@@ -419,3 +420,6 @@ glance.micsr <- function(x, ...){
 #    }
     result
 }
+
+    
+        

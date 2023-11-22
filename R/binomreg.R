@@ -89,7 +89,7 @@ binomreg <- function(formula, data, weights, subset, na.action, offset,
             q <- 2 * y - 1
             lnl <- pnorm(q * linpred, log.p = TRUE)
             if (gradient) grad <- q * mills(q * linpred) * X
-            if (hessian) hess <- - crossprod(sqrt(- dmills(q * linpred)) * X)
+            if (hessian) hess <-    -      crossprod(sqrt(- dmills(q * linpred)) * X)
             if (information) info <- solve(crossprod(sqrt(mills(linpred) * mills(- linpred)) * X))
             if (sum){
                 lnl <- sum(lnl)
@@ -108,7 +108,7 @@ binomreg <- function(formula, data, weights, subset, na.action, offset,
             q <- 2 * y - 1
             lnl <- plogis(q * linpred, log.p = TRUE)
             if (gradient) grad <- (y - exp(linpred) / (1 + exp(linpred))) * X
-            if (hessian) hess <- - crossprod(sqrt( exp(linpred) / (1 + exp(linpred)) ^ 2) * X)
+            if (hessian) hess <-     -     crossprod(sqrt( exp(linpred) / (1 + exp(linpred)) ^ 2) * X)
             if (information) info <- solve(crossprod(sqrt( exp(linpred) / (1 + exp(linpred)) ^ 2) * X))
             if (sum){
                 lnl <- sum(lnl)

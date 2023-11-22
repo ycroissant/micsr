@@ -27,7 +27,7 @@ This function can be used to reproduce the examples given of Shi
 statistic may be very different from a standard normal
 }
 \examples{
-sim_lm(N = 100, R = 10, Kf = 10, Kg = 2, a = 0.5)
+vuong_sim(N = 100, R = 10, Kf = 10, Kg = 2, a = 0.5)
 }
 \references{
 \insertRef{SHI:15}{micsr}

@@ -346,7 +346,7 @@ nonnest2::llcont
 #' \insertRef{SHI:15}{micsr}
 #'
 #' @examples
-#' sim_lm(N = 100, R = 10, Kf = 10, Kg = 2, a = 0.5)
+#' vuong_sim(N = 100, R = 10, Kf = 10, Kg = 2, a = 0.5)
 #' @export
 vuong_sim <- function(N = 1E03, R = 1E03, Kf = 15, Kg = 1, a = 0.125){
     Zf <- array(rnorm(R * Kf * N, sd = a / sqrt(Kf)), dim = c(N, Kf, R))

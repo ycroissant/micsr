@@ -2,10 +2,13 @@
 % Please edit documentation in R/rsq.R
 \name{rsq}
 \alias{rsq}
+\alias{rsq.lm}
 \alias{rsq.binomreg}
 \title{Coefficient of determination}
 \usage{
 rsq(x, type)
+
+\method{rsq}{lm}(x, type = c("raw", "adj"))
 
 \method{rsq}{binomreg}(
   x,

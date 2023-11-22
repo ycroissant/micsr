@@ -17,6 +17,12 @@ rsq <- function(x, type){
     UseMethod("rsq")
 }
 
+#' @rdname rsq
+#' @export
+rsq.lm <- function(x, type = c("raw", "adj")){
+    .type <- match.arg(type)
+    if (.type == "raw") summary(x)$r.squared else summary(x)$adj.r.squared
+}
 
 #' @rdname rsq
 #' @export

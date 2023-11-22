@@ -163,3 +163,5 @@ geom_binmeans <- function(mapping = NULL,
 ## print(va)
 
 #bdh %>% mutate(eligible = ifelse(selben > 0, "no", "yes")) %>% ggplot(aes(selben, treated)) + geom_binmeans(width = .1, center = 0, shape = 21,  color = "black", fill = "red") + geom_smooth(aes(linetype = eligible), se = FALSE)
+
+
