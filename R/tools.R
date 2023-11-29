@@ -168,33 +168,92 @@ sight.CJMrddensity <- function(x, ...){
 
 #' @rdname sight
 #' @export
-sight.htest <- function(x, ...){
-  .method <- x$method
-  .nms <- names(x$statistic)
-  .stat <- x$statistic
-  .param <- x$parameter
-  .pval <- x$p.value
-  .pval <- ifelse(.pval < 1E-04, 0, .pval)
-  .stderr <- x$stderr
-  if (.method %in% c("Welch Two Sample t-test", " Two Sample t-test")){
-    if (.method == "Welch Two Sample t-test") .method <- "Welch 2-smpl"
-    if (.method == " Two Sample t-test") .method <- "2-smpl"
-    .diff <- .stat * .stderr
-    .print <- paste(.method, ", diff = ",
-                    sprintf("%3.3f", .diff), " (", 
-                    sprintf("%3.3f", .stderr), ")", ",  ",
-                    .nms, " = ", sprintf("%3.3f", .stat),
-                    ", df: ", round(.param), ", p-value = ", 
-                    round(.pval, 4), "\n", sep = "")
-  } else {
-    .print <- paste(.method, ", ", 
-                    .nms, " = ", sprintf("%3.3f", .stat), 
-                    ", df: ", round(.param),
-                    ", p-value = ", round(.pval, 4), "\n", sep = "")
-  }
-  cat(.print)
-  invisible(x)
+sight.htest <- function(x, ..., digits = 3){
+    # name_raw = raw (mean-sd)
+    # name = stat
+    # df = param
+    # pvalue = pval
+    paste_element <- function(x, op = " = "){
+        paste(names(x), x, sep = op)
+    }
+    paste_raw <- function(x, std, mu = NULL){
+        if (is.null(mu)) paste(sprintf(.sprint, x), " (",
+                               sprintf(.sprint, std), ")",
+                               sep = "")
+        else paste(sprintf(.sprint, x), " (",
+                   sprintf(.sprint, mu), ", ",
+                   sprintf(.sprint, std), ")",
+                   sep = "")
+    }
+    .method <- x$method
+    .nms <- names(x$statistic)
+    .stat <- x$statistic
+    .param <- x$parameter
+    .pval <- x$p.value
+    .sprint <- "%3.4f"
+    .sprint <- paste("%3.", digits, "f", sep = "")
+    .raw <- NULL
+    if (.method %in% c("Welch Two Sample t-test", " Two Sample t-test")){
+        .name_raw <- "diff"
+        .stderr <- x$stderr
+        .raw <- .stat * .stderr
+        .raw <- paste_raw(.raw, .stderr)
+        names(.raw) <- .name_raw
+        .raw <- paste_element(.raw)
+    }
+    if (.method == "Moran I test under randomisation"){
+        .nms <- "z"
+        .name_raw <- "Moran I"
+        .stderr <- sqrt(x$estimate[3])
+        .mu <- x$estimate[2]
+        .raw <- x$estimate[1]
+        .raw <- paste_raw(.raw, .stderr, .mu)
+        names(.raw) <- .name_raw
+        .raw <- paste_element(.raw)
+    }
+        if (.method == "Geary C test under randomisation"){
+        .nms <- "z"
+        .name_raw <- "Geary C"
+        .stderr <- sqrt(x$estimate[3])
+        .mu <- x$estimate[2]
+        .raw <- x$estimate[1]
+        .raw <- paste_raw(.raw, .stderr, .mu)
+        names(.raw) <- .name_raw
+        .raw <- paste_element(.raw)
+    }
+    if (.method == "Global Moran I for regression residuals"){
+        .nms <- "z"
+        .name_raw <- "Moran I"
+        .stderr <- sqrt(x$estimate[3])
+        .mu <- x$estimate[2]
+        .raw <- x$estimate[1]
+        .raw <- paste_raw(.raw, .stderr, .mu)
+        names(.raw) <- .name_raw
+        .raw <- paste_element(.raw)
+    }
+    # degrees of freedom
+    if (! is.null(.param)){
+        .param <- sprintf("%0.0f", .param)
+        names(.param) <- "df"
+        .param <- paste_element(.param, ": ")
+    }
+    # p-value
+    .pval <- sprintf(.sprint, .pval)
+    names(.pval) <- "pval"
+    .pval <- paste_element(.pval)
+    # statistic
+    .stat <- sprintf(.sprint, .stat)
+    names(.stat) <- .nms
+    .stat <- paste_element(.stat)
+    cat(paste(paste(c(.raw, .stat, .param, .pval), collapse = ", "),
+              "\n", sep = ""))
+    invisible(x)
 }
+
+#' @rdname sight
+#' @export
+sight.LMtestlist <- function(x, ..., digits = 3) sight(x[[1]])
+
 
 
 #' Transform a factor in a set of dummy variables
@@ -235,3 +294,43 @@ dummy <- function (x, ..., keep = FALSE, prefix = NULL, ref = FALSE) {
     }
     x
 }
+## z <- scan("~/YvesPro2/treatment_effect/spacial/ERTU:KOCH:07/sp_solow/data-ek/data91.txt") %>% matrix(nrow = 91, byrow = TRUE) %>% .[, 1:2]
+## pts <- st_multipoint(z) %>% st_sfc %>% st_cast(to = "POINT") %>% st_set_crs(st_crs(sps))
+
+## b <- sps %>% na.omit %>% arrange(iso3) %>% add_column(pts = pts)
+
+
+## dist <- st_distance(b$pts, b$point) %>% diag %>% units::set_units(km)
+## b <- b %>% add_column(dist)
+
+
+## dd <- scan("~/YvesPro2/Ecdat2/in/databrut/sp_solow/data-ek/data91.txt") %>%
+##     matrix(ncol = 7, byrow = TRUE) %>%
+##     as_tibble %>%
+##     set_names(c("long", "lat", "lny60", "lny95", "gy", "lns", "lnngd")) %>%
+##     bind_cols(read_csv("~/YvesPro2/Ecdat2/in/databrut/sp_solow/countries.txt")) %>% 
+##     mutate(gdp60 = exp(lny60), gdp95 = exp(lny95), saving = exp(lns), labgwth = exp(lnngd) - 0.05) %>%
+##     select(- (lny60:lnngd)) %>%
+##     relocate(gdp60:labgwth, .before = 4) %>%
+##     as_tibble %>%
+##     mutate(code = ifelse(code == "ZAR", "COD", code)) %>%
+##     relocate(code, name, .before = 1)
+## long <- dd$long
+## lat <- dd$lat
+## longlat <- matrix(c(dd$long, dd$lat), nrow = 91) %>% st_multipoint %>% st_sfc(crs = 4326) %>% st_cast("POINT")
+## dd <- st_sf(dd, longlat)
+## dd <- dd %>%
+##     mutate(lns = log(saving), lnngd = log(labgwth + 0.05),
+##                     growth = (log(gdp95) - log(gdp60)) / 35)
+
+## cts <- countries(include = "Hong Kong") %>% st_set_geometry("point") %>% select(iso3)
+## dd <- dd %>% left_join(as_tibble(cts), join_by(code == iso3))# %>% st_set_geometry("point")
+## sl <- lm(log(gdp95) ~ lns + lnngd, dd)
+## d <- dnearneigh(dd, 0, Inf)
+## W1 <- nb2listwdist(d, dd, type = "idw", 
+##                    style = "W", zero.policy = TRUE, alpha = 2)
+## W2 <- nb2listwdist(d, dd, type = "exp", 
+##                    style = "W", zero.policy = TRUE, alpha = 2)
+## moran.test(resid(sl), W1)
+## lm.morantest(sl, W1)
+## lm.morantest(sl, W2)

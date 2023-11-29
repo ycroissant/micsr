@@ -13,7 +13,9 @@
 #' loglm(dist ~ log(speed), cars)
 #' @export
 loglm <- function(formula, data){
+    cl <- match.call()
     mf <- model.frame(formula, data)
+    mt <- attr(mf, "terms")
     X <- model.matrix(formula, mf)
     K <- ncol(X)
     y <- model.response(mf)
@@ -47,7 +49,9 @@ loglm <- function(formula, data){
                    est_method = "ml",
                    formula = formula,
                    npar = .npar,
-                   value = sum(.lnl)),
-              class = "micsr")
+                   value = sum(.lnl),
+                   call = cl,
+                   terms = mt),
+              class = c("micsr", "lm"))
                    
 }
