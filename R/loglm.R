@@ -38,20 +38,25 @@ loglm <- function(formula, data){
                       sigma = c(rep(0, K), .hessian_sig_sig))
     .npar <- structure(c(covariates = K, sigma = 1),
                        default = c("covariates", "sigma"))
-    structure(list(coefficients = c(coef(lm_reg), sigma = sig),
-                   model = mf,
-                   gradient = .gradient,
-                   hessian = .hessian,
-                   linear.predictor = mu,
-                   logLik = .lnl,
-                   fitted.values = fitted(lm_reg),
-                   residuals = resid(lm_reg),
-                   est_method = "ml",
-                   formula = formula,
-                   npar = .npar,
-                   value = sum(.lnl),
-                   call = cl,
-                   terms = mt),
-              class = c("micsr", "lm"))
-                   
+    # insert log(y) as the response
+    mf[[1]] <- log(mf[[1]])
+    .logLik <- structure(sum(.lnl), nobs = length(y), df = length(coef(lm_reg) + 1), class = "logLik")
+    result <- structure(list(coefficients = c(coef(lm_reg), sigma = sig),
+                             model = mf,
+                             gradient = .gradient,
+                             hessian = .hessian,
+                             linear.predictor = mu,
+                             logLik = .lnl,
+                             fitted.values = fitted(lm_reg),
+                             residuals = resid(lm_reg),
+                             est_method = "ml",
+                             formula = formula,
+                             npar = .npar,
+                             value = .logLik,
+                             call = cl,
+                             terms = mt),
+                        class = c("micsr", "lm"))
+    result[c("effects", "rank", "assign", "qr", "df.residual", "xlevels")] <-
+        lm_reg[c("effects", "rank", "assign", "qr", "df.residual", "xlevels")]
+    result
 }
