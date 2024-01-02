@@ -9,14 +9,9 @@
 #'     component and for the selection equation).
 #' @param data a data frame,
 #' @param subset,weights,na.action,offset see `stats::lm`,
-#' @param model one of `"lm"`, `"probit"` and "`logit`" to fit
-#'     respectively the linear probability, the probit and the logit
-#'     model
 #' @param link one of `probit` and `logit`
 #' @param start a vector of starting values, in this case, no
 #'     estimation
-#' @param object,type a `ordreg` object and the type of log-likelihood
-#'     for the `logLik` method
 #' @param ... further arguments
 #' @return an object of class `micsr`, see `micsr::micsr` for further
 #'     details
@@ -104,18 +99,22 @@ ordreg <- function(formula, data, weights, subset, na.action, offset,
     colnames(.fitted.values) <- nms_y
     .npar <- c(covariates = K, threshold = J - 1L)
     attr(.npar, "default") <- "covariates"
+    logLik_model <- sum(.lnl_conv)
+    logLik_null <- N * sum(fy * log(fy))
+    logLik_saturated <- 0
+    .logLik <- c(model = logLik_model, null = logLik_null, saturated = logLik_saturated)
     result <- list(coefficients = .coefs,
                    model = mf,
                    gradient = attr(.lnl_conv, "gradient"),
                    hessian = attr(.lnl_conv, "hessian"),
                    linear.predictors = .lp,
-                   logLik = as.numeric(.lnl_conv),
+                   logLik = .logLik,
                    fitted.values = .fitted.values,
                    df.residual = .df.residual,
                    est_method = "ml",
                    formula = formula,
                    npar = .npar,
-                   value = sum(as.numeric(.lnl_conv)),
+                   value = as.numeric(.lnl_conv),
                    call = .call
                    )
     structure(result, class = c("ordreg", "binomreg", "micsr"))
@@ -253,20 +252,20 @@ ordreg2 <- function(formula, data, weights, subset, na.action, offset,
 
 
 
-#' @rdname ordreg
-#' @export
-logLik.ordreg <- function(object, ..., type = c("model", "null")){
-    .type <- match.arg(type)
-    if (.type == "model")
-        result <- structure(object$value, nobs = nobs(object), df = sum(object$npar), class = "logLik")
-    if (.type == "null"){
-        yb <- prop.table(table(model.response(model.frame(object))))
-        J <- length(yb)
-        result <- nobs(object) * sum(yb * log(yb))
-        result <- structure(result, nobs = nobs(object), df = J - 1L, class = "logLik")
-    }
-    result
-}
+## #' @rdname ordreg
+## #' @export
+## logLik.ordreg <- function(object, ..., type = c("model", "null")){
+##     .type <- match.arg(type)
+##     if (.type == "model")
+##         result <- structure(object$value, nobs = nobs(object), df = sum(object$npar), class = "logLik")
+##     if (.type == "null"){
+##         yb <- prop.table(table(model.response(model.frame(object))))
+##         J <- length(yb)
+##         result <- nobs(object) * sum(yb * log(yb))
+##         result <- structure(result, nobs = nobs(object), df = J - 1L, class = "logLik")
+##     }
+##     result
+## }
 
 if (FALSE){
     library("tidyverse")

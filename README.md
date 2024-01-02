@@ -1,5 +1,10 @@
 # The `micsr` Package - Companion package to the forthcoming book "Microeconometrics With R", CRC/Chapman
 
+## warning
+
+- the example of ndvtest doesn't work anymor
+- the ivldv vignette is highly commented
+
 ## About
 
 `micsr` provides methods described in the book that are not available in R. This includes:

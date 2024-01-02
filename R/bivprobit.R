@@ -125,15 +125,21 @@ bivprobit <- function (formula, data, weights, subset, na.action, offset, ...) {
     lnl_null <- lnl(.coefs_null, gradient = FALSE, sum = TRUE, 
         robust = TRUE, X1 = matrix(rep(1, N), ncol = 1), X2 = matrix(rep(1, 
             N), ncol = 1), q1 = q1, q2 = q2)
-
+print(.coefs_null)
     .coefs[K1 + K2 + 1] <- atan(.coefs[K1 + K2 + 1]) * 2 / pi
     .lnl_conv <- lnl(.coefs, sum = FALSE, gradient = TRUE, hessian = TRUE, 
         robust = FALSE, X1 = X1, X2 = X2, q1 = q1, q2 = q2)
-    result <- list(coefficients = .coefs, model = mf, value = sum(as.numeric(.lnl_conv)), 
-        logLik = as.numeric(.lnl_conv), logLik_null = lnl_null, 
-        gradient = attr(.lnl_conv, "gradient"), hessian = attr(.lnl_conv, 
-            "hessian"), est_method = "ml", npar = .npar, formula = formula, 
-        call = .call)
+    result <- list(coefficients = .coefs,
+                   model = mf,
+                   value = sum(as.numeric(.lnl_conv)), 
+                   logLik = as.numeric(.lnl_conv),
+                   logLik_null = lnl_null, 
+                   gradient = attr(.lnl_conv, "gradient"),
+                   hessian = attr(.lnl_conv, "hessian"),
+                   est_method = "ml",
+                   npar = .npar,
+                   formula = formula, 
+                   call = .call)
     structure(result, class = c("bivprobit", "micsr"))
 }
 

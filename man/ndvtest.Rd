@@ -2,10 +2,6 @@
 % Please edit documentation in R/ndvtest.R
 \name{ndvtest}
 \alias{ndvtest}
-\alias{llcont.maxLik2}
-\alias{bread.maxLik2}
-\alias{estfun.maxLik2}
-\alias{logLik.maxLik2}
 \title{Shi test for non-nested models}
 \usage{
 ndvtest(
@@ -22,14 +18,6 @@ ndvtest(
   nd = TRUE,
   print.level = 0
 )
-
-\method{llcont}{maxLik2}(x, ...)
-
-\method{bread}{maxLik2}(x, ...)
-
-\method{estfun}{maxLik2}(x, ...)
-
-\method{logLik}{maxLik2}(object, ...)
 }
 \arguments{
 \item{x}{a first fitted model,}
@@ -55,21 +43,12 @@ ndvtest(
 \item{nd}{a boolean, if \code{TRUE} (the default) the non-degenarate Vuong test is computed,}
 
 \item{print.level}{the level of details to be printed,}
-
-\item{\dots}{further arguments,}
-
-\item{object}{an object of class \code{maxLik2}.}
 }
 \value{
 an object of class \code{"htest"}
 }
 \description{
 The Shi test correct the bias of the Vuong test
-}
-\examples{
-ll <- lm(dist ~ log(speed), cars)
-loglin <- loglm(dist ~ log(speed), cars)
-ndvtest(ll, loglin)
 }
 \references{
 \insertRef{VUON:89}{micsr}

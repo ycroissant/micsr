@@ -2,7 +2,6 @@
 % Please edit documentation in R/binomreg.R
 \name{binomreg}
 \alias{binomreg}
-\alias{logLik.binomreg}
 \alias{residuals.binomreg}
 \alias{glance.binomreg}
 \alias{predict.binomreg}
@@ -15,12 +14,10 @@ binomreg(
   subset,
   na.action,
   offset,
-  link = c("lm", "probit", "logit"),
+  link = c("identity", "probit", "logit"),
   start = NULL,
   ...
 )
-
-\method{logLik}{binomreg}(object, ..., type = c("model", "null"))
 
 \method{residuals}{binomreg}(object, ..., type = c("deviance", "pearson", "response"))
 
@@ -36,7 +33,7 @@ component and for the selection equation).}
 
 \item{subset, weights, na.action, offset}{see \code{stats::lm},}
 
-\item{link}{one of \code{"lm"}, \code{"probit"} and "\code{logit}" to fit
+\item{link}{one of \code{"identity"}, \code{"probit"} and "\code{logit}" to fit
 respectively the linear probability, the probit and the logit
 model}
 
@@ -61,6 +58,6 @@ logit model.
 }
 \examples{
 pbt <- binomreg(mode ~ cost + ivtime + ovtime, data = mode_choice, link = 'probit')
-lpm <- binomreg(mode ~ cost + ivtime + ovtime, data = mode_choice, link = 'lm')
+lpm <- binomreg(mode ~ cost + ivtime + ovtime, data = mode_choice, link = 'identity')
 summary(pbt, vcov = "opg")
 }

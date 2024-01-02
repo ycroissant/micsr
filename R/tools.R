@@ -1,8 +1,41 @@
-mills <- function(x) exp(dnorm(x, log = TRUE) - pnorm(x, log.p = TRUE))
+#' Compute the inverse Mills ratio and its first derivatives
+#'
+#' The inverse Mills ratio is used in several econometric models,
+#' especially different flavours of tobit model.
+#' @name mills
+#' @param x a numeric
+#' @param deriv one of 0 (the default, returns the inverse Mills
+#'     ratio), 1 (the first derivative) and 2 (the second derivative)
+#' @return a numeric
+#' @export
+mills <- function(x, deriv = 0){
+    if (! deriv %in% 0:2) stop("irrelevant value of deriv")
+    .mills <-  exp(dnorm(x, log = TRUE) - pnorm(x, log.p = TRUE))
+    if (deriv == 1) .mills <- - .mills * (x + .mills)
+    if (deriv == 2) .mills <- .mills * ( (x + .mills) * (x + 2 * .mills) - 1)
+    .mills
+}
+
 dmills <- function(x) - mills(x) * (x + mills(x))
 d2mills <- function(x) mills(x) * ( (x + mills(x)) * (x + 2 * mills(x)) - 1)
 
-newton <- function(fun, coefs, trace = 0, direction = c("min", "max"), tol = sqrt(.Machine$double.eps), ...){
+#' Newton-Rawlphson  method for numerical optimization
+#'
+#' The Newton-Rawlphson method use the gradient and the hessian of a
+#' function. For well behaved functions, it is extremely accurate.
+#' @name newton
+#' @param fun the function to optimize
+#' @param coefs a vector of starting values
+#' @param trace if positive or true, some information about the
+#'     computation is printed
+#' @param direction either `"min"` or `"max"`
+#' @param tol the tolerance
+#' @param maxit maximum number of iterations
+#' @param ... further arguments, passed to fun
+#' @return a numeric vector, the parameters at the optimum of the
+#'     function
+#' @export
+newton <- function(fun, coefs, trace = 0, direction = c("min", "max"), tol = sqrt(.Machine$double.eps), maxit = 500, ...){
     if (trace){
         cat("Initial values of the coefficients:\n")
     }
@@ -30,7 +63,7 @@ newton <- function(fun, coefs, trace = 0, direction = c("min", "max"), tol = sqr
         eps <- as.numeric(crossprod(solve(h, g), g))
                 if (trace) cat(paste("iteration:", i, "criteria:", round(eps, 5), "\n"))
         i <- i + 1
-        if (i > 500) stop("max iter reached")
+        if (i > maxit) stop("max iter reached")
         coefs <- newcoefs
     }
     coefs
@@ -71,7 +104,6 @@ stder.default <- function(x, .vcov = NULL, ...){
     }
     std
 }
-
 
 #' Transform a factor in a set of dummy variables
 #'
@@ -156,3 +188,38 @@ dummy <- function (x, ..., keep = FALSE, prefix = NULL, ref = FALSE) {
 ## sp_solow3 <- sp_solow2 %>% mutate(lns = lns + lnngd)
 ## un <- loglm(gdp95 ~ lns + lnngd, sp_solow2)
 ## deux <- loglm(gdp95 ~ lns, sp_solow3)
+
+#' Number of parameters of a fitted model
+#'
+#' The number of observation of a fitted model is typically obtained
+#' using the `nobs` method. There is no such generics to extract the
+#' same information about the number of parameters. `npar` is such a
+#' generic and has a special method for `micsr` objects with a
+#' `subset` argument that enables to compute the number of parameters
+#' for a subset of coefficients. The default method returns the length
+#' of the vector of coefficients extracted using the `coef` function
+#'
+#' @name npar
+#' @param x a fitted model
+#' @param subset a character indicating the subset of coefficients
+#'     (only relevant for `micsr` models).
+#' @return an integer
+#' @author Yves Croissant
+#' @export
+npar <- function(x, subset = NULL)
+    UseMethod("npar")
+
+npar.default <- function(x){
+    length(coef(x))
+}
+npar.micsr <- function(x, subset = NULL){
+    result <- x$npar
+    if (! is.null(subset)){
+        if (! is.character(subset)) stop("subset should be a character")
+        if (any(! subset %in% names(result))) stop("unknown subset")
+        result <- result[subset]
+    }
+    sum(as.numeric(result))
+}
+
+

@@ -88,7 +88,6 @@ scoretest <- function(x, y, ...){
 }
 
 
-
 #' @rdname scoretest
 #' @export
 scoretest.micsr <- function(x, y, ..., vcov = NULL){
@@ -122,4 +121,25 @@ scoretest.micsr <- function(x, y, ..., vcov = NULL){
                    data.name = paste(deparse(newform)),
                    alternative = "the constrained model is rejected"),
               class = "htest")    
+}
+
+
+#' F statistic
+#'
+#' Extract the F statistic that all the parameters except the
+#' intercept are zero. Currently implemented only for models that
+#' inherits `"lm"`.
+#' @name fstat
+#' @param x a fitted object
+#' @return an object of class `"htest"`
+#' @importFrom stats pf
+#' @export
+fstat <- function(x){
+    if (! inherits(x, "lm")) stop("The F statistic is only defined for linear models")
+    .fstat <- summary(x)$fstatistic
+    .statistic <- c(F = unname(.fstat["value"]))
+    .pval <- pf(.fstat["value"], df1 = .fstat["numdf"], df2 = .fstat["dendf"], lower.tail = FALSE)
+    structure(list(data.name = paste(deparse(x$call)), statistic = .statistic, parameter = c(.fstat["numdf"], .fstat["dendf"]),
+                   method = "F test", p.value = .pval),
+              class = "htest")
 }

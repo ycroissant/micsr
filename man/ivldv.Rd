@@ -89,6 +89,7 @@ bank_2st <- update(bank_msq, method = "twosteps")
 }
 \references{
 \insertRef{SMIT:BLUN:86}{micsr}
+\insertRef{RIVE:VUON:88}{micsr}
 }
 \author{
 Yves Croissant

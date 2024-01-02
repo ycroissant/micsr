@@ -21,22 +21,24 @@
 #' @param model one of `'es'` for endogenous switching (the default)
 #'     or `'ss'` for sample selection.
 #' @return an object of class `'escount'` and `'micsr'` which is a
-#'     list containing the following components: - coefficients: a
-#'     named vector of coefficients, - sigma, rho: the estimated
-#'     values of sigma and rho for the `twosteps` method, - residuals:
-#'     the vector of residuals, - fitted.values: the fitted values -
-#'     vcov: estimation of the covariance matrix of the estimators -
-#'     value: value of the objective function at convergence - model:
-#'     the model frame - call: the matched call - K: the number of
-#'     covariates - L: the number of instruments - df.residual: the
-#'     degrees of freedom of the regression - xlevels: a record of the
-#'     levels of the factors used in fitting - na.action: information
-#'     returned by `model.frame` on the sepcial handling of `NA`'s
+#'     list containing the following components:
+#' - coefficients: a  named vector of coefficients,
+#' - sigma, rho: the estimated values of sigma and rho for the `twosteps` method,
+#' - residuals: the vector of residuals,
+#' - fitted.values: the fitted values
+#' - vcov: estimation of the covariance matrix of the estimators
+#' - value: value of the objective function at convergence
+#' - model: the model frame
+#' - call: the matched call
+#' - K: the number of covariates
+#' - L: the number of instruments
+#' - df.residual: the degrees of freedom of the regression
+#' - xlevels: a record of the levels of the factors used in fitting
+#' - na.action: information returned by `model.frame` on the sepcial handling of `NA`'s
 #' @importFrom stats .getXlevels coef glm model.matrix model.response
 #'     model.frame model.offset model.weights formula fitted nobs
 #'     optim pchisq pnorm poisson printCoefmat vcov binomial dnorm
 #'     dpois
-#' @importFrom maxLik maxLik
 #' @importFrom Formula Formula model.part
 #' @importFrom numDeriv grad
 #' @importFrom statmod gauss.quad
@@ -208,7 +210,7 @@ escount <- function(formula,
             lnl
         }
         # functions for the log-likelihood and its gradient relevant for
-        # optim and maxLik
+        # optim
 
         fn <- function(param) - lnl(param, gradient = FALSE, sum = TRUE)
         gr <- function(param) - attr(lnl(param, gradient = TRUE, sum = TRUE), "gradient")
@@ -234,7 +236,8 @@ escount <- function(formula,
         .logLik <- z$value
         .gradient <- gr_obs(.coef)
         .hessian <- - z$hessian
-        .logLik <- fn_obs(.coef)
+        .lnl <- fn_obs(.coef)
+        logLik_model <- c(model = sum(.lnl))
         
         bX <- drop(X %*% .coef[1:K])
         aZ <- drop(Z %*% .coef[K + c(1:L)])
@@ -249,8 +252,8 @@ escount <- function(formula,
                        fitted.values = .fitted,
                        model = mf,
                        terms = mt,
-                       logLik = .logLik,
-                       value = structure(-z$value, nobs = length(y), df = K + L, class = "logLik"),
+                       logLik = logLik_model,
+                       value = .lnl,
                        npar = .npar,
                        gradient = .gradient,
                        hessian = .hessian,

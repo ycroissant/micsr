@@ -29,55 +29,38 @@ rsq.lm <- function(x, type = c("raw", "adj")){
 rsq.binomreg <- function(x, type = c("mcfadden", "cox_snell", "cragg_uhler",
                                      "aldrich_nelson", "veall_zimm", "estrella",
                                      "cor", "ess", "rss", "tjur",
-                                     "mckel_zavo")){
+                                     "mckel_zavo", "f", "wald")){
     type <- match.arg(type)
     y <- model.response(model.frame(x))
     yb <- mean(y)
     logL <- as.numeric(logLik(x))
-    if (type == "mcfadden"){
-        r2 <- 1 - deviance(x) / deviance(x, type = "null")
-    }
-    if (type == "cox_snell"){
-        # deviance = -2 * logLik
-        logLik0 <- - deviance(x, type = "null") / 2
-        r2 <- 1 - exp((logLik0 - logL) * 2 / nobs(x))
-    }
-    if (type == "cragg_uhler"){
-        # deviance = -2 * logLik
-        logLik0 <- - deviance(x, type = "null") / 2
-        r2 <- (1 - exp((logLik0 - logL) * 2 / nobs(x))) /
-            (1 - exp(logLik0 * 2 / nobs(x)))
-    }
-    if (type == "aldrich_nelson"){
-        logLik0 <- - deviance(x, type = "null") / 2
-        r2 <- 2 * (logL - logLik0) /
-            (2 * (logL - logLik0) + nobs(x))
-    }
-    if (type == "veall_zimm"){
-        logLik0 <- - deviance(x, type = "null") / 2
-        r2 <- 2 * (logL - logLik0) /
-            (2 * (logL - logLik0) + nobs(x))
-        r2 <- r2 * (2 * logLik0 - nobs(x)) / (2 * logLik0)
-    }
-    if (type == "estrella"){
-        logLik0 <- - deviance(x, type = "null") / 2
-        logLikx <- as.numeric(logL)
-        r2 <- 1 - exp(-2 / nobs(x) * logLik0 * log(logLikx - logLik0))
-        r2 <- 1 - (logLikx / logLik0) ^ (- 2 / nobs(x) * logLik0)
-    }
-    if (type == "cor"){
-        r2 <- sum( (fitted(x) - yb) * (y - yb)) ^ 2 /
-            sum((fitted(x) - yb) ^ 2) / sum((y - yb) ^ 2)
-    }
-    if (type == "rss"){
-        r2 <- 1 - sum(resid(x, "response") ^ 2) / sum( (y - yb) ^ 2)
-    }
-    if (type == "ess"){
-        r2 <- sum( (fitted(x) - yb) ^ 2) / sum( (y - yb) ^ 2)
-    }
+    logL0 <- - deviance(x, type = "null") / 2
+    df.model <- df.residual(x)
+    K <- as.numeric(x$npar) - 1
+    N <- nobs(x)
+    ESS <- sum((fitted(x) - yb) ^ 2)
+    TSS <- sum( (y - yb) ^ 2)
+    RSS <- sum(resid(x, type = "response") ^ 2)
+    F <- (TSS - RSS) / RSS * df.model / K
+    W <- (TSS - RSS) / RSS * N
+    LR <- 2 * (logL - logL0)
+    LR_star <- - 2 * logL0
+
+    if (type == "f") r2 <- K * F / (K * F + df.model) 
+    if (type == "wald") r2 <- W / (W + N)
+    if (type == "mcfadden") r2 <- 1 - logL / logL0
+    if (type == "cox_snell") r2 <- 1 - exp(- LR / N)
+    if (type == "cragg_uhler") r2 <- (1 - exp(- LR / N)) / (1 - exp(- LR_star / N))
+    if (type == "aldrich_nelson")  r2 <- LR / (LR + N)
+    if (type == "veall_zimm") r2 <- (LR / (LR + N)) / (LR_star / (LR_star + N))
+    if (type == "estrella") r2 <- 1 - (logL / logL0) ^ (- 2 / N * logL0)
+    if (type == "cor") r2 <- sum( (fitted(x) - yb) * (y - yb)) ^ 2 /
+                           sum((fitted(x) - yb) ^ 2) / sum((y - yb) ^ 2)
+    if (type == "rss")  r2 <- 1 - RSS / TSS
+    if (type == "ess") r2 <- ESS / TSS
     if (type == "tjur"){
-        r2_model <- sum( (fitted(x) - yb) ^ 2) / sum( (y - yb) ^ 2)
-        r2_resid <- 1 - sum(resid(x, "response") ^ 2) / sum( (y - yb) ^ 2)
+        r2_model <- ESS / TSS
+        r2_resid <- 1 - RSS / TSS
         r2 <- (r2_model + r2_resid) / 2
         r2
     }
@@ -85,8 +68,8 @@ rsq.binomreg <- function(x, type = c("mcfadden", "cox_snell", "cragg_uhler",
         lp <- x$linear.predictors
         hlp <- mean(lp)
         ESS <- sum( (lp- hlp) ^ 2)
-        .model <- x$call$model
-        RSS <- nobs(x) * ifelse(.model == "probit", 1, pi ^ 2 / 3)
+        .link <- x$call$link
+        RSS <- nobs(x) * ifelse(.link == "probit", 1, pi ^ 2 / 3)
         r2 <- ESS / (ESS + RSS)
     }
     r2

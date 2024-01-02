@@ -15,8 +15,6 @@
 #' @param numbers a user provided matrix of random numbers
 #' @param nd a boolean, if `TRUE` (the default) the non-degenarate Vuong test is computed,
 #' @param print.level the level of details to be printed,
-#' @param \dots further arguments,
-#' @param object an object of class `maxLik2`.
 #' @return an object of class \code{"htest"}
 #' @importFrom Rdpack reprompt
 #' @importFrom stats pnorm
@@ -30,10 +28,10 @@
 #'
 #' @importFrom stats ecdf logLik optimize qnorm quantile rnorm uniroot
 #' @keywords htest
-#' @examples
-#' ll <- lm(dist ~ log(speed), cars)
-#' loglin <- loglm(dist ~ log(speed), cars)
-#' ndvtest(ll, loglin)
+## #' @examples
+## #' ll <- lm(dist ~ log(speed), cars)
+## #' loglin <- loglm(dist ~ log(speed), cars)
+## #' ndvtest(ll, loglin)
 #' @export
 ndvtest <- function(x, y, size = 0.05, pval = TRUE,
                     nested = FALSE, vartest = FALSE,
@@ -287,26 +285,6 @@ bdiag <- function(...){
   return(out)
 } 
 
-#' @rdname ndvtest
-#' @method llcont maxLik2
-#' @export
-llcont.maxLik2 <- function(x, ...) x$lnl
-
-
-#' @rdname ndvtest
-#' @method bread maxLik2
-#' @export
-bread.maxLik2 <- function(x, ...) - solve(x$hessian) * length(x$lnl)
-
-#' @rdname ndvtest
-#' @method estfun maxLik2
-#' @export
-estfun.maxLik2 <- function(x, ...) x$gradient
-
-#' @rdname ndvtest
-#' @method logLik maxLik2
-#' @export
-logLik.maxLik2 <- function(object, ...) sum(object$lnl)
 
 #' @importFrom sandwich estfun
 #' @export
@@ -404,3 +382,20 @@ vuong_sim <- function(N = 1E03, R = 1E03, Kf = 15, Kg = 1, a = 0.125){
 #' ndvtest(turnout$intens, turnout$sur)
 #' }
 NULL
+
+
+## #' @rdname ndvtest
+## #' @method bread maxLik2
+## #' @export
+## bread.maxLik2 <- function(x, ...) - solve(x$hessian) * length(x$lnl)
+
+## #' @rdname ndvtest
+## #' @method estfun maxLik2
+## #' @export
+## estfun.maxLik2 <- function(x, ...) x$gradient
+
+## #' @rdname ndvtest
+## #' @method logLik maxLik2
+## #' @export
+## logLik.maxLik2 <- function(object, ...) sum(object$lnl)
+

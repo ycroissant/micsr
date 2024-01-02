@@ -44,17 +44,22 @@ or \code{'ss'} for sample selection.}
 }
 \value{
 an object of class \code{'escount'} and \code{'micsr'} which is a
-list containing the following components: - coefficients: a
-named vector of coefficients, - sigma, rho: the estimated
-values of sigma and rho for the \code{twosteps} method, - residuals:
-the vector of residuals, - fitted.values: the fitted values -
-vcov: estimation of the covariance matrix of the estimators -
-value: value of the objective function at convergence - model:
-the model frame - call: the matched call - K: the number of
-covariates - L: the number of instruments - df.residual: the
-degrees of freedom of the regression - xlevels: a record of the
-levels of the factors used in fitting - na.action: information
-returned by \code{model.frame} on the sepcial handling of \code{NA}'s
+list containing the following components:
+\itemize{
+\item coefficients: a  named vector of coefficients,
+\item sigma, rho: the estimated values of sigma and rho for the \code{twosteps} method,
+\item residuals: the vector of residuals,
+\item fitted.values: the fitted values
+\item vcov: estimation of the covariance matrix of the estimators
+\item value: value of the objective function at convergence
+\item model: the model frame
+\item call: the matched call
+\item K: the number of covariates
+\item L: the number of instruments
+\item df.residual: the degrees of freedom of the regression
+\item xlevels: a record of the levels of the factors used in fitting
+\item na.action: information returned by \code{model.frame} on the sepcial handling of \code{NA}'s
+}
 }
 \description{
 Heckman's like estimator are extended to count data, using either

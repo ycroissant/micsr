@@ -13,7 +13,7 @@ rsq(x, type)
 \method{rsq}{binomreg}(
   x,
   type = c("mcfadden", "cox_snell", "cragg_uhler", "aldrich_nelson", "veall_zimm",
-    "estrella", "cor", "ess", "rss", "tjur", "mckel_zavo")
+    "estrella", "cor", "ess", "rss", "tjur", "mckel_zavo", "f", "wald")
 )
 }
 \arguments{

@@ -45,7 +45,6 @@ dplyr::mutate
 #' @export
 magrittr::`%>%`
 
-
 #' @importFrom generics glance
 #' @export
 generics::glance
@@ -69,6 +68,11 @@ sandwich::vcovHC
 #' @importFrom nonnest2 llcont
 #' @export
 nonnest2::llcont
+
+
+## #' @rdname micsr
+## #' @export
+## llcont <- function(x, ...) UseMethod("llcont")
 
 #' @importFrom Formula model.part
 #' @export
@@ -142,7 +146,7 @@ vcov.micsr <- function(object, ..., vcov = c("info", "hessian", "opg"), subset =
         if (.vcov_method == "info" & is.null(object$info)) .vcov_method = "hessian"
         if (.vcov_method == "hessian") .vcov <- solve(- object$hessian)
         if (.vcov_method == "opg") .vcov <- solve(crossprod(object$gradient))
-        if (.vcov_method == "info") .vcov <- object$info
+        if (.vcov_method == "info") .vcov <- solve(object$info)
     }
     else .vcov <- object$vcov
     nms <- rownames(.vcov)
@@ -196,6 +200,10 @@ print.micsr <- function (x, digits = max(3L, getOption("digits") - 3L), ...){
 #' @export
 print.summary.micsr <- function (x, digits = max(3, getOption("digits") - 2), width = getOption("width"), ...){
     .est_method <- x$est_method
+    if (.est_method == "trimmed"){
+        .est_method_lib <- "Trimmed estimation"
+        gof_stat <- NULL
+    }
     if (.est_method == "ml"){
         .est_method_lib <- "Maximum likelihood estimation"
         gof_stat <- "log-Likelihood"
@@ -223,7 +231,9 @@ print.summary.micsr <- function (x, digits = max(3, getOption("digits") - 2), wi
     
     cat(.est_method_lib, "\n", sep = "")
     printCoefmat(coef(x), digits = digits)
-    cat("\n", gof_stat, ": ", format(x$value, digits = digits), "\n\n", sep = "")
+    if (! is.null(gof_stat)){
+        cat("\n", gof_stat, ": ", format(x$logLik["model"], digits = digits), "\n\n", sep = "")
+    }
     if (.est_method == "twosteps"){
         hrho <- x$coefficients
         cat("Estimated value of sigma: ", format(x$sigma, digits = digits), "\n", sep = "")
@@ -239,6 +249,17 @@ print.summary.micsr <- function (x, digits = max(3, getOption("digits") - 2), wi
 logLik.micsr <- function(object, ...){
     if (object$est_method != "ml") NULL
     else object$value
+}
+
+logLik.micsr <- function(object, ..., type = c("model", "null", "saturated")){
+    .type <- match.arg(type)
+    .val <- object$logLik[.type]
+    .nobs <- nobs(object)
+    .df <- switch(.type,
+                  model = npar(object),
+                  null = 1,
+                  saturated = nobs(object))
+    structure(.val, nobs = .nobs, df = .df, class = "logLik")
 }
 
 #' @rdname micsr
@@ -273,7 +294,9 @@ AIC.micsr <- function(object, ..., k = 2, type = c("model", "null")){
 #' @export
 deviance.micsr <- function(object, ..., type = c("model", "null")){
     .type <- match.arg(type)
-    - 2 * as.numeric(logLik(object, type = .type))
+    logLik_saturated <- unname(ifelse(is.na(object$logLik["saturated"]), 0,
+                               object$logLik["saturated"]))
+    - 2 * (unname(object$logLik[.type]) - logLik_saturated)
 }
 
 #' @rdname micsr
@@ -380,18 +403,22 @@ vcovHC.micsr <- function(x, type, omega = NULL, sandwich = TRUE, ...){
 #' @export
 bread.micsr <- function(x, ...){
     if (x$est_method == "twosteps") stop("no meat method for two-steps models")
-    if (! is.null(x$info)) x$info * nobs(x)
-    else solve(- x$hessian) * nobs(x)
+#    if (! is.null(x$info)) solve(x$info) * nobs(x)
+#    else solve(- x$hessian) * nobs(x)
+    solve(- x$hessian) * nobs(x)
 }
 
 #' @rdname micsr
 #' @export
-nobs.micsr <- function(object, ...) nrow(object$model)#length(object$residuals)
+nobs.micsr <- function(object, ...){
+    if (! is.null(object$model)) nrow(object$model)#length(object$residuals)
+    else nrow(object$gradient)
+}
 
 #' @rdname micsr
 #' @method llcont micsr
 #' @export
-llcont.micsr <- function(x, ...) x$logLik
+llcont.micsr <- function(x, ...) x$value
 
 
 #' @rdname micsr
@@ -423,3 +450,4 @@ glance.micsr <- function(x, ...){
 
     
         
+npar <- function(x) sum(as.numeric(x$npar))

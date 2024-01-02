@@ -9,7 +9,7 @@
 #'     component and for the selection equation).
 #' @param data a data frame,
 #' @param subset,weights,na.action,offset see `stats::lm`,
-#' @param link one of `"lm"`, `"probit"` and "`logit`" to fit
+#' @param link one of `"identity"`, `"probit"` and "`logit`" to fit
 #'     respectively the linear probability, the probit and the logit
 #'     model
 #' @param start a vector of starting values, in this case, no
@@ -25,11 +25,11 @@
 #' @importFrom Formula Formula
 #' @examples
 #' pbt <- binomreg(mode ~ cost + ivtime + ovtime, data = mode_choice, link = 'probit')
-#' lpm <- binomreg(mode ~ cost + ivtime + ovtime, data = mode_choice, link = 'lm')
+#' lpm <- binomreg(mode ~ cost + ivtime + ovtime, data = mode_choice, link = 'identity')
 #' summary(pbt, vcov = "opg")
 #' @export
 binomreg <- function(formula, data, weights, subset, na.action, offset,
-                     link = c("lm", "probit", "logit"), start = NULL, ...){
+                     link = c("identity", "probit", "logit"), start = NULL, ...){
     .call <- match.call()
     .link <- match.arg(link)
     cl <- match.call(expand.dots = FALSE)
@@ -44,12 +44,16 @@ binomreg <- function(formula, data, weights, subset, na.action, offset,
     mt <- attr(mf, "terms")
     X <- model.matrix(mt, mf)
     y <- model.response(mf)
+    yb <- mean(y)
     q <- 2 * y - 1
     K <- ncol(X)
     N <- length(y)
     .df.residual <- N - K
-    .null_deviance <- - 2 * N * (mean(y) * log(mean(y)) + (1 - mean(y)) * log(1 - mean(y)))
-    if (.link == "lm"){
+    .null_logLik <- N * (yb * log(yb) + (1 - yb) * log(1 - yb))
+    .sat_logLik <- 0
+    .null_deviance <- - 2 * .null_logLik
+        
+    if (.link == "identity"){
         lnl <- function(coefs, gradient = FALSE, hessian = FALSE, information = FALSE, sum = TRUE, X, y){
             K <- ncol(X)
             N <- length(y)
@@ -89,8 +93,8 @@ binomreg <- function(formula, data, weights, subset, na.action, offset,
             q <- 2 * y - 1
             lnl <- pnorm(q * linpred, log.p = TRUE)
             if (gradient) grad <- q * mills(q * linpred) * X
-            if (hessian) hess <-    -      crossprod(sqrt(- dmills(q * linpred)) * X)
-            if (information) info <- solve(crossprod(sqrt(mills(linpred) * mills(- linpred)) * X))
+            if (hessian) hess <- -   crossprod(sqrt(- dmills(q * linpred)) * X)
+            if (information) info <- crossprod(sqrt(mills(linpred) * mills(- linpred)) * X)
             if (sum){
                 lnl <- sum(lnl)
                 if (gradient) grad <- apply(grad, 2, sum)
@@ -108,8 +112,8 @@ binomreg <- function(formula, data, weights, subset, na.action, offset,
             q <- 2 * y - 1
             lnl <- plogis(q * linpred, log.p = TRUE)
             if (gradient) grad <- (y - exp(linpred) / (1 + exp(linpred))) * X
-            if (hessian) hess <-     -     crossprod(sqrt( exp(linpred) / (1 + exp(linpred)) ^ 2) * X)
-            if (information) info <- solve(crossprod(sqrt( exp(linpred) / (1 + exp(linpred)) ^ 2) * X))
+            if (hessian) hess <-  -   crossprod(sqrt( exp(linpred) / (1 + exp(linpred)) ^ 2) * X)
+            if (information) info <- crossprod(sqrt( exp(linpred) / (1 + exp(linpred)) ^ 2) * X)
             if (sum){
                 lnl <- sum(lnl)
                 if (gradient) grad <- apply(grad, 2, sum)
@@ -123,7 +127,7 @@ binomreg <- function(formula, data, weights, subset, na.action, offset,
     if (is.null(start)){
         start <- rep(0, K)
         names(start) <- colnames(X)
-        if (.link != "lm") .coefs <- newton(lnl, X = X, y = y, trace = 0, coefs = start, direction = "max")
+        if (.link != "identity") .coefs <- newton(lnl, X = X, y = y, trace = 0, coefs = start, direction = "max")
         else{
             .coefs <- drop(solve(crossprod(X), crossprod(X, y)))
             .sigma <- sqrt(mean((y - drop(X %*% .coefs) ^ 2)))
@@ -131,47 +135,49 @@ binomreg <- function(formula, data, weights, subset, na.action, offset,
         }
     }
     else .coefs <- start
-    if (.link != "lm") .linpred <- drop(X %*% .coefs)
+    if (.link != "identity") .linpred <- drop(X %*% .coefs)
     else .linpred <- drop(X %*% .coefs[- (ncol(X) + 1)])
     .lnl_conv <- lnl(.coefs, X = X, y = y, gradient = TRUE, hessian = TRUE, info = TRUE, sum = FALSE)
     if (.link == "logit") .fitted <- plogis(.linpred)
     if (.link == "probit") .fitted <- pnorm(.linpred)
-    if (.link == "lm") .fitted <- .linpred
+    if (.link == "identity") .fitted <- .linpred
     .npar <- c(covariates = K)
-    if (.link == "lm") .npar <- c(covariates = K, vcov = 1)
+    if (.link == "identity") .npar <- c(covariates = K, vcov = 1)
     attr(.npar, "default") <- "covariates"
     .logLik <- structure(sum(as.numeric(.lnl_conv)), nobs = length(y), df = length(.coefs), class = "logLik")
+    .logLik <- c(model = sum(as.numeric(.lnl_conv)),
+                 saturated = .sat_logLik,
+                 null = .null_logLik)
     result <- list(coefficients = .coefs,
                    model = mf,
                    gradient = attr(.lnl_conv, "gradient"),
                    hessian = attr(.lnl_conv, "hessian"),
                    info = attr(.lnl_conv, "info"),
                    linear.predictors = .linpred,
-                   logLik = as.numeric(.lnl_conv),
+                   logLik = .logLik,
                    fitted.values = .fitted,
                    df.residual = .df.residual,
                    est_method = "ml",
                    formula = formula,
                    npar = .npar,
-                   value = .logLik,
+                   value = as.numeric(.lnl_conv),
                    call = .call
                    )
     structure(result, class = c("binomreg", "micsr"))
 }
 
-#' @rdname binomreg
-#' @export
-logLik.binomreg <- function(object, ..., type = c("model", "null")){
-    .type <- match.arg(type)
-    if (.type == "model")
-        result <- structure(object$value, nobs = nobs(object), df = sum(object$npar), class = "logLik")
-    if (.type == "null"){
-        yb <- mean(model.response(model.frame(object)))
-        result <- nobs(object) * (yb * log(yb) + (1 - yb) * log(1 - yb))
-        result <- structure(result, nobs = nobs(object), df = 1, class = "logLik")
-    }
-    result
-}
+## #' @rdname binomreg
+## #' @export
+## logLik.binomreg <- function(object, ..., type = c("model", "null", "saturated")){
+##     .type <- match.arg(type)
+##     .val <- object$logLik[.type]
+##     .nobs <- nobs(object)
+##     .df <- switch(.type,
+##                   model = npar(object),
+##                   null = 1,
+##                   saturated = nobs(object))
+##     structure(.val, nobs = .nobs, df = .df, class = "logLik")
+## }
 
 #' @rdname binomreg
 #' @export
@@ -182,7 +188,7 @@ residuals.binomreg <- function(object, ..., type = c("deviance", "pearson", "res
     sd_hy <- sqrt(hy * (1 - hy))
     if (type == "response") resid <- y - hy
     if (type == "pearson") resid <- (y - hy) / sd_hy
-    if (type == "deviance") resid <- (2 * y - 1) * sqrt(- 2  * object$logLik)
+    if (type == "deviance") resid <- (2 * y - 1) * sqrt(- 2  * object$value)
     resid
 }
 

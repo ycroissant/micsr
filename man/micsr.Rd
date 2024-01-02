@@ -41,7 +41,7 @@
   ...
 )
 
-\method{logLik}{micsr}(object, ...)
+\method{logLik}{micsr}(object, ..., type = c("model", "null", "saturated"))
 
 \method{BIC}{micsr}(object, ..., type = c("model", "null"))
 

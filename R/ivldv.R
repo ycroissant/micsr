@@ -30,6 +30,7 @@
 #' @author Yves Croissant
 #' @references
 #' \insertRef{SMIT:BLUN:86}{micsr}
+#' \insertRef{RIVE:VUON:88}{micsr}
 #' @importFrom Rdpack reprompt
 #' @export
 #' @examples
@@ -169,7 +170,7 @@ ivldv <- function(formula,
     if (compute_test){
         .data.name <- paste(deparse(substitute(formula)))[1]
         .data.name <- paste(.data.name, "...")
-        coef_res <- grep("res", names(.coef))
+        coef_res <- grep("rho", names(.coef))
         B <- .coef[coef_res]
         V <- .vcov[coef_res, coef_res, drop = FALSE]
         stat <- as.numeric(crossprod(B,solve(V, B)))
@@ -177,7 +178,7 @@ ivldv <- function(formula,
         res <- list(statistic    = c(chisq = stat),
                     p.value      = pval,
                     parameter    = c(df = length(coef_res)),
-                    method       = "Smith-Blundell test",
+                    method       = "Smith-Blundell / Rivers-Vuong test",
                     data.name    = .data.name,
                     alternative  = "endogeneity")
         class(res) <- "htest"

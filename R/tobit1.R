@@ -358,6 +358,39 @@ tobit1 <- function(formula, data, subset = NULL, weights = NULL,
         dimnames(.vcov) <- list(names(coefs), names(coefs))
         .terms <-  terms(mf)
         attr(.terms, ".Environment") <- NULL
+        
+        # tobit without covariates (mu and sigma), only for the standard tobit
+        if (left == 0 & is.infinite(right) & .sample == "censored"){
+            coef0 <- function(x){
+                mu2 <- mean(x[x > 0] ^ 2)
+                yb <- mean(x[x > 0])
+                pr <- mean(x > 0)
+                alpha <- qnorm(pr)
+                h <- (alpha + dnorm(alpha) / pnorm(alpha)) / yb
+                za <- function(h){
+                    alpha <-  (h * mu2 - 1 / h) / yb
+                    pr * alpha - pr * h * yb + (1 - pr) * mills(- alpha)
+                }
+                .sig <- 1 / h
+                h_min <- 1 / (.sig * 10)
+                h_max <- 1 / (.sig / 2)
+                h_conv <- uniroot(za, c(0, h_max), tol = 1E-10)$root
+                alpha_conv <- (h_conv * mu2 - 1 / h_conv) / yb
+                .sig <- 1 / h_conv
+                .mu <- .sig * alpha_conv
+                .lnL <- (1 - pr) * pnorm(- alpha_conv, log.p = TRUE) - pr * log(2 * pi) / 2 +
+                    pr * log(h_conv) - pr / 2 * h_conv ^ 2 * mu2 - pr / 2 * alpha_conv ^ 2 +
+                    pr * alpha_conv * h_conv * yb
+                c(mu = .mu, sigma = .sig, lnl = .lnL)
+            }
+            logLik_null <- coef0(y)[["lnl"]] * N
+            N0 <- sum(y == 0)
+            logLik_saturated <- - (N - N0) / 2 * log(2 * pi)
+            .logLik <- c(model = sum(as.numeric(lnl_conv)),
+                        saturated = logLik_saturated,
+                        null = logLik_null)
+        } else .logLik <- c(model = sum(as.numeric(lnl_conv)))
+        
         result <- list(coefficients = coefs,
                        linear.predictor = linear.predictor,
                        fitted.values = .fitted,
@@ -368,7 +401,8 @@ tobit1 <- function(formula, data, subset = NULL, weights = NULL,
                        info = .info,
                        vcov = .vcov,
                        gradient = .gradient,
-                       value = structure(.logLik, nobs = length(y), df = length(coefs), class = "logLik"),
+                       value = as.numeric(lnl_conv),
+                       logLik = .logLik,
                        model = mf,
                        terms = .terms,
                        call = .call,

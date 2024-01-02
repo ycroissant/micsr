@@ -37,6 +37,14 @@ sight.lm <- function(x, ..., coef = NULL,
 
 #' @rdname sight
 #' @export
+sight.micsr <- function(x, ..., coef = NULL,
+                        digits = max(3L, getOption("digits") - 3L), 
+                        signif.stars = FALSE){
+  sight.lm(x, ..., coef = coef, digits = digits, signif.stars = signif.stars)
+}
+
+#' @rdname sight
+#' @export
 sight.ivreg <- function(x, ..., coef,
                           digits = max(3L, getOption("digits") - 3L), 
                           signif.stars = getOption("show.signif.stars")){

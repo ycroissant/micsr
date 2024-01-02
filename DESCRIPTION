@@ -8,9 +8,9 @@ Authors@R: person("Yves",
 		  email = "yves.croissant@univ-reunion.fr",
 		  comment = c(ORCID = "0000-0002-4857-7736"))
 Depends: R (>= 4.0.0)
-Imports: Formula, Rdpack, maxLik, numDeriv, sandwich, generics, tibble, Rcpp, statmod, ggplot2, rlang, dplyr, tidyr, purrr, knitr, CompQuadForm, nonnest2, magrittr, tidyselect
-Suggests: rmarkdown, modelsummary, bookdown, AER, censReg, sampleSelection, mlogit, MASS, lmtest, pscl
-Description: A set of estimation and test functions that were developped while writing the book.
+Imports: Formula, Rdpack, numDeriv, sandwich, generics, tibble, Rcpp, statmod, ggplot2, rlang, dplyr, tidyr, purrr, knitr, CompQuadForm, magrittr, tidyselect, nonnest2
+Suggests: rmarkdown, modelsummary, bookdown, AER, censReg, sampleSelection, mlogit, MASS, lmtest, pscl, maxLik
+Description: A set of estimation and test functions that were developped while writing the book <doi:10.1201/9781003100263>.
              A lot of data sets are also provided in order to illustrate the features of these functions.
 Encoding: UTF-8
 License: GPL (>=2)

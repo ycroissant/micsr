@@ -2,7 +2,6 @@
 % Please edit documentation in R/ordreg.R
 \name{ordreg}
 \alias{ordreg}
-\alias{logLik.ordreg}
 \title{Ordered regression}
 \usage{
 ordreg(
@@ -16,8 +15,6 @@ ordreg(
   start = NULL,
   ...
 )
-
-\method{logLik}{ordreg}(object, ..., type = c("model", "null"))
 }
 \arguments{
 \item{formula}{a symbolic description of the model, (for the count
@@ -33,13 +30,6 @@ component and for the selection equation).}
 estimation}
 
 \item{...}{further arguments}
-
-\item{object, type}{a \code{ordreg} object and the type of log-likelihood
-for the \code{logLik} method}
-
-\item{model}{one of \code{"lm"}, \code{"probit"} and "\code{logit}" to fit
-respectively the linear probability, the probit and the logit
-model}
 }
 \value{
 an object of class \code{micsr}, see \code{micsr::micsr} for further
