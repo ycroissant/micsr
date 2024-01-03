@@ -206,7 +206,8 @@ ivldv <- function(formula,
         if (model == "probit") newey_3 <- glm(y ~ fitted(step_1) + X1 + resid(step_1) - 1, family = binomial(link = 'probit'))
         if (model == "tobit") newey_3 <- tobit1(y ~ fitted(step_1) + X1 + resid(step_1) - 1, left = left, right = right)
         coef_newey_3 <- newey_3$coefficients
-        coef_fit_w <- coef_newey_3[1 + (1:G)]
+#        coef_fit_w <- coef_newey_3[1 + (1:G)] bug 2024-01-03: mauvais indexage
+        coef_fit_w <- coef_newey_3[1:G]
         rho_hat <- coef_res_w - coef_fit_w
 
         # Newey_4. computation of the augmented matrix of covariance
