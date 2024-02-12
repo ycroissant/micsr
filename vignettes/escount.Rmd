@@ -1,5 +1,5 @@
 ---
-title: "Using the escount package to fit count data models with endogenous switching or sample selection"
+title: "Endogenous switching or sample selection models for count data"
 header-includes:
   - \usepackage{xcolor}
 output: 
@@ -7,7 +7,7 @@ output:
 toc: false
 bibliography: ../inst/REFERENCES.bib
 vignette: >
-  %\VignetteIndexEntry{Using the escount package to fit count data models with endogenous switching or sample selection}
+  %\VignetteIndexEntry{Endogenous switching or sample selection models for count data}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

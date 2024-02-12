@@ -9,7 +9,7 @@ Authors@R: person("Yves",
 		  comment = c(ORCID = "0000-0002-4857-7736"))
 Depends: R (>= 4.0.0)
 Imports: Formula, Rdpack, sandwich, generics, tibble, ggplot2, rlang, dplyr, tidyr, purrr, knitr, magrittr, tidyselect
-Suggests: rmarkdown, modelsummary, bookdown, AER, censReg, sampleSelection, mlogit, MASS, lmtest, pscl, maxLik
+Suggests: rmarkdown, modelsummary, bookdown, AER, censReg, sampleSelection, mlogit, MASS, lmtest
 Description: Companion package to the forthcoming book Microeconometrics with R (Chapman and Hall/CRC The R Series). The package includes a set of estimators for models used in microeconometrics, especially for count data and limited dependent variables. Test functions include score test, hausman test, vuong test, sargan test and conditional moment test. A small subset of the data set used in the book is also included.
 Encoding: UTF-8
 License: GPL (>=2)
