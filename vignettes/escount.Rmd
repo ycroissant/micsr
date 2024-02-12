@@ -1,0 +1,438 @@
+---
+title: "Using the escount package to fit count data models with endogenous switching or sample selection"
+header-includes:
+  - \usepackage{xcolor}
+output: 
+  rmarkdown::html_vignette
+toc: false
+bibliography: ../inst/REFERENCES.bib
+vignette: >
+  %\VignetteIndexEntry{Using the escount package to fit count data models with endogenous switching or sample selection}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# Introduction
+
+In two seminal papers, @HECK:76 and @HECK:79 considered the case where
+two variable are jointly determined: a binomial variable and an
+outcome continuous variable. For example, the continuous variable can
+be the wage and the binomial variable the labor force
+participation. In this case, the wage is observed only for the
+sub-sample of the individuals who works. If the unobserved
+determinants of labor force participation are correlated with the
+unobserved determinants of wage, estimating the wage equation only on
+the subset of individuals who work will result in an inconsistent
+estimator. This case is called the **sample selection** model.
+
+An other example is the case where the binomial variable is a a dummy
+for private vs public sector. In this case the wage is observed for
+the whole sample (for the individuals in the public and in the private
+sector). But, once again, if the unobserved determinants of the
+chosen sector are correlated with those of the wage,
+estimating the wage equation only will leads to inconsistent
+estimators. This case is called the **endogenous switching** model. 
+
+Two consistent method of estimation can be used in this context:
+
+- the first one is a two-step method where, in a first step, a probit
+  model for the binomial variable is estimated and, in a second step,
+  the outcome equation is estimated by OLS with a supplementary
+  covariate which is a function of the linear predictor of the
+  probit^[More precisely the inverse Mills ratio.],
+- the second one is the maximum likelihood estimation of the system of
+  the two equations, assuming that the error terms are jointly
+  normally distributed.
+
+
+# Sample selection and endogenous switching for count data
+
+Let $y$ be a count response (for sake of simplicity a Poisson
+variable) and $z$ a binomial variable. The value of $z$ is given by
+the sign of $\alpha ^ \top z + \nu$, where $\nu$ is a standard normal
+deviate, $z$ a vector of covariates and $\alpha$ the associated vector
+of unknown parameters. The distribution of $y_n$ is Poisson with
+parameter $\lambda_n$, given by $\ln \lambda_n = \beta ^ \top x_n +
+\epsilon_n$ where $x$ is a second set of covariates (which can overlap
+with $z$), $\beta$ is the corresponding set of unknown parameters and
+$\epsilon$ is a random normal deviate with 0 mean and a standard
+deviation equal to $\sigma$. $\epsilon$ and $\nu$ being potentially
+correlated, their joint distribution has to be considered:
+
+$$
+f(\epsilon, \nu ; \sigma, \rho) = 
+\frac{1}{2\pi\sqrt{1 - \rho ^ 2}\sigma}
+e^{\displaystyle-\frac{1}{2} \frac{\left(\frac{\epsilon}{\sigma}\right) ^ 2 + \nu ^
+2 - 2 \rho \left(\frac{\epsilon}{\sigma}\right)\nu}{1 - \rho ^2}}
+= \frac{1}{\sqrt{2\pi}}\sigma e ^
+{-\frac{1}{2}\left(\frac{\epsilon}{\sigma}\right) ^ 2}
+\frac{1}{\sqrt{2\pi}\sqrt{1 - \rho ^ 2}}
+e^{-\frac{1}{2}\left(\frac{(\nu - \rho \epsilon / \sigma)}{\sqrt{1 -
+\rho ^ 2}}\right) ^ 2}
+$$
+
+The second expression classically gives the joint distribution as the
+product of the marginal distribution of $\epsilon$ and the conditional
+distribution of $\nu$.
+
+
+For $z=1$, the unconditional distribution of $y$ is obtained by
+integrating out $g(y_n \mid x_n, \epsilon_n, \nu_n, z_n = 1)$ with
+respect with the two random deviates:
+
+$$
+P(y_n \mid x_n, z_n = 1) = \int_{-\infty} ^ {+\infty}\int_{-\alpha ^ \top
+z_n} ^ {+ \infty} g(y_n \mid x_n, \epsilon_n, z_n = 1)
+f(\epsilon, \nu) d\epsilon d\nu
+$$
+
+$$
+P(y_n \mid x_n, z_n = 1) = \int_{-\infty} ^ {+\infty}
+g(y_n \mid x_n, \epsilon_n, z_n = 1)
+\left(\int_{-\alpha ^ \top z_n} ^ {+ \infty} 
+\frac{1}{\sqrt{2\pi}\sqrt{1 - \rho ^ 2}}
+e^{-\frac{1}{2}\left(\frac{(\nu - \rho \epsilon / \sigma)}{\sqrt{1 -
+\rho ^ 2}}\right) ^ 2} 
+d\nu\right)
+\frac{1}{\sqrt{2\pi}\sigma} e ^
+{-\frac{1}{2}\left(\frac{\epsilon}{\sigma}\right) ^ 2}
+d\epsilon
+$$
+
+By symetry of the normal distribution, the term in braquet is: 
+
+$$
+\Phi\left(\frac{\alpha ^ \top z_n + \rho / \sigma \epsilon}{\sqrt{1 -
+\rho ^ 2}}\right)
+$$
+
+which is the probability that $z = 1$ for a given value of
+$\epsilon$. The density of $y$ given that $z = 1$ is then:
+
+
+\begin{equation}
+P(y_n \mid x_n, z_n = 1) = \int_{-\infty} ^ {+\infty} \frac{e ^
+{-\mbox{exp}(\beta ^ \top x_n + \epsilon_n)}e^{y_n(\beta^\top x_n +
+\epsilon_n)}}{y_n!}\Phi\left(\frac{\alpha ^ \top z_n + \rho / \sigma \epsilon}{\sqrt{1 -
+\rho ^ 2}}\right)\frac{1}{\sqrt{2\pi}\sigma} e ^
+{-\frac{1}{2}\left(\frac{\epsilon}{\sigma}\right) ^ 2} d\epsilon
+(\#eq:probyz1)
+\end{equation}
+
+By symmetry, it is easily shown that $P(y_n \mid x_n, z_n = 0)$ is
+similar except that $\Phi\left( (\alpha ^ \top z_n + \rho / \sigma
+\epsilon) / \sqrt{1 - \rho ^ 2}\right)$ is replaced by $1 - \Phi\left(
+(\alpha ^ \top z_n + \rho / \sigma \epsilon) / \sqrt{1 - \rho ^
+2}\right) = \Phi\left( -(\alpha ^ \top z_n + \rho / \sigma \epsilon) /
+\sqrt{1 - \rho ^ 2}\right)$, so that a general formulation of the
+distribution of $y$ is, denoting $q = 2 z -1$:
+
+\begin{equation}
+(\#eq:proby)
+P(y_n \mid x_n) = \int_{-\infty} ^ {+\infty} \frac{e ^
+{-\mbox{exp}(\beta ^ \top x_n + \epsilon_n)}e^{y_n(\beta^\top x_n +
+\epsilon_n)}}{y_n!}\Phi\left(q_n\frac{\alpha ^ \top z_n + \rho / \sigma \epsilon}{\sqrt{1 -
+\rho ^ 2}}\right)\frac{1}{\sqrt{2\pi}\sigma} e ^
+{-\frac{1}{2}\left(\frac{\epsilon}{\sigma}\right) ^ 2} d\epsilon
+\end{equation}
+
+There is no closed form for this integral but, using the change of
+variable $\eta = \epsilon / \sqrt{2} / \sigma$, we get:
+
+$$
+P(y_n \mid x_n) = \int_{-\infty} ^ {+\infty} \frac{e ^
+{-\mbox{exp}(\beta ^ \top x_n + \sqrt{2} \sigma  \eta)}e^{y_n(\beta^\top x_n +
+\sqrt{2}\sigma\eta)}}{y_n!}\Phi\left(q_n\frac{\alpha ^ \top z_n + \sqrt{2} \rho  \eta}{\sqrt{1 -
+\rho ^ 2}}\right)\frac{1}{\sqrt{\pi}} e ^
+{-\eta ^ 2} d\eta
+$$
+
+which can be approximated using Gauss-Hermite quadrature. Denting
+$\eta_r$ the nodes and $\omega_r$ the weights:
+
+$$
+P(y_n \mid x_n) \approx 
+\sum_{r = 1} ^ R
+\omega_r \frac{e ^
+{-\mbox{exp}(\beta ^ \top x_n + \sqrt{2} \sigma  \eta_r)}e^{y_n(\beta^\top x_n +
+\sqrt{2}\sigma\eta_r)}}{y_n!}\Phi\left(q_n\frac{\alpha ^ \top z_n + \sqrt{2} \rho  \eta_r}{\sqrt{1 -
+\rho ^ 2}}\right)\frac{1}{\sqrt{\pi}} e ^
+{-\eta_r ^ 2}
+$$
+
+For the exogenous switching model, the contribution of one observation
+to the likelihood is given by \@ref(eq:proby). 
+
+For the sample selection model, the contribution of one observation to
+the likelihood is given by \@ref(eq:probyz1) if $z_n = 1$. If $z_n =
+0$, $y$ is unobserved and the contribution of such observations to the
+likelihood is the probability that $z_n = 0$, which is:
+
+\begin{equation}
+P(z_n = 0 \mid x_n) = \int_{-\infty} ^ {+\infty}
+\Phi\left(q_n\frac{\alpha ^ \top z_n + \rho / \sigma \epsilon}{\sqrt{1 -
+\rho ^ 2}}\right)\frac{1}{\sqrt{2\pi}\sigma} e ^
+{-\frac{1}{2}\left(\frac{\epsilon}{\sigma}\right) ^ 2} d\epsilon
+\end{equation}
+
+
+The ML estimator is computing intensive as the integral has no closed
+form. One alternative is to use non-linear least squares, by first
+computing the expectation of $y$. @TERZ:98 showed that, in the
+endogenous switching case:
+
+$$
+\mbox{E}(y_n\mid x_n) = \mbox{exp}\left(\beta ^ \top x_n + \ln \frac{\Phi\left(q_n(\alpha ^\top
+z_n + \theta)\right)}{\Phi\left(q_n(\alpha ^\top z_n)\right)}\right)
+$$
+
+For the sample selection case, we have:
+
+$$
+\mbox{E}(y_n\mid x_n, z_n = 1) = \mbox{exp}\left(\beta ^\top x_n + \ln \frac{\Phi(\alpha ^\top
+z_n + \theta)}{\Phi(\alpha ^ \top z_n)}\right)
+$$
+
+
+@GREE:01 noted that, taking a first order Taylor series of $\ln
+\frac{\Phi(\alpha ^\top z_n + \theta)}{\Phi(\alpha ^ \top z_n)}$
+around $\theta = 0$ gives: $\theta \phi(\alpha ^ \top z_n) /
+\Phi(\alpha ^ \top z_n)$, which is the inverse mills ratio that is
+used in the linear case in order to correct the inconsistency due to
+sample selection. As $\alpha$ can be consistently estimated by a
+probit model, the NLS estimator is obtained by minimizing with respect
+to $\beta$ and $\theta$ the sum of squares of the following residuals:
+
+$$
+y_n - e^{\displaystyle \beta ^ \top x_n + \ln
+\frac{\Phi(\hat{\alpha} ^ \top z_n + \theta)}{\Phi(\hat{\alpha}
+^ \top z_n)}}
+$$
+
+As it is customary for these two-steps estimator, the covariance
+matrix of the estimators should take into account the fact that
+$\alpha$ has been estimated in the first step. Moreover, only $\theta
+= \rho \sigma$ is estimated. To retrieve an estimator of $\sigma$,
+@TERZ:98 proposed to insert into the log-likelihood function the
+estimated values of $\alpha$, $\beta$ and $\theta$ and then to
+maximize it with respect to $\sigma$^[These once again requires to use
+Gauss-Hermite quadrature, but the problem is considerably simpler as
+the likelihood is maximized with respect with only one parameter.].
+
+# The `escount` function
+
+
+```{r }
+library("micsr")
+```
+
+
+The `escount` function estimates the endogenous switching and the
+sample selection model for count data. The first one is obtained by
+setting the `model` argument to `'es'` (the default) and the second
+one to `'ss'`. The estimation method is selected using the `method`
+argument, which can be either `'twosteps'` for the two-steps non-linear
+least squares model (the default) or `'ML'` for maximum
+likelihood. The model is described by an extended formula (using the
+**Formula** package) of the form:
+
+`y | d ~ x + y + z + d | x + y + w`
+
+which indicates that the two responses are `y` (the count) and `d` (the
+binomial variable), that the covariates are `x`, `y` and `z`
+for the count equation and `x`, `y` and `w` for the
+switching/selection equation. When there are two large sets of
+covariates that overlap, it is possible to define the second set of
+covariates by updating the first one:
+
+`y | d ~ x + y + z + d | . - d - z + w`
+
+`R` is an integer that indicates the number of points used for the
+Gauss-Hermite quadrature method. Relevant only for the ML method, the
+`hessian` argument is a boolean: if `TRUE`, the covariance matrix of
+the coefficients is estimated using the numerical hessian, which is
+computed using the `hessian` function of the **numDeriv**
+package, otherwise, the outer product of the gradient is used.
+
+`escount` returns an object of class `escount` which inherits from
+`lm`. 
+
+<!-- This is a list that contains usual items that can be found in -->
+<!-- `lm` objects and some more specific items: -->
+
+<!-- - `K` and `L` are the number of covariates in the count equation and -->
+<!--   in the binomial equation, -->
+<!-- - `sigma` and `rho` are the estimates of $\sigma$ and $\rho$ for the -->
+<!--   two-steps method. -->
+
+# Trips demand
+
+@TERZ:98 analyzed the number of trips taken by 577 individuals in the
+United States in 1978 the day before they were interviewed. The
+`trips` data set is included in the **micsr** package.A major
+determinant of trips demand is the availability of a car in the
+household. @TERZ:98 advocates that the unobserved determinants of the
+decision of having a car may be correlated with those of the trip
+demand equation. In this case the estimation of the Poisson model will
+lead to inconsistent estimators.  The covariates are the share of
+trips for work or school (`workschl`), the number of individuals in
+the household (`size`), the distance to the central business district
+(`dist`) a factor (`smsa`) with two levels for small and large urban
+area, the number of full-time worker in household (`fulltime`), the
+distance from home to nearest transit node, household income divided
+by the median income of the census tract (`realinc`), a dummy if the
+survey period is Saturday or Sunday (`weeekend`) and a dummy for
+owning at least a car (`car`). Although the coefficients are
+identified, as in the classic Heckman model by the non-linearity of
+the correction term, @TERZ:98 use a different set of variable for the
+binomial and the count parts of the model. Namely, the `weekend`
+covariate is removed and `adults` is added in the binomial part of the
+model.
+
+We first compute the two-steps NLS estimator. The `model` and `method`
+arguments needn't to be set are the default values are `es` (endogenous
+switching) and `twosteps` (two-steps NLS).
+
+```{r warning = FALSE}
+trips_2s <- escount(trips | car ~ workschl + size + dist + smsa + fulltime + distnod +
+                        realinc + weekend + car | . - car - weekend + adults,
+                    data = trips)
+names(trips_2s)
+```
+
+The result is a list with usual items, except
+<!-- `L` and `K` which are -->
+<!-- the number of the covariates in the binomial and in the count -->
+<!-- equations,  -->
+`sigma` and `rho` which are the estimates of $\sigma$ and
+$\rho$ obtained from the estimation of $\theta$.
+
+The print of the summary method returns the usual table of
+coefficients, the value of the objective function (the sum of squares
+residuals) and the estimated values of $\sigma$ and $\rho$:
+
+```{r }
+summary(trips_2s)
+```
+
+```{r tripsest, warning = FALSE}
+trips_pois <- glm(trips ~ workschl + size + dist + smsa + fulltime + distnod +
+                      realinc + weekend + car, data = trips, family = poisson)
+trips_ml <- update(trips_2s, method = "ml")
+```
+
+The following table presents the results of a Poisson estimation
+and of the endogenous switching model, estimated by the two-steps
+non-linear least squares method and by maximum likelihood.
+
+
+```{r tripsres, warning = FALSE, echo = FALSE}
+if (requireNamespace("modelsummary")){
+    library("modelsummary")
+    msummary(list("Poisson" = trips_pois, "2 steps" = trips_2s, "ML" = trips_ml),
+             label = "tab:tripsres",
+             title = "Estimation results for the trip demand model")
+}
+```
+
+The coefficient of `car` is equal to 1.413 for the Poisson model,
+which implies that the number of trips increases by $e^{1.413} - 1 =
+311$% for individuals who belongs to households that own at least one
+car. The coefficient is much higher in the selection models (2.796 for
+the 2-step estimator and 2.160 for the ML estimator), which implies an
+increase of 767% for the ML estimator. The Poisson estimator
+is therefore downward biased, which indicates a negative correlation
+between the unobserved part of the trips demand equation and the
+propensity to own a car equation.
+
+# Physician advice and alcohol consumption
+
+@KENK:TERZ:01 investigate the effect of physician's advice on alcohol
+consumption. The outcome variable `drinks` is the number of drinks in
+the past 2 weeks and the selection variable `advice` is a dummy based
+on the respondents' answer to the question "Have you ever been told
+by a physician to drink less". The unobserved part of the equation
+indicating the propensity to receive an advice form the physician can
+obviously be correlated with the one of the alcohol consumption
+equation. The data set `drinks` is part of the **micsr
+package. The covariates are monthly income in thousands of dollars
+(`income`), `age` (a factor with six 10 years categories of age),
+education in years (`educ`), `race` (a factor with levels `white`,
+`black` and `other`), the marital status (`marital`, a factor with
+levels `single`, `married`, `widow`, `separated`), the employment
+status (a factor `empstatus` with levels `other`, `emp` and `unemp`)
+and the region (`region`, a factor with levels `west`, `northeast`,
+`midwest` and `south`). For the binomial part of the model, the same
+covariates are used (except of course `advice`) and 10 supplementary
+covariates indicating the insurance coverage and the health status are
+added.
+
+```{r drinksest, warning = FALSE, cache = TRUE}
+kt_pois <- glm(drinks ~ advice + income + age + educ + race + marital + empstatus +
+                   region, data = drinks, family = poisson)
+kt_ml <- escount(drinks | advice ~ advice + income + age + educ + race + marital +
+                     empstatus + region | income + age + educ + race + marital +
+                     empstatus + region + medicare + medicaid + champus + hlthins +
+                     regmed + dri + limits + diabete + hearthcond + stroke,
+                 data = drinks, method = "ml")
+kt_2s <- update(kt_ml, method = "twosteps")
+```
+
+
+The following table presents the results of a Poisson
+estimation and of the endogenous switching model, estimated by the
+two-steps non-linear least squares method and maximum likelihood^[The
+coefficients of `marital`, `empstatus` and `region` are omitted to
+save place.].
+
+```{r drinksres, warning = FALSE, eval = TRUE, echo = FALSE}
+msummary(list("Poisson" = kt_pois, "2 steps" = kt_2s, "ML" = kt_ml),
+         gof_omit = "AIC|BIC|Log.Lik.",
+         label = "tab:drinksres",
+         coef_omit = "region|marital|empstatus|age",
+         title = "Poisson and endogenous switching models for alcohol demand")
+```
+
+The coefficient of `advice` in the alcohol demand equation is positive
+in the Poisson model, which would imply that a positive effect of
+physical advice on alcohol consumption. The estimation of the
+endogenous switching model shows that this positive coefficient is
+due to the positive correlation between the error terms of the two
+equations (the unobserved propensities to drink and to receive an
+advice from a physician are positively correlated).
+
+<!-- # Job changes -->
+
+<!-- @WYSZ:MARR:18 analyzed the determinants of the number of job -->
+<!-- changes. The data set `soep` (included in the **escount** package) is -->
+<!-- an extract of the German Socio-Economic Panel survey of 1984. It -->
+<!-- concerns 2651 individuals and the response `djc` is the number of -->
+<!-- direct job changes (changes without an intervening spell of -->
+<!-- unemployment). Obviously this variable is observed only for -->
+<!-- individuals who are part of the job market, which corresponds to a -->
+<!-- value equal to 1 for the selection variable `lfp`. The covariates for -->
+<!-- the count equation are `spd` (a factor indicating if the individual is -->
+<!-- a strong or a very strong supporter of the social-democrat party in -->
+<!-- Germany), `whitecol` (a factor indicating it the individual is a white -->
+<!-- collar) and `educ` (number of years of education). For the selection -->
+<!-- equation, the covariates are `single` (a factor indicating if the -->
+<!-- individual is single), `whitecol` and `exper` (full-time employment in -->
+<!-- years). The results are presented in table \@ref(tab:soepres). -->
+
+<!-- ```{r soepest, warning = FALSE, cache = TRUE} -->
+<!-- soep_pois <- glm(djc ~ spd + whitecol + educ, data = soep, family = poisson) -->
+<!-- soep_2s <- escount(djc | lfp ~ spd + whitecol + educ | single + whitecol + exper, -->
+<!--                    data = soep, model = "ss") -->
+<!-- soep_ml <- update(soep_2s, method = "ml") -->
+<!-- ``` -->
+
+<!-- ```{r soepres, warning = FALSE, eval = FALSE} -->
+<!-- msummary(list("Poisson" = soep_pois, "2 steps" = soep_2s, "ML" = soep_ml), -->
+<!-- #         gof_omit = "AIC|BIC|Log.Lik.", -->
+<!--          label = "tab:soepres", -->
+<!--          title = "Poisson and selection models for the job change model") -->
+<!-- ``` -->
+
+
+# References
+
