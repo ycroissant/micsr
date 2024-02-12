@@ -2,6 +2,7 @@
 % Please edit documentation in R/methods.R
 \name{micsr}
 \alias{micsr}
+\alias{llobs}
 \alias{coef.micsr}
 \alias{vcov.micsr}
 \alias{summary.micsr}
@@ -19,11 +20,14 @@
 \alias{vcovHC.micsr}
 \alias{bread.micsr}
 \alias{nobs.micsr}
-\alias{llcont.micsr}
+\alias{llobs.micsr}
+\alias{llobs.mlogit}
 \alias{tidy.micsr}
 \alias{glance.micsr}
 \title{\code{micsr} class}
 \usage{
+llobs(x, ...)
+
 \method{coef}{micsr}(object, ..., subset = NA)
 
 \method{vcov}{micsr}(object, ..., vcov = c("info", "hessian", "opg"), subset = NA)
@@ -63,13 +67,17 @@
 
 \method{nobs}{micsr}(object, ...)
 
-\method{llcont}{micsr}(x, ...)
+\method{llobs}{micsr}(x, ...)
+
+\method{llobs}{mlogit}(x, ...)
 
 \method{tidy}{micsr}(x, conf.int = FALSE, conf.level = 0.95, ...)
 
 \method{glance}{micsr}(x, ...)
 }
 \arguments{
+\item{x, object}{an object which inherits the \code{micsr} class}
+
 \item{...}{further arguments}
 
 \item{subset}{a character which indicates which subset of
@@ -78,7 +86,7 @@ coefficients except those corresponding to instrumental
 variables), \code{all}, \code{covar} (only the coefficients of the
 covariates), \code{inst} (only the coefficients of the instrumental
 variables) and \code{misc} (ony the "miscelanous" coefficients,
-typicaly a standard deviation or a coefficient of correlation),}
+typicaly a standard deviation or a coefficient of correlation)}
 
 \item{vcov}{the method used to compute the covariance matrix of the
 estimators (only for the ML estimator), one of \code{hessian} (the
@@ -86,13 +94,11 @@ opposite of the inverse of the hessian), \code{info} (the inverse of
 the opposite of the expected value of the hessian), \code{opg} (the
 outer product of the gradient)}
 
-\item{x, object}{an object which inherits the \code{micsr} class,}
-
-\item{digits, width}{see \code{base::print}}
+\item{digits, width}{see \code{print}}
 
 \item{type, omega, sandwich}{see \code{sandwich::sandwich}}
 
-\item{k}{see \code{stats::AIC}}
+\item{k}{see \code{AIC}}
 
 \item{newdata}{a new data frame to compute the predictions}
 

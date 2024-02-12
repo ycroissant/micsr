@@ -17,12 +17,11 @@ ordreg(
 )
 }
 \arguments{
-\item{formula}{a symbolic description of the model, (for the count
-component and for the selection equation).}
+\item{formula}{a symbolic description of the model}
 
-\item{data}{a data frame,}
+\item{data}{a data frame}
 
-\item{subset, weights, na.action, offset}{see \code{stats::lm},}
+\item{subset, weights, na.action, offset}{see \code{lm}}
 
 \item{link}{one of \code{probit} and \code{logit}}
 
@@ -36,10 +35,10 @@ an object of class \code{micsr}, see \code{micsr::micsr} for further
 details
 }
 \description{
-A unified interface perform binomial regression calling \code{lm} to fit
-the linear-probability model and \code{glm} to fit the probit and the
-logit model.
+Maximum-likelihood estimation of a model for which the response is
+ordinal
 }
 \examples{
 mod1 <- ordreg(factor(dindx) ~ rhs1 + catchup, fin_reform, link = "logit")
 }
+\keyword{models}

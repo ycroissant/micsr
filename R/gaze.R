@@ -1,27 +1,31 @@
 #' Short print of the summary of an object
 #'
 #' `print` and `print.summary` methods often returns long input, which
-#' is suitable for the console, but to verbal for a printed output
-#' like a book or an article written using quarto. `sight` is a generic
+#' is suitable for the console, but too verbal for a printed output
+#' like a book or an article written using quarto. `gaze` is a generic
 #' function which prints a short output
-#' @name sight
+#' @name gaze
 #' @param x an object,
 #' @param ... further arguments for the different methods,
 #' @param first_stage a boolean for the `rdrobust::rdrobust` method,
-#'     if `TRUE` the results of the first stage estimation,
+#'     if `TRUE` the results of the first stage estimation are printed
 #' @param coef the coefficients to be printed
 #' @param digits the number of digits for the `lm` and the `ivreg`
 #'     methods
 #' @param signif.stars a boolean indicating whether the stars should
 #'     be printed
 #' @return invisibly its first argument
+#' @keywords misc
+#' @examples
+#' t.test(extra ~ group, sleep) %>% gaze
+#' lm(dist ~ poly(speed, 2), cars) %>% gaze
+#' lm(dist ~ poly(speed, 2), cars) %>% gaze(coef = "poly(speed, 2)2")
 #' @export
-sight <- function(x, ...) UseMethod("sight")
+gaze <- function(x, ...) UseMethod("gaze")
 
-
-#' @rdname sight
+#' @rdname gaze
 #' @export
-sight.lm <- function(x, ..., coef = NULL,
+gaze.lm <- function(x, ..., coef = NULL,
                        digits = max(3L, getOption("digits") - 3L), 
                        signif.stars = FALSE){
   .coef <- coef
@@ -35,25 +39,25 @@ sight.lm <- function(x, ..., coef = NULL,
   invisible(x)
 }
 
-#' @rdname sight
+#' @rdname gaze
 #' @export
-sight.micsr <- function(x, ..., coef = NULL,
+gaze.micsr <- function(x, ..., coef = NULL,
                         digits = max(3L, getOption("digits") - 3L), 
                         signif.stars = FALSE){
-  sight.lm(x, ..., coef = coef, digits = digits, signif.stars = signif.stars)
+  gaze.lm(x, ..., coef = coef, digits = digits, signif.stars = signif.stars)
 }
 
-#' @rdname sight
+#' @rdname gaze
 #' @export
-sight.ivreg <- function(x, ..., coef,
+gaze.ivreg <- function(x, ..., coef,
                           digits = max(3L, getOption("digits") - 3L), 
                           signif.stars = getOption("show.signif.stars")){
-  sight.lm(x, ..., coef = coef, digits = digits, signif.stars = signif.stars)
+  gaze.lm(x, ..., coef = coef, digits = digits, signif.stars = signif.stars)
 }
 
-#' @rdname sight
+#' @rdname gaze
 #' @export
-sight.rdrobust <- function(x, ..., first_stage = FALSE){
+gaze.rdrobust <- function(x, ..., first_stage = FALSE){
     cat(paste("Bandwidth (N used)     : ", sprintf("%3.3f", x$bws[1, 1]), " (", sum(x$N_h), ")\n", sep = ""))
 
     if (! is.null(x$tau_T) & first_stage){
@@ -87,9 +91,9 @@ sight.rdrobust <- function(x, ..., first_stage = FALSE){
     invisible(x)
 }
 
-#' @rdname sight
+#' @rdname gaze
 #' @export
-sight.CJMrddensity <- function(x, ...){
+gaze.CJMrddensity <- function(x, ...){
     nobs <- c(x$N$eff_left, x$N$eff_right)
     stat <- x$test$t_jk
     pval <- x$test$p_jk
@@ -100,9 +104,9 @@ sight.CJMrddensity <- function(x, ...){
     invisible(x)
 }
 
-#' @rdname sight
+#' @rdname gaze
 #' @export
-sight.htest <- function(x, ..., digits = 3){
+gaze.htest <- function(x, ..., digits = 3){
     # name_raw = raw (mean-sd)
     # name = stat
     # df = param
@@ -185,9 +189,9 @@ sight.htest <- function(x, ..., digits = 3){
     invisible(x)
 }
 
-#' @rdname sight
+#' @rdname gaze
 #' @export
-sight.anova <- function(x, ..., digits = 3){
+gaze.anova <- function(x, ..., digits = 3){
     if ("Chisq" %in% names(x)){
         .stat <- c("Chisq" = x$Chisq[2])
         .pval <- x[["Pr(>Chisq)"]][2]
@@ -202,15 +206,15 @@ sight.anova <- function(x, ..., digits = 3){
     }
     .result <- structure(list(method = "anova", statistic = .stat,
                               parameter = .param, p.value = .pval), class = "htest")
-    sight(.result, ..., digits = 3)
+    gaze(.result, ..., digits = 3)
 }
     
 
-#' @rdname sight
+#' @rdname gaze
 #' @export
-sight.LMtestlist <- function(x, ..., digits = 3){
+gaze.LMtestlist <- function(x, ..., digits = 3){
     .sprint <- paste("%6.", digits, "f", sep = "")
-    if (length(x) == 1) sight(x[[1]], ..., digits= digits)
+    if (length(x) == 1) gaze(x[[1]], ..., digits= digits)
     else{
         .name <- unname(sapply(x, function(x) names(x$statistic)))
         .nchar <- nchar(.name)

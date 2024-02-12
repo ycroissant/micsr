@@ -8,9 +8,16 @@
 #' @return
 #' An object of class `micsr`
 #' @author Yves Croissant
+#' @keywords models
 #' @examples
-#' lm(dist ~ log(speed), cars)
-#' loglm(dist ~ log(speed), cars)
+#' lm_model <- lm(log(dist) ~ log(speed), cars)
+#' log_model <- loglm(dist ~ log(speed), cars)
+#' coef(lm_model)
+#' coef(log_model)
+#' # same coefficients, supplementary sigma coefficient for `loglm`
+#' logLik(lm_model)
+#' logLik(log_model)
+#' # log_model returns the correct value for the log-likelihood
 #' @export
 loglm <- function(formula, data){
     cl <- match.call()
@@ -40,19 +47,20 @@ loglm <- function(formula, data){
                        default = c("covariates", "sigma"))
     # insert log(y) as the response
     mf[[1]] <- log(mf[[1]])
-    .logLik <- structure(sum(.lnl), nobs = length(y), df = length(coef(lm_reg) + 1), class = "logLik")
+    .logLik <- c()
+    .logLik["model"] <- structure(sum(.lnl), nobs = length(y), df = length(coef(lm_reg) + 1), class = "logLik")
     result <- structure(list(coefficients = c(coef(lm_reg), sigma = sig),
                              model = mf,
                              gradient = .gradient,
                              hessian = .hessian,
                              linear.predictor = mu,
-                             logLik = .lnl,
+                             logLik = .logLik,
                              fitted.values = fitted(lm_reg),
                              residuals = resid(lm_reg),
                              est_method = "ml",
                              formula = formula,
                              npar = .npar,
-                             value = .logLik,
+                             value = .lnl,
                              call = cl,
                              terms = mt),
                         class = c("micsr", "lm"))

@@ -12,75 +12,75 @@ tobit1(
   start = NULL,
   left = 0,
   right = Inf,
-  scedas = c("exp", "pnorm"),
+  scedas = NULL,
   sample = c("censored", "truncated"),
-  method = c("ml", "lm", "twosteps", "trimmed", "nls"),
+  method = c("ml", "lm", "twosteps", "trimmed", "nls", "minchisq", "test"),
   trace = FALSE,
   ...
 )
 }
 \arguments{
 \item{formula}{a symbolic description of the model; if two right
-hand sides are provided, the second one is used to parametrize
-the conditional variance,}
+hand sides are provided, the second one described the set of
+instruments if \code{scedas} is \code{NULL}, which is the
+default. Otherwise, the second part indicates the set of
+covariates for the variance function}
 
-\item{data}{a data frame,}
-
-\item{subset}{a subset,}
-
-\item{weights}{an optional vector of weights (currently only
-supported by ml method}
+\item{data, subset, weights}{see \code{lm}}
 
 \item{start}{an optional vector of starting values}
 
-\item{left, right}{left and right limits of the dependent
-variable. The default is respectively 0 and +Inf which
+\item{left, right}{left and right truncation points for the response
+The default is respectively 0 and +Inf which
 corresponds to the most classic (left-zero truncated) tobit
-model,}
+model}
 
 \item{scedas}{the functional form used to specify the conditional
-variance, which is of the form: s_n = s_o f(Z'g), where Z are
-the covariates indicated in the second part of the formula and
-z_o and g a set of parameters to estimate. Currently, f can
-either be set to \code{"exp"} or \code{"pnorm"},}
+variance, either \code{"exp"} or \code{"pnorm"}}
 
 \item{sample}{either \code{"censored"} (the default) to estimate the
 censored (tobit) regression model or \code{"truncated"} to estimated
-the truncated regression model,}
+the truncated regression model}
 
 \item{method}{one of \code{"ml"} for maximum likelihood, \code{"lm"} for
-(biased) least squares estimators and \code{"twosteps"} for two-steps
-consistent estimators, \code{"trimmed"} for symetrically censored
-estimator,}
+(biased) least squares estimators, \code{"twosteps"} for
+two-steps consistent estimators, \code{"trimmed"} for symetrically
+censored estimator, \code{"minchisq"} and \code{"test"}. The last two are
+only relevant for instrumental variable estimation (when the
+formula is a two-parts formula and \code{scedas} is \code{NULL})}
 
 \item{trace}{a boolean (the default if \code{FALSE}) if \code{TRUE} some
-information about the optimization process is printed,}
+information about the optimization process is printed}
 
-\item{...}{further arguments.}
+\item{...}{further arguments}
 }
 \value{
-An object of class \code{c('tobit1', 'lm')}, which is a list containg the following components:
+An object of class \code{c("tobit1", "lm")}, which is a list
+containg the following components:
 \itemize{
-\item coefficients: a named vector of coefficients,
-\item linear.predictor: the linear fit,
-\item fitted.values: the fitted values,
-\item residuals: the residuals,
-\item df.residual: the residual degrees of freedom,
-\item hessian: the hessian of the log-likelihood function at the optimum,
+\item coefficients: a named vector of coefficients
+\item linear.predictor: the linear fit
+\item fitted.values: the fitted values
+\item residuals: the residuals
+\item df.residual: the residual degrees of freedom
+\item hessian: the hessian of the log-likelihood function at the
+optimum
 \item vcov: an estimator of the covariance matrix of the coefficients,
-\item gradObs: a N x K matrix containing the individual contributions to the gradient,
-\item logLik: the value of the log-likelihood at the optimum,
-\item model: the model frame,
-\item terms: the terms object used,
+\item gradient: a N x K matrix containing the individual contributions
+to the gradient
+\item logLik: the value of the log-likelihood at the optimum
+\item model: the model frame
+\item terms: the terms object used
 \item call: the matched call
 \item xlevels: a record of the levels of the factors used in fitting
-\item na.action: intormation returned by \code{model.frame} on the special handling of \code{NA}'s.
+\item na.action: intormation returned by \code{model.frame} on the special
+handling of \code{NA}'s
 }
 }
 \description{
 Estimation of models for which the response is truncated, either on
-censored or truncated samples using linear models, maximum
-likelihood or two-steps estimators
+censored or truncated samples using OLS, NLS, maximum
+likelihood, two-steps estimators or trimmed estimators
 }
 \examples{
 charitable$logdon <- with(charitable, log(donation) - log(25))
@@ -88,6 +88,7 @@ ml <- tobit1(logdon ~ log(donparents) + log(income) + education +
              religion + married + south, data = charitable)
 scls <- update(ml, method = "trimmed")
 tr <- update(ml, sample = "truncated")
+nls <- update(tr, method = "nls")
 }
 \references{
 \insertRef{POWE:86}{micsr}
@@ -95,3 +96,4 @@ tr <- update(ml, sample = "truncated")
 \author{
 Yves Croissant
 }
+\keyword{models}

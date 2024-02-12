@@ -33,3 +33,16 @@ an object of class \code{clm} which inherits from class \code{lm}
 Compute the least squares estimator using linear constrains on the
 coefficients.
 }
+\examples{
+# Cobb-Douglas production function for the apple data set
+# First compute the total production
+apples <- apples \%>\% mutate(prod = apples + otherprod)
+# unconstrained linear model
+cd <- lm(log(prod) ~ log(capital) + log(labor) +
+         log(materials), apples)
+# constrained linear model imposing constant
+# return to scales
+crs <- clm(cd, R = matrix(c(0, 1, 1, 1), nrow = 1),
+               q = 1)
+}
+\keyword{models}

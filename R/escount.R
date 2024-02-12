@@ -1,26 +1,24 @@
 #' Endogenous switching and sample selection models for count data
 #'
-#' Heckman's like estimator are extended to count data, using either
-#' non-linear least squares, using a correction term computed from a
-#' first-stage probit estimation or maximum likelihood
-#'
+#' Heckman's like estimator for count data, using either
+#' maximum likelihood or a two-steps estimator
+#' 
 #' @name escount
-#' @param formula a Formula object which includes two responses (the
+#' @param formula a `Formula` object which includes two responses (the
 #'     count and the binomial variables) and two sets of covariates
-#'     (for the count component and for the selection equation).
+#'     (for the count component and for the selection equation)
 #' @param data a data frame,
 #' @param subset,weights,na.action,offset see `stats::lm`
 #' @param start an optional vector of starting values,
 #' @param R the number of points for the Gauss-Hermite quadrature
-#'     approximation,
 #' @param hessian if `TRUE`, the numerical hessian is computed,
 #'     otherwise the covariance matrix of the coefficients is computed
-#'     using the outer product of the gradient,
+#'     using the outer product of the gradient
 #' @param method one of `'ML'` for maximum likelihood estimation (the
-#'     default) or `'twosteps'` for the two-steps NLS method,
+#'     default) or `'twosteps'` for the two-steps NLS method
 #' @param model one of `'es'` for endogenous switching (the default)
-#'     or `'ss'` for sample selection.
-#' @return an object of class `'escount'` and `'micsr'` which is a
+#'     or `'ss'` for sample selection
+#' @return an object of class `c("escount,micsr)"`, a
 #'     list containing the following components:
 #' - coefficients: a  named vector of coefficients,
 #' - sigma, rho: the estimated values of sigma and rho for the `twosteps` method,
@@ -39,14 +37,14 @@
 #'     model.frame model.offset model.weights formula fitted nobs
 #'     optim pchisq pnorm poisson printCoefmat vcov binomial dnorm
 #'     dpois
+#' @keywords models
 #' @importFrom Formula Formula model.part
-#' @importFrom numDeriv grad
-#' @importFrom statmod gauss.quad
 #' @author Yves Croissant
 #' @references \insertRef{TERZ:98}{micsr}
 #' 
 #' \insertRef{GREE:01}{micsr}
 #' @importFrom Rdpack reprompt
+#' @importFrom Formula Formula model.part
 #' @examples
 #' trips_2s <- escount(trips | car ~ workschl + size + dist + smsa + fulltime + distnod +
 #' realinc + weekend + car | . - car - weekend + adults, data = trips, method = "twosteps")
@@ -138,7 +136,8 @@ escount <- function(formula,
         # The likelihood function for the Terza model, approximated using
         # gauss-hermite quadratures
         lnl <- function(param, gradient = FALSE, sum = FALSE, R = 16){
-            rn <- gauss.quad(R, kind = "hermite")
+#            rn <- statmod::gauss.quad(R, kind = "hermite")
+            rn <- gaussian_quad(R, "hermite")
             alpha <- param[1:L]
             beta <- param[L + c(1:K)]
             beta <- param[1:K]
@@ -326,7 +325,8 @@ escount <- function(formula,
 
         # objFun compute the log-likelihood function as a function of
         # sig only
-        rn <- gauss.quad(R, kind = "hermite")
+#        rn <- statmod::gauss.quad(R, kind = "hermite")
+        rn <- gaussian_quad(R, kind = "hermite")
 
         sig <- abs(2 * htheta)
         objFun <- function(sig){

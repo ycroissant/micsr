@@ -1,12 +1,15 @@
 #' Hausman test
 #'
-#' Hausman test 
+#' Hausman test; under the null both models are consistent but one of
+#' them is more efficient, under the alternative, only one model is
+#' consistent
 #'
-#' @name haustest
+#' @name hausman
 #' @param x the first model,
 #' @param y the second model
 #' @param omit a character containing the effects that are removed from the test
-#' @return a list with class `'htest'` containing the following components:
+#' @param ... further arguments
+#' @return an object of class `"htest"` containing the following components:
 #' - data.mane: a character string describing the fitted model
 #' - statistic: the value of the test statistic
 #' - parameter: degrees of freedom
@@ -18,15 +21,30 @@
 #' @importFrom stats pchisq
 #' @references
 #' \insertRef{HAUS:78}{micsr}
-#' @examples
-#' charitable$logdon <- with(charitable, log(donation) - log(25))
-#' char_form <- logdon ~ log(donparents) + log(income) +
-#'     education + religion + married + south
-#' ml <- tobit1(char_form, data = charitable)
-#' scls <- update(ml, method = "trimmed")
-#' haustest(scls, ml, omit = "(Intercept)")
+hausman <- function(x, y, omit = FALSE, ...)
+    UseMethod("hausman")
+
+#' @rdname hausman
 #' @export
-haustest <- function(x, y, omit = NULL){
+hausman.ivreg <- function(x, y, omit = FALSE, ...){
+    .stat <- summary(x)$diagnostics["Wu-Hausman", ]
+    .parameter <- .stat[1]
+    .statistic <- .stat[3]
+    names(.statistic) <- "chisq"
+    .pval <- .stat[4]
+    .method <- "Hausman Test"
+    .data.name <- paste(deparse(formula(x)))
+    rval <- list(statistic = .statistic,
+                 parameter = .parameter,
+                 p.value = .pval,
+                 method = .method,
+                 data.name = .data.name)
+    structure(rval, class = "htest")
+}
+
+#' @rdname hausman
+#' @export
+hausman.micsr <- function(x, y, omit = NULL, ...){
     .data.name <- paste(paste(deparse(substitute(x))), "vs",
                        paste(deparse(substitute(y))))
     nms_x <- names(coef(x))
@@ -53,7 +71,65 @@ haustest <- function(x, y, omit = NULL){
     return(res)
 }
 
+#' F statistic
+#'
+#' Extract the F statistic that all the parameters except the
+#' intercept are zero. Currently implemented only for models fitted by `lm` or `ivreg::ivreg`.
+#' @name ftest
+#' @param x a fitted object
+#' @param covariate the covariate for which the test should be performed for the `ivreg` method
+#' @param ... further arguments
+#' @return an object of class `"htest"`
+#' @importFrom stats pf
+#' @keywords htest
+#' @export
+ftest <- function(x, ...){
+    UseMethod("ftest")
+}
 
+#' @rdname ftest
+#' @export
+ftest.lm <- function(x, ...){
+    .fstat <- summary(x)$fstatistic
+    .statistic <- .fstat["value"]
+    names(.statistic) <- "F"
+    .parameter <- .fstat[2:3]
+    .method <- "F test"
+    .data.name <- paste(deparse(formula(x)))
+    .pval <- pf(.statistic, .parameter[1], .parameter[2], lower.tail = FALSE)
+    rval <- list(statistic = .statistic,
+                 parameter = .parameter,
+                 p.value = .pval,
+                 method = .method,
+                 data.name = .data.name)
+    structure(rval, class = "htest")
+}
+                 
+
+#' @rdname ftest
+#' @export
+ftest.ivreg <- function(x, ..., covariate = NULL){
+    .fstat <- summary(x)$diagnostics
+    wi_rows <- grep("Weak instruments", rownames(.fstat))
+    .fstat <- .fstat[wi_rows, , drop = FALSE]
+    if (! is.null(covariate)) .covariate <- grep(covariate, rownames(.fstat))
+    else .covariate <- 1
+    if (length(.covariate) > 1) stop("several covariates")
+    if (nrow(.fstat) > 1) .fstat <- .fstat[.covariate, ]
+    .statistic <- .fstat["statistic"]
+    .parameter <- .fstat[1:2]
+    .method <- "F test"
+    names(.statistic) <- "F"
+    .data.name <- paste(deparse(formula(x)))
+    .pval <- pf(.statistic, .parameter[1], .parameter[2], lower.tail = FALSE)
+    rval <- list(statistic = .statistic,
+                 parameter = .parameter,
+                 p.value = .pval,
+                 method = .method,
+                 data.name = .data.name)
+    structure(rval, class = "htest")
+}    
+    
 #' Score test
 #'
 #' Score test, also knowned as Lagrange multiplier tests
@@ -64,13 +140,14 @@ haustest <- function(x, y, omit = NULL){
 #' @param vcov omit a character containing the effects that are
 #'     removed from the test
 #' @param ... further arguments
-#' @return a list with class `'htest'` containing the following
-#'     components: - data.mane: a character string describing the
-#'     fitted model - statistic: the value of the test statistic -
-#'     parameter: degrees of freedom - p.value: the p.value of the
-#'     test - method: a character indicating what type of test is
-#'     performed - alternative: a character indicating the alternative
-#'     hypothesis
+#' @return an object of `'htest'` containing the following
+#'     components:
+#' - data.mane: a character string describing the fitted model
+#' - statistic: the value of the test statistic
+#' - parameter: degrees of freedom
+#' - p.value: the p.value of the test
+#' - method: a character indicating what type of test is performed
+#' - alternative: a character indicating the alternative hypothesis
 #' @keywords htest
 #' @author Yves Croissant
 #' @importFrom stats pchisq
@@ -123,23 +200,65 @@ scoretest.micsr <- function(x, y, ..., vcov = NULL){
               class = "htest")    
 }
 
-
-#' F statistic
+#' Sargan test for GMM models
 #'
-#' Extract the F statistic that all the parameters except the
-#' intercept are zero. Currently implemented only for models that
-#' inherits `"lm"`.
-#' @name fstat
-#' @param x a fitted object
-#' @return an object of class `"htest"`
-#' @importFrom stats pf
+#' When a IV model is over-identified, the set of all the empirical
+#' moment conditions can't be exactly 0. The test of the validity of
+#' the instruments is based on a quadratic form of the vector of the
+#' empirical moments
+#' 
+#' @name sargan
+#' @param object a model fitted by GMM
+#' @param ... further arguments
+#' @return an `htest` object
+#' @keywords htest
+#' @examples
+#' cigmales <- cigmales %>%
+#'        mutate(age2 = age ^ 2, educ2 = educ ^ 2,
+#'               age3 = age ^ 3, educ3 = educ ^ 3,
+#'               educage = educ * age)
+#' gmm_cig <- expreg(cigarettes ~ habit + price + restaurant + income + age + age2 +
+#'                  educ + educ2 + famsize + race | . - habit + age3 + educ3 +
+#'                  educage + lagprice + reslgth, data = cigmales,
+#'                  twosteps = FALSE)
+#' sargan(gmm_cig)
 #' @export
-fstat <- function(x){
-    if (! inherits(x, "lm")) stop("The F statistic is only defined for linear models")
-    .fstat <- summary(x)$fstatistic
-    .statistic <- c(F = unname(.fstat["value"]))
-    .pval <- pf(.fstat["value"], df1 = .fstat["numdf"], df2 = .fstat["dendf"], lower.tail = FALSE)
-    structure(list(data.name = paste(deparse(x$call)), statistic = .statistic, parameter = c(.fstat["numdf"], .fstat["dendf"]),
-                   method = "F test", p.value = .pval),
+sargan <- function(object, ...){
+    UseMethod("sargan")
+}
+
+#' @rdname sargan
+#' @export
+sargan.ivreg <- function(object, ...){
+    .fstat <- summary(object)$diagnostics["Sargan", ]
+    .statistic <- .fstat["statistic"]
+    .parameter <- .fstat[1]
+    .method <- "Sargan test"
+    names(.statistic) <- "chisq"
+    .data.name <- paste(deparse(formula(object)))
+    .pval <- pchisq(.statistic, .parameter, lower.tail = FALSE)
+    rval <- list(statistic = .statistic,
+                 parameter = .parameter,
+                 p.value = .pval,
+                 method = .method,
+                 data.name = .data.name)
+    structure(rval, class = "htest")
+}
+
+#' @rdname sargan
+#' @export
+sargan.micsr <- function(object, ...){
+    if (! object$est_method %in% c("iv", "gmm")) stop("Sargan test only relevant for GMM models")
+    .stat <- nobs(object) * object$value
+    .df <- object$L - object$K
+    .pval <- pchisq(.stat, .df, lower.tail = FALSE)
+    .data <- deparse(object$call$data)
+    structure(list(statistic = c(chisq = .stat),
+                   parameter = c(df = .df),
+                   method = "Sargan Test",
+                   p.value = .pval,
+                   data.name = .data,
+                   alternative = "the moment conditions are not valid"),
               class = "htest")
 }
+

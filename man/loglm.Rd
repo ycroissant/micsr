@@ -17,9 +17,16 @@ Estimation of log-linear model; the estimation is done by \code{lm}, but
 the correct log-likelihood related quantities are returned
 }
 \examples{
-lm(dist ~ log(speed), cars)
-loglm(dist ~ log(speed), cars)
+lm_model <- lm(log(dist) ~ log(speed), cars)
+log_model <- loglm(dist ~ log(speed), cars)
+coef(lm_model)
+coef(log_model)
+# same coefficients, supplementary sigma coefficient for `loglm`
+logLik(lm_model)
+logLik(log_model)
+# log_model returns the correct value for the log-likelihood
 }
 \author{
 Yves Croissant
 }
+\keyword{models}

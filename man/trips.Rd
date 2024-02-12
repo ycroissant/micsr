@@ -12,7 +12,7 @@ a tibble containing:
 \item workschl: share of trips for work or school vs personal business or pleasure
 \item size: number of individuals in the household
 \item dist: distance to central business district in kilometers
-\item smsa: a factor with levels "small" (less than 2.5 million population) and "large" (more than 2.5 million population)
+\item smsa: a factor with levels \code{"small"} (less than 2.5 million population) and \code{"large"} (more than 2.5 million population)
 \item fulltime: number of fulltime workers in household
 \item adults: number of adults in household
 \item distnod: distace from home to nearest transit node, in blocks

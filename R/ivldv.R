@@ -19,8 +19,6 @@
 #'     model,
 #' @param trace a boolean (the default if `FALSE`) if `TRUE` some
 #'     information about the optimization process is printed,
-#' @param compute_test a boolean, if `TRUE`, the endogeneity test,
-#'     based on the two steps model is computed
 #' @param ... further arguments
 #' @importFrom Formula Formula
 #' @importFrom stats coef dnorm lm model.matrix model.response pnorm
@@ -28,8 +26,10 @@
 #'     vcov terms .getXlevels delete.response logLik printCoefmat
 #' @return An object of class `c('ivldv', 'lm')`
 #' @author Yves Croissant
+#' @keywords models
 #' @references
 #' \insertRef{SMIT:BLUN:86}{micsr}
+#'
 #' \insertRef{RIVE:VUON:88}{micsr}
 #' @importFrom Rdpack reprompt
 #' @export
@@ -37,10 +37,11 @@
 #' inst <- ~ sic3 + k_serv + inv + engsci + whitecol + skill + semskill + cropland + 
 #'     pasture + forest + coal + petro + minerals + scrconc + bcrconc + scrcomp +
 #'     bcrcomp + meps + kstock + puni + geog2 + tenure + klratio + bunion
-#' trade_protection <- dplyr::mutate(trade_protection,
+#' trade_protection <- dplyr::mutate(micsr::trade_protection,
 #'                                  y = ntb / (1 + ntb),
-#'                                  x1 = exports / imports / elast,
-#'                                  x2 = cap * x1)
+#'                                  x1 = vshipped / imports / elast,
+#'                                  x2 = cap * x1,
+#'                                  x3 = labvar)
 #' GH <- ivldv(Formula::as.Formula(y  ~  x1 + x2, inst), trade_protection,
 #'             method = "twosteps", model = "tobit") 
 #' Full <- ivldv(Formula::as.Formula(y ~ x1 + x2 + labvar, inst), trade_protection,
@@ -59,13 +60,12 @@ ivldv <- function(formula,
                   weights = NULL,
                   na.action,
                   offset,
-                  method = c("twosteps", "minchisq", "ml"),
+                  method = c("twosteps", "minchisq", "ml", "test"),
                   model = c("probit", "tobit"),
                   robust = TRUE,
                   left = 0,
                   right = Inf,
                   trace = 0,
-                  compute_test = FALSE,
                   ...){
     rm_intercept <- function(x){
         pos <- match("(Intercept)", colnames(x))
@@ -73,6 +73,7 @@ ivldv <- function(formula,
         else x
     }
     .est_method <- match.arg(method)
+    compute_test <- (.est_method == "test")
     model <- match.arg(model)
     if (compute_test){
         .est_method <- "twosteps"
@@ -84,6 +85,7 @@ ivldv <- function(formula,
     .formula <- mf$formula <- Formula(formula)
     m <- match(c("formula", "data", "subset", "weights"),
                names(mf), 0L)
+
     # construct the model frame and components
     mf <- mf[c(1L, m)]
     mf[[1L]] <- quote(stats::model.frame)
@@ -99,17 +101,17 @@ ivldv <- function(formula,
     y <- model.response(mf)
     q <- 2 * y - 1
     # model matrices
-    Z <- rm_intercept(model.matrix(Formula(formula), mf, rhs = 1))  # L covariates (X1 + Y)
+    ZZ <- rm_intercept(model.matrix(Formula(formula), mf, rhs = 1))  # L covariates (X1 + Y)
     X <- rm_intercept(model.matrix(Formula(formula), mf, rhs = 2))  # K exogenous variables (X1 + X2)
     names_X <- colnames(X)
-    W <- Z[, setdiff(colnames(Z), colnames(X)), drop = FALSE]       # G endogenous variables (W)
-    X1 <- Z[, intersect(colnames(Z), colnames(X)), drop = FALSE]    # K1 exogenous covariates (X1)
+    W <- ZZ[, setdiff(colnames(ZZ), colnames(X)), drop = FALSE]       # G endogenous variables (W)
+    X1 <- ZZ[, intersect(colnames(ZZ), colnames(X)), drop = FALSE]    # K1 exogenous covariates (X1)
     X2 <- X[, setdiff(colnames(X), colnames(X1)), drop = FALSE]    # K1 exogenous covariates (X1)
-    Z <- cbind(X1, W)
-    names_Z <- colnames(Z)
+    ZZ <- cbind(X1, W)
+    names_ZZ <- colnames(ZZ)
     if (has.int){
         names_X <- c("(Intercept)", names_X)
-        names_Z <- c("(Intercept)", names_Z)
+        names_ZZ <- c("(Intercept)", names_ZZ)
     }
     N <- length(y)
     K1 <- ncol(X1)
@@ -127,17 +129,17 @@ ivldv <- function(formula,
     Wres <- residuals(step_1)
     Yhat <- fitted(step_1)
     Yres <- residuals(step_1)
-    
-    if (model == "probit") step_2 <- glm(y ~ Z + Wres, family = binomial(link = 'probit'))
-    if (model == "tobit")  step_2 <- tobit1(y ~ Z + resid(step_1), left = left, right = right)
+    if (model == "probit") step_2 <- glm(y ~ ZZ + Wres, family = binomial(link = 'probit'))
+    if (model == "tobit")  step_2 <- tobit1(y ~ ZZ + resid(step_1), left = left, right = right)
+
     lp <- step_2$linear.predictor
     if (.est_method == "twosteps"){
         .coef <- coef(step_2)
-        nms_coef <- c("(Intercept)", colnames(Z), paste("rho", colnames(W), sep = "_"))
+        nms_coef <- c("(Intercept)", colnames(ZZ), paste("rho", colnames(W), sep = "_"))
         if (model == "tobit") nms_coef <- c(nms_coef, "sigma")
         S_epsilon <- crossprod(Wres) / N
         # compute the consistent covariance matrix if required
-        U <- cbind("(Intercept)" = 1, Z, Wres)
+        U <- cbind("(Intercept)" = 1, ZZ, Wres)
         X <- cbind("(Intercept)" = 1, X)
         if (model == "tobit"){
             .sigma <- .coef["sigma"]
@@ -217,13 +219,13 @@ ivldv <- function(formula,
         OMEGA <- SIGMA + alpha_vcov
         
         # Newey_5. Computation of the estimator and its variance
-        d <- solve(crossprod(cbind(1, X)), crossprod(cbind(1, X), cbind(1, Z)), tol = 1E-20)
+        d <- solve(crossprod(cbind(1, X)), crossprod(cbind(1, X), cbind(1, ZZ)), tol = 1E-20)
         .vcov <- solve(t(d) %*% solve(OMEGA, tol = 1E-20) %*% d, tol = 1E-20)
         .coef <- drop(.vcov %*% t(d) %*% solve(OMEGA, alpha_hat, tol = 1E-20))
         names(.coef)[1] <- colnames(.vcov)[1] <- rownames(.vcov)[1] <- "(Intercept)"
     }
     if (.est_method == "ml"){
-        nms_param <- list(covar = names_X, ancil = names_Z, vcov = c("sigma", "rho"))
+        nms_param <- list(covar = names_X, ancil = names_ZZ, vcov = c("sigma", "rho"))
         # computation of the starting values
         nu <- step_2$linear.predictor
         # Compute the covariance matrix of the SUR estimator and takes its Cholesky decomposition
@@ -264,11 +266,11 @@ ivldv <- function(formula,
         }
         names(.start) <- nms_coef
 
-        check_gradient <- function(f, g, param){
-            comp_grad <- cbind(analytic = gr(param), numeric = numDeriv::grad(func, param), diff = gr(param) - numDeriv::grad(func, param))
-            rownames(comp_grad) <- names(param)
-            comp_grad
-        }
+        ## check_gradient <- function(f, g, param){
+        ##     comp_grad <- cbind(analytic = gr(param), numeric = numDeriv::grad(func, param), diff = gr(param) - numDeriv::grad(func, param))
+        ##     rownames(comp_grad) <- names(param)
+        ##     comp_grad
+        ## }
             
         func_obs <- function(param)    lnliv_ldv(param, X1 = X1, X2 = X2, W = W, y = y, sum = FALSE, gradient = FALSE, right = right, model = model)
         func <- function(param)    -      lnliv_ldv(param, X1 = X1, X2 = X2, W = W, y = y, sum = TRUE, gradient = FALSE, right = right, model = model)
@@ -309,7 +311,7 @@ ivldv <- function(formula,
         attr(.npar, "default") <- c("covariates", "resid")
         if (model == "tobit"){
             .npar <- c(.npar, vcov = 1)
-            attr(.npar, "default") <- c(attr(.npar, "default"), "vcov")
+            attr(.npar, "default") <- c("covariates", "resid", "vcov")
         }
     }                    
     if (.est_method != "ml"){
@@ -320,7 +322,7 @@ ivldv <- function(formula,
                            default =  c("covariates", "resid"))
         if (model == "tobit"){
             .npar <- c(.npar, vcov = 1)
-            attr(.npar, "default") <- c(attr(.npar, "default"), "vcov")
+            attr(.npar, "default") <- c("covariates", "resid", "vcov")
         }
     }
         

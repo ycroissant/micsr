@@ -13,7 +13,7 @@ cmtest(
   test = c("normality", "reset", "heterosc", "skewness", "kurtosis"),
   powers = 2:3,
   heter_cov = NULL,
-  OPG = FALSE
+  opg = FALSE
 )
 
 \method{cmtest}{tobit}(
@@ -21,7 +21,7 @@ cmtest(
   test = c("normality", "reset", "heterosc", "skewness", "kurtosis"),
   powers = 2:3,
   heter_cov = NULL,
-  OPG = FALSE
+  opg = FALSE
 )
 
 \method{cmtest}{micsr}(
@@ -29,7 +29,7 @@ cmtest(
   test = c("normality", "reset", "heterosc", "skewness", "kurtosis"),
   powers = 2:3,
   heter_cov = NULL,
-  OPG = FALSE
+  opg = FALSE
 )
 
 \method{cmtest}{censReg}(
@@ -37,7 +37,7 @@ cmtest(
   test = c("normality", "reset", "heterosc", "skewness", "kurtosis"),
   powers = 2:3,
   heter_cov = NULL,
-  OPG = FALSE
+  opg = FALSE
 )
 
 \method{cmtest}{glm}(
@@ -45,17 +45,17 @@ cmtest(
   test = c("normality", "reset", "heterosc", "skewness", "kurtosis"),
   powers = 2:3,
   heter_cov = NULL,
-  OPG = FALSE
+  opg = FALSE
 )
 }
 \arguments{
 \item{x}{a fitted model, currently a tobit model either fitted by
-\code{AER::tobit} or \code{censReg::censReg} or a probit model fitted by
-\code{glm} with \code{family = binomial(link = 'probit')},}
+\code{AER::tobit}, \code{censReg::censReg} or \code{micsr::tobit1} or a probit model fitted by
+\code{glm} with \code{family = binomial(link = "probit")} or by \code{micsr::binomreg} with \code{link = "probit"}}
 
 \item{test}{the kind of test to be performed, either a normality
 test (or separately a test that the skewness or kurtosis
-coefficients are 0 and 3), a heteroscedasticity test or a reset
+are 0 and 3), a heteroscedasticity test or a reset
 test,}
 
 \item{powers}{the powers of the fitted values that should be used
@@ -65,12 +65,12 @@ in the reset test,}
 that should be used for the heteroscedasticity test (by default
 all the covariates used in the regression are used),}
 
-\item{OPG}{a boolean, if \code{FALSE} (the default), the analytic
+\item{opg}{a boolean, if \code{FALSE} (the default), the analytic
 derivatives are used, otherwise the outer product of the
 gradient formula is used}
 }
 \value{
-a list with class \code{'htest'} containing the following components:
+an object of class \code{"htest"} containing the following components:
 \itemize{
 \item data.mane: a character string describing the fitted model
 \item statistic: the value of the test statistic
@@ -80,19 +80,17 @@ a list with class \code{'htest'} containing the following components:
 }
 }
 \description{
-Conditional moments tests for maximum likelihood estimators consist
-on adding to the matrix of individual contributions to the score
-moments conditions and then test the hypothesis that the expected
-value of the vector of augmented scores is zero. It is particularly
-convenient for the probit and the tobit model to test for
-functional form, omitted variables, heteroscedasticity and normaliy.
+Conditional moments tests for maximum likelihood estimators,
+particularly convenient for the probit and the tobit model to test
+relevance of functional form, omitted variables, heteroscedasticity and
+normality.
 }
 \examples{
 charitable$logdon <- with(charitable, log(donation) - log(25))
 ml <- tobit1(logdon ~ log(donparents) + log(income) + education +
              religion + married + south, data = charitable)
 cmtest(ml, test = "heterosc")
-cmtest(ml, test = "normality", OPG = TRUE)
+cmtest(ml, test = "normality", opg = TRUE)
 }
 \references{
 \insertRef{NEWE:85}{micsr}

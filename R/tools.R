@@ -1,4 +1,4 @@
-#' Compute the inverse Mills ratio and its first derivatives
+#' Compute the inverse Mills ratio and its first two derivatives
 #'
 #' The inverse Mills ratio is used in several econometric models,
 #' especially different flavours of tobit model.
@@ -6,6 +6,7 @@
 #' @param x a numeric
 #' @param deriv one of 0 (the default, returns the inverse Mills
 #'     ratio), 1 (the first derivative) and 2 (the second derivative)
+#' @keywords misc
 #' @return a numeric
 #' @export
 mills <- function(x, deriv = 0){
@@ -19,9 +20,9 @@ mills <- function(x, deriv = 0){
 dmills <- function(x) - mills(x) * (x + mills(x))
 d2mills <- function(x) mills(x) * ( (x + mills(x)) * (x + 2 * mills(x)) - 1)
 
-#' Newton-Rawlphson  method for numerical optimization
+#' Newton-Raphson  method for numerical optimization
 #'
-#' The Newton-Rawlphson method use the gradient and the hessian of a
+#' The Newton-Raphson method use the gradient and the hessian of a
 #' function. For well behaved functions, it is extremely accurate.
 #' @name newton
 #' @param fun the function to optimize
@@ -32,6 +33,7 @@ d2mills <- function(x) mills(x) * ( (x + mills(x)) * (x + 2 * mills(x)) - 1)
 #' @param tol the tolerance
 #' @param maxit maximum number of iterations
 #' @param ... further arguments, passed to fun
+#' @keywords misc
 #' @return a numeric vector, the parameters at the optimum of the
 #'     function
 #' @export
@@ -82,6 +84,7 @@ newton <- function(fun, coefs, trace = 0, direction = c("min", "max"), tol = sqr
 #' @param .vcov a function that computes a covariance matrix, or a character
 #' @param ... further arguments
 #' @return a numeric vector
+#' @keywords misc
 #' @export
 stder <- function(x, .vcov, ...) UseMethod("stder")
 
@@ -123,6 +126,7 @@ stder.default <- function(x, .vcov = NULL, ...){
 #' @return a data frame
 #' @importFrom tidyselect eval_select
 #' @importFrom rlang expr
+#' @keywords misc
 #' @examples
 #' charitable %>% dummy(religion, education)
 #' @export
@@ -204,14 +208,20 @@ dummy <- function (x, ..., keep = FALSE, prefix = NULL, ref = FALSE) {
 #' @param subset a character indicating the subset of coefficients
 #'     (only relevant for `micsr` models).
 #' @return an integer
+#' @keywords misc
 #' @author Yves Croissant
 #' @export
 npar <- function(x, subset = NULL)
     UseMethod("npar")
 
-npar.default <- function(x){
+#' @rdname npar
+#' @export
+npar.default <- function(x, subset = NULL){
     length(coef(x))
 }
+
+#' @rdname npar
+#' @export
 npar.micsr <- function(x, subset = NULL){
     result <- x$npar
     if (! is.null(subset)){

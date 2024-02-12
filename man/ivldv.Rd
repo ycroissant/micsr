@@ -14,13 +14,12 @@ ivldv(
   weights = NULL,
   na.action,
   offset,
-  method = c("twosteps", "minchisq", "ml"),
+  method = c("twosteps", "minchisq", "ml", "test"),
   model = c("probit", "tobit"),
   robust = TRUE,
   left = 0,
   right = Inf,
   trace = 0,
-  compute_test = FALSE,
   ...
 )
 
@@ -52,9 +51,6 @@ model,}
 \item{trace}{a boolean (the default if \code{FALSE}) if \code{TRUE} some
 information about the optimization process is printed,}
 
-\item{compute_test}{a boolean, if \code{TRUE}, the endogeneity test,
-based on the two steps model is computed}
-
 \item{...}{further arguments}
 
 \item{x}{on object returned by \code{ivldv}}
@@ -70,10 +66,11 @@ binomial or censored
 inst <- ~ sic3 + k_serv + inv + engsci + whitecol + skill + semskill + cropland + 
     pasture + forest + coal + petro + minerals + scrconc + bcrconc + scrcomp +
     bcrcomp + meps + kstock + puni + geog2 + tenure + klratio + bunion
-trade_protection <- dplyr::mutate(trade_protection,
+trade_protection <- dplyr::mutate(micsr::trade_protection,
                                  y = ntb / (1 + ntb),
-                                 x1 = exports / imports / elast,
-                                 x2 = cap * x1)
+                                 x1 = vshipped / imports / elast,
+                                 x2 = cap * x1,
+                                 x3 = labvar)
 GH <- ivldv(Formula::as.Formula(y  ~  x1 + x2, inst), trade_protection,
             method = "twosteps", model = "tobit") 
 Full <- ivldv(Formula::as.Formula(y ~ x1 + x2 + labvar, inst), trade_protection,
@@ -89,8 +86,10 @@ bank_2st <- update(bank_msq, method = "twosteps")
 }
 \references{
 \insertRef{SMIT:BLUN:86}{micsr}
+
 \insertRef{RIVE:VUON:88}{micsr}
 }
 \author{
 Yves Croissant
 }
+\keyword{models}

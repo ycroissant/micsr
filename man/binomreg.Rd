@@ -15,6 +15,7 @@ binomreg(
   na.action,
   offset,
   link = c("identity", "probit", "logit"),
+  method = c("ml", "twosteps", "minchisq", "test"),
   start = NULL,
   ...
 )
@@ -26,8 +27,7 @@ binomreg(
 \method{predict}{binomreg}(object, ..., type = c("response", "link"), newdata = NULL)
 }
 \arguments{
-\item{formula}{a symbolic description of the model, (for the count
-component and for the selection equation).}
+\item{formula}{a symbolic description of the model}
 
 \item{data}{a data frame,}
 
@@ -37,27 +37,31 @@ component and for the selection equation).}
 respectively the linear probability, the probit and the logit
 model}
 
-\item{start}{a vector of starting values, in this case, no
-estimation}
+\item{method}{\code{"ml"} for maximum likelihood (the only relevant
+method for a regression without instrumental variables),
+\code{"twosteps"} for two-steps estimator, \code{"minchisq"} for minimum
+chi-squared estimator and \code{"test"} to get the exogeneity test}
+
+\item{start}{a vector of starting values}
 
 \item{...}{further arguments}
 
-\item{object, x, type}{a \code{binomreg} object and the type of
-log-likelihood / residuals for the \code{logLik} / \code{residuals}
-method}
+\item{object, x, type}{a \code{binomreg} object and the type of residuals
+for the \code{residuals} method}
 
 \item{newdata}{a new data frame for the \code{predict} method}
 }
 \value{
-an object of class \verb{c(}"binomreg", "micsr")\verb{, see }micsr::micsr` for further details
+an object of class \code{c("binomreg", "micsr")}, see
+\code{micsr::micsr} for further details
 }
 \description{
-A unified interface perform binomial regression calling \code{lm} to fit
-the linear-probability model and \code{glm} to fit the probit and the
-logit model.
+A unified interface for binomial regression models, including
+linear probability, probit and logit models
 }
 \examples{
 pbt <- binomreg(mode ~ cost + ivtime + ovtime, data = mode_choice, link = 'probit')
 lpm <- binomreg(mode ~ cost + ivtime + ovtime, data = mode_choice, link = 'identity')
 summary(pbt, vcov = "opg")
 }
+\keyword{models}

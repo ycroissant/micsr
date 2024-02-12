@@ -26,7 +26,7 @@ a tibble containing:
 \item contact: contacted a temporary work agency
 \item region: one of  \code{"Tuscany"} and \code{"Sicily"}
 \item city: the city
-\item group: one of \code{"control"} and `"treated"
+\item group: one of \code{"control"} and \code{"treated"}
 \item sector: the sector
 \item occup: occupation, one of \code{"nojob"}, \code{"selfemp"}, \code{"bluecol"} and \code{"whitecol"}
 \item empstat: employment status, one of \code{"empl"}, \code{"unemp"} and \code{"olf"} (out of labor force)

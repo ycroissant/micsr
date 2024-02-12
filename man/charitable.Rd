@@ -9,15 +9,15 @@ a tibble containing:
 \itemize{
 \item donation: the amount of charitable giving
 \item donparents: the amount of charitable giving of the parents
-\item education: the level of education of household's head, a factor with levels \code{less_high_school}, \code{high_school}, \code{some_college}, \code{college}, \code{post_college}
-\item religion: a factor with levels \code{none}, \code{catholic}, \code{protestant}, \code{jewish} and \code{other}.
+\item education: the level of education of household's head, a factor with levels \code{"less_high_school"}, \code{"high_school"}, \code{"some_college"}, \code{"college"}, \code{"post_college"}
+\item religion: a factor with levels \code{"none"}, \code{"catholic"}, \code{"protestant"}, \code{"jewish"} and \code{"other"}
 \item income: income
 \item married: a dummy for married couples
 \item south: a dummy for households living in the south
 }
 }
 \source{
-this data set was kindly provided by Mark Ottoni Wilhelm
+kindly provided by Mark Ottoni Wilhelm.
 }
 \description{
 a cross-section of 2384 households from 2001

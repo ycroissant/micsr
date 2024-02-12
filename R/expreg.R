@@ -2,11 +2,11 @@
 #' models
 #'
 #' Exponential conditional mean models are particularly useful for
-#' non-negative responses (including count data). The one or two steps
-#' GMM estimator is used to fit the model.
+#' non-negative responses (including count data). Least squares and one or two steps
+#' IV estimators are available
 #' 
 #' @name expreg
-#' @param formula a two-part right hand side formula, first part
+#' @param formula a two-part right hand side formula, the first part
 #'     describing the covariates and the second part the instruments
 #' @param data a data frame,
 #' @param subset,weights,na.action,offset see `stats::lm`
@@ -15,7 +15,7 @@
 #'     get a model with respectively a multiplicative or an additive
 #'     error
 #' @param ... further arguments
-#' @return An object of class `c('micsr')` which is a list
+#' @return An object of class `"micsr"` which is a list
 #'     containing the following components:
 #' - coefficients: a named vector of coefficients,
 #' - residuals: the vector of residuals,
@@ -32,6 +32,7 @@
 #' @importFrom stats .getXlevels coef glm model.matrix model.response
 #'     nobs optim pchisq pnorm poisson printCoefmat vcov model.frame
 #' @importFrom Formula Formula
+#' @keywords models
 #' @references \insertRef{MULL:97}{micsr}
 #' @author Yves Croissant
 #' @examples
@@ -158,43 +159,4 @@ expreg <- function(formula,
 #    options(old_options)
     structure(result, class = c("micsr"))
 }
-
-
-#' Sargan test for GMM models
-#'
-#' When a GMM model is over-identified, the set of all the empirical
-#' moment conditions can't be exactly 0. The test of the validity of
-#' the instruments is based on a quadratic form of the vector of the
-#' empirical moments
-#' 
-#' @name sargantest
-#' @param object a model fitted by GMM
-#' @param ... further arguments
-#' @return an `htest` object
-#' @examples
-#' cigmales <- cigmales %>%
-#'        mutate(age2 = age ^ 2, educ2 = educ ^ 2,
-#'               age3 = age ^ 3, educ3 = educ ^ 3,
-#'               educage = educ * age)
-#' gmm_cig <- expreg(cigarettes ~ habit + price + restaurant + income + age + age2 +
-#'                  educ + educ2 + famsize + race | . - habit + age3 + educ3 +
-#'                  educage + lagprice + reslgth, data = cigmales,
-#'                  twosteps = FALSE)
-#' sargantest(gmm_cig)
-#' @export
-sargantest <- function(object, ...){
-    if (! object$est_method %in% c("iv", "gmm")) stop("Sargan test only relevant for GMM models")
-    .stat <- nobs(object) * object$value
-    .df <- object$L - object$K
-    .pval <- pchisq(.stat, .df, lower.tail = FALSE)
-    .data <- deparse(object$call$data)
-    structure(list(statistic = c(chisq = .stat),
-                   parameter = c(df = .df),
-                   method = "Sargan Test",
-                   p.value = .pval,
-                   data.name = .data,
-                   alternative = "the moment conditions are not valid"),
-              class = "htest")
-}
-
 

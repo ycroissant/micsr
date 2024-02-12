@@ -1,29 +1,27 @@
 #' Conditional moments test
 #'
-#' Conditional moments tests for maximum likelihood estimators consist
-#' on adding to the matrix of individual contributions to the score
-#' moments conditions and then test the hypothesis that the expected
-#' value of the vector of augmented scores is zero. It is particularly
-#' convenient for the probit and the tobit model to test for
-#' functional form, omitted variables, heteroscedasticity and normaliy.
+#' Conditional moments tests for maximum likelihood estimators,
+#' particularly convenient for the probit and the tobit model to test
+#' relevance of functional form, omitted variables, heteroscedasticity and
+#' normality.
 #'
 #' @name cmtest
 #' @param x a fitted model, currently a tobit model either fitted by
-#'     `AER::tobit` or `censReg::censReg` or a probit model fitted by
-#'     `glm` with `family = binomial(link = 'probit')`,
+#'     `AER::tobit`, `censReg::censReg` or `micsr::tobit1` or a probit model fitted by
+#'     `glm` with `family = binomial(link = "probit")` or by `micsr::binomreg` with `link = "probit"`
 #' @param test the kind of test to be performed, either a normality
 #'     test (or separately a test that the skewness or kurtosis
-#'     coefficients are 0 and 3), a heteroscedasticity test or a reset
+#'     are 0 and 3), a heteroscedasticity test or a reset
 #'     test,
 #' @param powers the powers of the fitted values that should be used
 #'     in the reset test,
 #' @param heter_cov a one side formula that indicates the covariates
 #'     that should be used for the heteroscedasticity test (by default
 #'     all the covariates used in the regression are used),
-#' @param OPG a boolean, if `FALSE` (the default), the analytic
+#' @param opg a boolean, if `FALSE` (the default), the analytic
 #'     derivatives are used, otherwise the outer product of the
 #'     gradient formula is used
-#' @return a list with class `'htest'` containing the following components:
+#' @return an object of class `"htest"` containing the following components:
 #' - data.mane: a character string describing the fitted model
 #' - statistic: the value of the test statistic
 #' - parameter: degrees of freedom
@@ -48,27 +46,27 @@
 #' ml <- tobit1(logdon ~ log(donparents) + log(income) + education +
 #'              religion + married + south, data = charitable)
 #' cmtest(ml, test = "heterosc")
-#' cmtest(ml, test = "normality", OPG = TRUE)
+#' cmtest(ml, test = "normality", opg = TRUE)
 #' @export
 cmtest <- function(x, test = c("normality", "reset", "heterosc",
                                "skewness", "kurtosis"),
-                   powers = 2:3, heter_cov = NULL, OPG = FALSE){    
-
+                   powers = 2:3, heter_cov = NULL, opg = FALSE){    
+    
     UseMethod("cmtest")
 }
 
 #' @rdname cmtest
 #' @export
 cmtest.tobit <- function(x, test = c("normality", "reset", "heterosc",
-                               "skewness", "kurtosis"),
-                         powers = 2:3, heter_cov = NULL, OPG = FALSE){
+                                     "skewness", "kurtosis"),
+                         powers = 2:3, heter_cov = NULL, opg = FALSE){
     test <- match.arg(test)
     param <- c(coef(x), x$scale)
     X <- model.matrix(x)
     mf <- model.frame(x)
     y <- x$y[, 1]
     result <- cmtest_tobit(param, X, y, mf, test = test,
-                           powers = powers, heter_cov = heter_cov, OPG = OPG)
+                           powers = powers, heter_cov = heter_cov, opg = opg)
     .data.name <- paste(deparse(formula(x)))
     if (length(.data.name) > 1) .data.name <- paste(.data.name[1], "...")
     result$data.name <- .data.name
@@ -78,15 +76,22 @@ cmtest.tobit <- function(x, test = c("normality", "reset", "heterosc",
 #' @rdname cmtest
 #' @export
 cmtest.micsr <- function(x, test = c("normality", "reset", "heterosc",
-                               "skewness", "kurtosis"),
-                         powers = 2:3, heter_cov = NULL, OPG = FALSE){
+                                     "skewness", "kurtosis"),
+                         powers = 2:3, heter_cov = NULL, opg = FALSE){
     test <- match.arg(test)
     param <- coef(x)
     X <- model.matrix(x)
     mf <- model.frame(x)
     y <- model.response(mf)
-    result <- cmtest_tobit(param, X, y, mf, test = test,
-                           powers = powers, heter_cov = heter_cov, OPG = OPG)
+    if (! inherits(x, "tobit1") & ! inherits(x, "binomreg"))
+        stop("a tobit1 or a binomreg object is required")
+    else{
+        if (inherits(x, "tobit1"))
+            result <- cmtest_tobit(param, X, y, mf, test = test,
+                                   powers = powers, heter_cov = heter_cov, opg = opg)
+        else result <- cmtest_probit(param, X, y, mf, test = test,
+                                     powers = powers, heter_cov = heter_cov, opg = opg)
+    }
     .data.name <- paste(deparse(formula(x)))
     if (length(.data.name) > 1) .data.name <- paste(.data.name[1], "...")
     result$data.name <- .data.name
@@ -98,7 +103,7 @@ cmtest.micsr <- function(x, test = c("normality", "reset", "heterosc",
 #' @export
 cmtest.censReg <- function(x, test = c("normality", "reset", "heterosc",
                                "skewness", "kurtosis"),
-                         powers = 2:3, heter_cov = NULL, OPG = FALSE){
+                         powers = 2:3, heter_cov = NULL, opg = FALSE){
     test <- match.arg(test)
     param <- coef(x)
     mf <- model.frame(x)
@@ -106,7 +111,7 @@ cmtest.censReg <- function(x, test = c("normality", "reset", "heterosc",
     y <- unname(model.response(mf))
     X <- model.matrix(x)
     result <- cmtest_tobit(param, X, y, mf, test = test,
-                           powers = powers, heter_cov = heter_cov, OPG = OPG)
+                           powers = powers, heter_cov = heter_cov, opg = opg)
     .data.name <- paste(deparse(formula(x)))
     if (length(.data.name) > 1) .data.name <- paste(.data.name[1], "...")
     result$data.name <- .data.name
@@ -158,7 +163,7 @@ hess_cens <- function(param, X, y)
 
 cmtest_tobit <- function(param, X, y, mf, test = c("normality", "reset", "heterosc",
                                                       "skewness", "kurtosis"),
-                         powers = 2:3, heter_cov = NULL, OPG = FALSE){    
+                         powers = 2:3, heter_cov = NULL, opg = FALSE){    
     S <- attr(lnl_cens(param, X, y, sum = FALSE, gradient = TRUE, hessian = FALSE), "gradient")
     N <- length(y)
     has.intercept <- any(colnames(X) == "(Intercept)")    
@@ -176,7 +181,7 @@ cmtest_tobit <- function(param, X, y, mf, test = c("normality", "reset", "hetero
     if (test %in% c("normality", "skewness", "kurtosis")){
         if (test %in% c("normality", "skewness")){
             psi3 <- Ipos * e ^ 3 - (1 - Ipos) * (z ^ 2 + 2) * sigma ^ 3 * mls
-            if (! OPG){
+            if (! opg){
                 m3_z <- - 3 * Ipos * sigma * e ^ 2 - (1 - Ipos) * 2 * z * sigma ^ 3 * mls +
                     (1 - Ipos) * (z ^ 2 + 2) * sigma ^ 3 * d_mls
                 m3_s <- - 3 * Ipos * e ^ 2 * z - 3 * (1 - Ipos) * (z ^ 2 + 2) * sigma ^ 2 * mls
@@ -187,7 +192,7 @@ cmtest_tobit <- function(param, X, y, mf, test = c("normality", "reset", "hetero
         }
         if (test %in% c("normality", "kurtosis")){
             psi4 <- Ipos * (e ^ 4 - 3 * sigma ^ 4) + (1 - Ipos) * (z ^ 2 + 3) * sigma ^ 4 * mls * z
-            if (! OPG){
+            if (! opg){
                 m4_z <- - 4 * sigma * Ipos * e ^ 3 + (1 - Ipos) * (3 * z ^ 2 + 3) * sigma ^ 4 * mls -
                     (1 - Ipos) * (z ^ 3 + 3 * z) * sigma ^  4 * d_mls
                 m4_s <- Ipos * (- 4 * z * e ^ 3 - 12 * sigma ^ 3) +
@@ -199,17 +204,17 @@ cmtest_tobit <- function(param, X, y, mf, test = c("normality", "reset", "hetero
         }
         if (test == "normality"){
             M <- cbind(psi3, psi4)
-            if (! OPG)  W <- cbind(apply(d_m3, 2, sum), apply(d_m4, 2, sum))
+            if (! opg)  W <- cbind(apply(d_m3, 2, sum), apply(d_m4, 2, sum))
             test.name <- "Conditional Expectation Test for Normality"
         }
         if (test == "skewness"){
             M <- matrix(psi3, ncol = 1)
-            if (! OPG) W <- apply(d_m3, 2, sum)
+            if (! opg) W <- apply(d_m3, 2, sum)
             test.name <- "Conditional Expectation Test for Skewness"
         }
         if (test == "kurtosis"){
             M <- matrix(psi4, ncol = 1)
-            if (! OPG) W <- apply(d_m4, 2, sum)
+            if (! opg) W <- apply(d_m4, 2, sum)
             test.name <- "Conditional Expectation Test for Kurtosis"
         }
     }
@@ -220,7 +225,7 @@ cmtest_tobit <- function(param, X, y, mf, test = c("normality", "reset", "hetero
         gres <- Ipos * e - sigma * (1 - Ipos) * mls
         Ys <- model.matrix(form) 
         M <-Ys  *  gres
-        if (! OPG){
+        if (! opg){
             gres_z <- - Ipos * sigma + sigma * (1 - Ipos) * d_mls
             gres_s <- - Ipos * z + (1 - Ipos) * mls
             gres_beta <- gres_z / sigma
@@ -236,7 +241,7 @@ cmtest_tobit <- function(param, X, y, mf, test = c("normality", "reset", "hetero
         if (colnames(XH)[1] == "(Intercept)") XH <- XH[, -1, drop = FALSE]
         rho <- Ipos * ( e ^ 2 - sigma ^ 2) + (1 - Ipos) * sigma ^ 2 * mls * z
         M <- rho * XH
-        if (! OPG){
+        if (! opg){
             rho_z <- Ipos * (- 2 * e * sigma) + (1 - Ipos) * sigma ^ 2 * (- z * d_mls + mls)
             rho_s <- Ipos * (- 2 * e * z - 2 * sigma) + (1 - Ipos) * (2 * sigma * mls * z)
             rho_beta <- rho_z / sigma
@@ -246,7 +251,7 @@ cmtest_tobit <- function(param, X, y, mf, test = c("normality", "reset", "hetero
         }
         test.name <- "Heteroscedasticity Test"
     }
-    if (OPG){
+    if (opg){
         W <- t(S) %*% M
         F <- crossprod(S)
     }
@@ -275,55 +280,68 @@ cmtest_tobit <- function(param, X, y, mf, test = c("normality", "reset", "hetero
                    method = test.name),
               class = "htest")
 }
-    
+
 #' @rdname cmtest
 #' @export
 cmtest.glm <- function(x, test = c("normality", "reset", "heterosc",
                                    "skewness", "kurtosis"),
-                       powers = 2:3, heter_cov = NULL, OPG = FALSE){
+                       powers = 2:3, heter_cov = NULL, opg = FALSE){
     .family <- family(x)
     if (! (.family$family == "binomial" & .family$link == "probit"))
-        stop("cmtest method for glm objects currently only implemented for probit models")
+        stop("cmtest only implemented for probit models")
     test <- match.arg(test)
     param <- coef(x)
-    y <- unname(model.response(model.frame(x)))
+    mf <- model.frame(x)
+    y <- unname(model.response(mf))
     X <- model.matrix(x)
+    result <- cmtest_probit(param, X, y, mf, test = test,
+                            powers = powers, heter_cov = heter_cov, opg = opg)
+    .data.name <- paste(deparse(formula(x)))
+    if (length(.data.name) > 1) .data.name <- paste(.data.name[1], "...")
+    result$data.name <- .data.name
+    result
+}
+    
+cmtest_probit <- function(param, X, y, mf, test = c("normality", "reset", "heterosc",
+                                                      "skewness", "kurtosis"),
+                          powers = 2:3, heter_cov = NULL, opg = FALSE){
+    test <- match.arg(test)
+    bX <- z <- drop(X %*% param)
     N <- length(y)
     has.intercept <- any(colnames(X) == "(Intercept)")    
     K <- length(param) - 1 - has.intercept
-    z <- x$linear.predictors
     gres <- dnorm(z) / pnorm(z) / (1 - pnorm(z)) * (y - pnorm(z))
     gres_z <- - (z + dnorm(z) * (1 - 2 * pnorm(z)) / (pnorm(z) * (1 - pnorm(z)))) * gres -
         dnorm(z) ^ 2 / (pnorm(z) * (1 - pnorm(z)))
-    S <- gres(z) * X
+    S <- gres * X
     if (test %in% c("normality", "skewness", "kurtosis")){
         if (test %in% c("normality", "skewness")){
             psi3 <- z ^ 2 * gres
-            if (! OPG){
+            if (! opg){
                 psi3_z <- 2 * z * gres + z ^ 2 * gres_z
                 d_m3 <- psi3_z * X
             }
         }
         if (test %in% c("normality", "kurtosis")){
-            psi4 <- z ^ 3 * gres(z)
-            if (! OPG){
-                psi4_z <- 3 * z ^ 2 * gres(z) + z ^ 3 * gres_z(z)
+            psi4 <- z ^ 3 * gres
+            if (! opg){
+                psi4_z <- 3 * z ^ 2 * gres + z ^ 3 * gres_z
                 d_m4 <- psi4_z * X
             }
         }
         if (test == "normality"){
             M <- cbind(psi3, psi4)
-            if (! OPG)  W <- cbind(apply(d_m3, 2, sum), apply(d_m4, 2, sum))
+            if (! opg)  W <- cbind(apply(d_m3, 2, sum), apply(d_m4, 2, sum))
             test.name <- "Conditional Expectation Test for Normality"
         }
         if (test == "skewness"){
             M <- matrix(psi3, ncol = 1)
-            if (! OPG) W <- apply(d_m3, 2, sum)
+            if (! opg) W <- apply(d_m3, 2, sum)
             test.name <- "Conditional Expectation Test for Skewness"
         }
         if (test == "kurtosis"){
             M <- matrix(psi4, ncol = 1)
-            if (! OPG) W <- apply(d_m4, 2, sum)
+            if (! opg) W <- apply(d_m4, 2, sum)
             test.name <- "Conditional Expectation Test for Kurtosis"
         }
     }
@@ -332,24 +350,24 @@ cmtest.glm <- function(x, test = c("normality", "reset", "heterosc",
                                  paste("I( bX ^ ", powers, ")", sep = "", collapse = " + "), sep = " + "))
         Ys <- model.matrix(form) 
         M <- Ys  *  gres
-        if (! OPG){
+        if (! opg){
             W <- crossprod(gres_z * X, Ys)
         }
         test.name <- "Reset test"
     }
     if (test == "heterosc"){
         if (is.null(heter_cov)) XH <- X
-        else XH <- model.matrix(heter_cov, model.frame(x))
+        else XH <- model.matrix(heter_cov, mf)
         if (colnames(XH)[1] == "(Intercept)") XH <- XH[, -1, drop = FALSE]
         rho <- z * gres
         M <- rho * XH
-        if (! OPG){
+        if (! opg){
             rho_z <- gres + z * gres_z
             W <- crossprod(X, rho_z * XH)
         }
         test.name <- "Heteroscedasticity Test"
     }
-    if (OPG){
+    if (opg){
         W <- t(S) %*% M
         F <- crossprod(S)
     }
@@ -371,8 +389,7 @@ cmtest.glm <- function(x, test = c("normality", "reset", "heterosc",
         param <- NULL
         pval <- pnorm(stat, lower.tail = FALSE) * 2
     }
-    structure(list(data.name = deparse(formula(x)),
-                   statistic = stat,
+    structure(list(statistic = stat,
                    parameter = param,
                    p.value = pval,
                    method = test.name),

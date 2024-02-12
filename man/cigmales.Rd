@@ -15,7 +15,7 @@ a tibble containing:
 \item age: age in years
 \item educ: schooling in years
 \item famsize: number of family members
-\item race: a factor with levels "other" and "white"
+\item race: a factor with levels \code{"other"} and \code{"white"}
 \item reslgth: number of years the state's restaurant smoking restrictions had been in place in 1979
 \item lagprice: one-year lag of cigarette price
 }

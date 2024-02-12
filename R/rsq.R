@@ -26,28 +26,33 @@ rsq.lm <- function(x, type = c("raw", "adj")){
 
 #' @rdname rsq
 #' @export
-rsq.binomreg <- function(x, type = c("mcfadden", "cox_snell", "cragg_uhler",
+rsq.micsr <- function(x, type = c("mcfadden", "cox_snell", "cragg_uhler",
                                      "aldrich_nelson", "veall_zimm", "estrella",
                                      "cor", "ess", "rss", "tjur",
-                                     "mckel_zavo", "f", "wald")){
+                                  "mckel_zavo", "w", "lm", "lr")){
     type <- match.arg(type)
     y <- model.response(model.frame(x))
+    if (! is.numeric(y)) y <- as.numeric(y)
     yb <- mean(y)
     logL <- as.numeric(logLik(x))
     logL0 <- - deviance(x, type = "null") / 2
     df.model <- df.residual(x)
     K <- as.numeric(x$npar) - 1
     N <- nobs(x)
-    ESS <- sum((fitted(x) - yb) ^ 2)
-    TSS <- sum( (y - yb) ^ 2)
-    RSS <- sum(resid(x, type = "response") ^ 2)
-    F <- (TSS - RSS) / RSS * df.model / K
-    W <- (TSS - RSS) / RSS * N
+    if (! inherits(x, "ordreg")){
+        ESS <- sum((fitted(x) - yb) ^ 2)
+        TSS <- sum( (y - yb) ^ 2)
+        RSS <- sum(resid(x, type = "response") ^ 2)
+    }
     LR <- 2 * (logL - logL0)
     LR_star <- - 2 * logL0
-
+    if (type %in% c("w", "lm", "lr")){
+        if (! inherits(x, "micsr")) stop("only implemented for micsr objects")
+        if (type == "w") r2 <- x$tests["w"] / (N + x$tests["w"])
+        if (type == "lm") r2 <- x$tests["lm"] / N
+        if (type == "lr") r2 <- 1 - exp(- x$tests["lr"] / N)
+    }
     if (type == "f") r2 <- K * F / (K * F + df.model) 
-    if (type == "wald") r2 <- W / (W + N)
     if (type == "mcfadden") r2 <- 1 - logL / logL0
     if (type == "cox_snell") r2 <- 1 - exp(- LR / N)
     if (type == "cragg_uhler") r2 <- (1 - exp(- LR / N)) / (1 - exp(- LR_star / N))

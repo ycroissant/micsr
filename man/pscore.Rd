@@ -94,13 +94,11 @@ be printed: one of \code{"all"} (the default), \code{strata},
 \item{smpl}{the sample to use, either the whole sample (\code{smpl = "total"}) or the sample with common support (\code{smpl = "cs"})}
 }
 \value{
-an object of class \code{"pscore"}
-
-a \code{"pscore"} object has the following elements:
+an object of class \code{"pscore"}, with the following elements:
 \itemize{
 \item \code{strata}: a tibble containing the stratas, the frequencies, the
 means and the variances of the propensity scores for treated and
-controled observations,
+controled observations
 \item \code{cov_balance}: a tibble containing the results of the balancing
 tests for every covariate; the results for the class with the
 lowest p-value is reported
@@ -132,3 +130,4 @@ pscore(formula_tuscany, data_tuscany)
 
 \insertRef{BECK:ICHI:02}{micsr}
 }
+\keyword{models}

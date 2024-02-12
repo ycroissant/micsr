@@ -29,7 +29,7 @@ a tibble containing:
 }
 }
 \source{
-Lee Adkin's home page https://learneconometrics.com/
+Lee Adkin's home page \url{https://learneconometrics.com/}
 }
 \description{
 a cross-section of 794 banks from 1996 to 2000

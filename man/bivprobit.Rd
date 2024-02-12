@@ -5,17 +5,29 @@
 \alias{logLik.bivprobit}
 \title{Bivariate probit}
 \usage{
-bivprobit(formula, data, weights, subset, na.action, offset, ...)
+bivprobit(
+  formula,
+  data,
+  weights,
+  subset,
+  na.action,
+  offset,
+  method = c("newton", "bfgs"),
+  ...
+)
 
 \method{logLik}{bivprobit}(object, ..., type = c("model", "null"))
 }
 \arguments{
-\item{formula}{a symbolic description of the model, (for the count
-component and for the selection equation).}
+\item{formula}{a symbolic description of the model, a two-part left
+and right hand side formula}
 
 \item{data}{a data frame,}
 
 \item{subset, weights, na.action, offset}{see \code{stats::lm},}
+
+\item{method}{the optimization method, one of \code{"newton"} and
+\code{"bfgs"}}
 
 \item{...}{further arguments}
 
@@ -24,12 +36,13 @@ component and for the selection equation).}
 \item{type}{for the \code{logLik} method}
 }
 \value{
-an object of class \code{micsr}, see \code{micsr::micsr} for further details
+an object of class \code{micsr}, see \code{micsr::micsr} for further
+details
 }
 \description{
 Estimation of bivariate probit models by maximum likelihood
 }
 \examples{
-pins <- bivprobit(doctor | privateins ~ privateins + size + smsa + age + sex + educ + log(wage) |
-                  . - privateins + pluriloc + nbemp, private_ins)
+bivprobit(mjob | fjob ~ meduc + ychild + owner | feduc + ychild + owner , housprod)
 }
+\keyword{models}

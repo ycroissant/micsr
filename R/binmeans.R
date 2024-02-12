@@ -1,19 +1,26 @@
 #' Compute the mean of a variable for bins of another variable
 #'
-#' In regression discontinuity, it is usual to plot average values of
-#' the outcome for beans of the forcing variable.
+#' Plot average values of the outcome for bins of the forcing
+#' variable, a common plot in regression discontinuity analysis
 #'
 #' @name binmeans
 #' @param x,y either two numeric vector for the default method, or a
-#'     formula and a data for the formula method
+#'     formula and a data frame for the formula method
 #' @param width the width of the bins
 #' @param center the cuting point of the forcing variable
 #' @param g a grouping variable
 #' @param name_g internally used by the geom
 #' @param ... further arguments
+#' @param center the cuting value of the forcing variable
+#' @param width the width of the bins
 #' @importFrom dplyr bind_cols group_by left_join mutate n select summarise %>%
 #' @importFrom rlang set_names `:=` .data
+#' @inheritParams ggplot2::layer
+#' @inheritParams ggplot2::geom_point
 #' @importFrom tibble as_tibble tibble
+#' @importFrom ggplot2 ggproto Stat
+#' @importFrom ggplot2 GeomPoint
+#' @keywords plot 
 #' @export
 binmeans <- function(x, y, width = NULL, center = NULL, g = NULL, ...){
     UseMethod("binmeans")
@@ -85,14 +92,7 @@ compute_binmeans <- function(x, width, center){
     .df
 }
 
-#' The Stat for binmeans
-#'
-#' This is the \code{ggproto} class that creates the textpath layer. It is not
-#' intended to be used directly by the end user.
-#'
-#' @format NULL
-#' @usage NULL
-#' @importFrom ggplot2 ggproto Stat
+#' @rdname binmeans
 #' @export
 StatBinmeans <-  ggplot2::ggproto("StatBinmeans", ggplot2::Stat,
                      ## setup_data = function(data, params) {
@@ -117,13 +117,7 @@ StatBinmeans <-  ggplot2::ggproto("StatBinmeans", ggplot2::Stat,
                          optional_aes = c("shape", "colour", "fill")
                          )
 
-#' Points that represents the average value of a numeric variable for
-#' bins of another variable
-#' @inheritParams ggplot2::layer
-#' @inheritParams ggplot2::geom_point
-#' @param center the cuting value of the forcing variable
-#' @param width the width of the bins
-#' @importFrom ggplot2 GeomPoint
+#' @rdname binmeans
 #' @export
 geom_binmeans <- function(mapping = NULL,
                           data = NULL, 

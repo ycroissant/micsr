@@ -1,45 +1,59 @@
 #' Binomial regression
 #'
-#' A unified interface perform binomial regression calling `lm` to fit
-#' the linear-probability model and `glm` to fit the probit and the
-#' logit model.
+#' A unified interface for binomial regression models, including
+#' linear probability, probit and logit models
 #'
 #' @name binomreg
-#' @param formula a symbolic description of the model, (for the count
-#'     component and for the selection equation).
+#' @param formula a symbolic description of the model
 #' @param data a data frame,
 #' @param subset,weights,na.action,offset see `stats::lm`,
 #' @param link one of `"identity"`, `"probit"` and "`logit`" to fit
 #'     respectively the linear probability, the probit and the logit
 #'     model
-#' @param start a vector of starting values, in this case, no
-#'     estimation
-#' @param object,x,type a `binomreg` object and the type of
-#'     log-likelihood / residuals for the `logLik` / `residuals`
-#'     method
+#' @param method `"ml"` for maximum likelihood (the only relevant
+#'     method for a regression without instrumental variables),
+#'     `"twosteps"` for two-steps estimator, `"minchisq"` for minimum
+#'     chi-squared estimator and `"test"` to get the exogeneity test
+#' @param start a vector of starting values
+#' @param object,x,type a `binomreg` object and the type of residuals
+#'     for the `residuals` method
 #' @param ... further arguments
 #' @param newdata a new data frame for the `predict` method
-#' @return an object of class `c(`"binomreg", "micsr")`, see
+#' @return an object of class `c("binomreg", "micsr")`, see
 #'     `micsr::micsr` for further details
-#' @importFrom stats glm plogis
-#' @importFrom Formula Formula
+#' @importFrom stats glm plogis qlogis
+#' @importFrom Formula Formula model.part
+#' @keywords models
 #' @examples
 #' pbt <- binomreg(mode ~ cost + ivtime + ovtime, data = mode_choice, link = 'probit')
 #' lpm <- binomreg(mode ~ cost + ivtime + ovtime, data = mode_choice, link = 'identity')
 #' summary(pbt, vcov = "opg")
 #' @export
 binomreg <- function(formula, data, weights, subset, na.action, offset,
-                     link = c("identity", "probit", "logit"), start = NULL, ...){
+                     link = c("identity", "probit", "logit"),
+                     method = c("ml", "twosteps", "minchisq", "test"),
+                     start = NULL, ...){
+    .method <- match.arg(method)
     .call <- match.call()
     .link <- match.arg(link)
-    cl <- match.call(expand.dots = FALSE)
-    .formula <- cl$formula <- Formula(formula)
+    mf <- match.call(expand.dots = FALSE)
+    .formula <- Formula(formula)
+    if (length(.formula)[2] == 2){
+        mf$model <- "probit"
+        mf$method <- .method
+        mf[[1L]] <- as.name("ivldv")#quote(micsr::ivldv())
+        result <- eval(mf, parent.frame())
+        result$call <- .call
+        return(result)
+    } else {
+        if (.method != "ml")
+            stop("with a one-part formula, the only relevant method is ml")
+    }
     m <- match(c("formula", "data", "subset", "weights"),
-               names(cl), 0L)
+               names(mf), 0L)
     # construct the model frame and components
-    cl <- cl[c(1L, m)]
-    mf <- cl
-    mf[[1L]] <- as.name("model.frame")
+    mf <- mf[c(1L, m)]
+    mf[[1L]] <- quote(stats::model.frame)
     mf <- eval(mf, parent.frame())
     mt <- attr(mf, "terms")
     X <- model.matrix(mt, mf)
@@ -54,6 +68,7 @@ binomreg <- function(formula, data, weights, subset, na.action, offset,
     .null_deviance <- - 2 * .null_logLik
         
     if (.link == "identity"){
+        .null_intercept <- yb
         lnl <- function(coefs, gradient = FALSE, hessian = FALSE, information = FALSE, sum = TRUE, X, y){
             K <- ncol(X)
             N <- length(y)
@@ -82,12 +97,13 @@ binomreg <- function(formula, data, weights, subset, na.action, offset,
             }
             if (gradient) attr(lnl, "gradient") <- grad
             if (hessian) attr(lnl, "hessian") <- hess
-            if (information) attr(lnl, "ifno") <- info
+            if (information) attr(lnl, "info") <- info
             lnl
         }
     }
                 
     if (.link == "probit"){
+        .null_intercept <- qnorm(yb)
         lnl <- function(coefs, gradient = FALSE, hessian = FALSE, information = FALSE, sum = TRUE, X, y){
             linpred <- drop(X %*% coefs)
             q <- 2 * y - 1
@@ -107,6 +123,7 @@ binomreg <- function(formula, data, weights, subset, na.action, offset,
     }
 
     if (.link == "logit"){
+        .null_intercept <- qlogis(yb)
         lnl <- function(coefs, gradient = FALSE, hessian = FALSE, information = FALSE, sum = TRUE, X, y){
             linpred <- drop(X %*% coefs)
             q <- 2 * y - 1
@@ -131,7 +148,7 @@ binomreg <- function(formula, data, weights, subset, na.action, offset,
         else{
             .coefs <- drop(solve(crossprod(X), crossprod(X, y)))
             .sigma <- sqrt(mean((y - drop(X %*% .coefs) ^ 2)))
-            .coefs <- c(.coefs, .sigma)
+            .coefs <- c(.coefs, sigma = .sigma)
         }
     }
     else .coefs <- start
@@ -148,6 +165,24 @@ binomreg <- function(formula, data, weights, subset, na.action, offset,
     .logLik <- c(model = sum(as.numeric(.lnl_conv)),
                  saturated = .sat_logLik,
                  null = .null_logLik)
+
+    # Null model
+    null_coefs <- rep(0, ncol(X))
+    names(null_coefs) <- colnames(X)
+    null_coefs["(Intercept)"] <- .null_intercept
+    if (.link == "identity") null_coefs <- c(null_coefs, sigma = sqrt(mean((y - mean(y)) ^ 2)))
+    lnl_null <- lnl(null_coefs, gradient = TRUE, hessian = TRUE, information = TRUE, X = X, y = y)
+    .null_gradient <- attr(lnl_null, "gradient")
+    .null_info <- attr(lnl_null, "info")
+    .lm <- drop(crossprod(.null_gradient, solve(.null_info, .null_gradient)))
+    .model_info <- attr(.lnl_conv, "info")
+#    .w <- drop(crossprod(.coefs[- 1], t(crossprod(.coefs[-1], .model_info[- 1, - 1]))))
+    .vcov <- solve(.model_info)
+    .w <- drop(crossprod(.coefs[- 1], t(crossprod(.coefs[-1], solve(.vcov[- 1, - 1, drop = FALSE])))))
+    .lr <- 2 * unname(.logLik["model"] - .logLik["null"])
+    tests <- c(w = .w, lm = .lm, lr = .lr)
+    
+    
     result <- list(coefficients = .coefs,
                    model = mf,
                    gradient = attr(.lnl_conv, "gradient"),
@@ -161,23 +196,11 @@ binomreg <- function(formula, data, weights, subset, na.action, offset,
                    formula = formula,
                    npar = .npar,
                    value = as.numeric(.lnl_conv),
+                   tests = tests,
                    call = .call
                    )
     structure(result, class = c("binomreg", "micsr"))
 }
-
-## #' @rdname binomreg
-## #' @export
-## logLik.binomreg <- function(object, ..., type = c("model", "null", "saturated")){
-##     .type <- match.arg(type)
-##     .val <- object$logLik[.type]
-##     .nobs <- nobs(object)
-##     .df <- switch(.type,
-##                   model = npar(object),
-##                   null = 1,
-##                   saturated = nobs(object))
-##     structure(.val, nobs = .nobs, df = .df, class = "logLik")
-## }
 
 #' @rdname binomreg
 #' @export
@@ -239,89 +262,7 @@ predict.binomreg <- function(object, ..., type = c("response", "link"), newdata 
     result
 }
 
-## #' @rdname binomreg
-## #' @export
-## get_predict.binomreg <- function(model,
-##                                  newdata = insight::get_data(model),
-##                                  vcov = NULL,
-##                                  conf_level = 0.95,
-##                                  type = "response",
-##                                  ...) {
-
-##     out <- stats::predict(model, type = type, newdata = newdata)
-##     out <- data.frame(rowid = seq_len(length(out)), predicted = out)
-##     return(out)
-## }
-
 # ajout dans le fichier type_dictionary.R
 # ajout du fichier methods_binomreg
 # sanity_model.R ajouter dans la liste des modèles supportés
 
-
-## binomreg <- function(formula, data, weights, subset, na.action, offset, model = c("lm", "probit", "logit"), ...){
-##     .formula <- Formula(formula)
-##     .call <- match.call()
-##     .model <- match.arg(model)
-##     cl <- match.call(expand.dots = FALSE)
-##     m <- match("model", names(cl), 0L)
-##     cl <- cl[- m]
-##     if (.model == "lm") cl[[1L]] <- as.name("lm")
-##     else cl[[1L]] <- as.name("glm")
-##     if (.model == "probit") dist <- binomial(link = 'probit')
-##     if (.model == "logit") dist <- binomial(link = 'logit')
-##     if (.model != "lm") cl$family <- dist
-##     fitted_model <- eval(cl, parent.frame())
-##     mf <- model.frame(fitted_model)
-##     tm <- terms(fitted_model)
-##     .coefs <- coef(fitted_model)
-##     X <- model.matrix(tm, mf)
-##     y <- model.response(mf)
-##     q <- 2 * y - 1
-##     .linpred <- drop(X %*% .coefs)
-##     K <- ncol(X)
-##     N <- length(y)
-    
-##     if (model == "probit"){
-##         .gradient <- q * mills(q * .linpred) * X
-##         .hessian <- - crossprod(sqrt(- dmills(q * .linpred)) * X)
-##         .info <- crossprod(sqrt(mills(.linpred) * mills(- .linpred)) * X)
-##         .logLik <- pnorm(q * .linpred, log.p = TRUE)
-##     }
-##     if (model == "logit"){
-##         .gradient <- (y - exp(.linpred) / (1 + exp(.linpred))) * X
-##         .hessian <- - crossprod(sqrt( exp(.linpred) / (1 + exp(.linpred)) ^ 2) * X)
-##         .info <- - .hessian
-##         .logLik <- y * .linpred - log(1 + exp(.linpred))
-##     }
-##     if (model == "lm"){
-##         .sigma <- sqrt(deviance(fitted_model) / length(y))
-##         .gradient <- cbind( (y - .linpred) * X / .sigma ^ 2,
-##                            - 1 / .sigma + (y - .linpred) ^ 2 / .sigma ^ 3)
-##         .hessian_bb <- - crossprod(X) / .sigma ^ 2
-##         .hessian_bs <- rep(0, length(.coefs))
-##         .hessian_ss <- - 2 * length(y) / .sigma ^ 2
-##         .hessian <- rbind(cbind(.hessian_bb, sigma = .hessian_bs),
-##                           sigma = c(t(.hessian_bs), .hessian_ss))
-##         .info <- - .hessian
-##         .logLik <- dnorm(.linpred, log = TRUE)
-##         .coefs <- c(.coefs, sigma = .sigma)
-##     }
-##     .value <- structure(sum(.logLik), nobs = length(y), df = length(.coefs), class = "logLik")
-##     .npar <- c(covariates = K)
-##     if (model == "lm") .npar <- c(.npar, vcov = 1)
-##     result <- list(coefficients = .coefs,
-##                    fitted.values = .linpred,
-##                    gradient = .gradient,
-##                    logLik = .logLik,
-##                    hessian = .hessian,
-##                    value = .value,
-##                    est_method = "ml",
-##                    call = .call,
-##                    info = .info,
-##                    model = fitted_model$model,
-##                    npar = .npar,
-##                    formula = .formula)
-##     structure(result, class  = "micsr")
-## }
-
-    

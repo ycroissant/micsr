@@ -26,3 +26,4 @@ and are used to compute the t/z-value. \code{stderr} enables to retrieve
 easily the vector of standard errors, either from a fitted model or
 from a matrix of covariance
 }
+\keyword{misc}

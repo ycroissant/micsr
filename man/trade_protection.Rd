@@ -7,36 +7,36 @@
 \format{
 a tibble containing:
 \itemize{
-\item ntb: NTB coverage ratio, proportion
-\item exports: exportations
+\item ntb: nontariff barrier coverage ratio
+\item vshipped: value of shipments
 \item imports: importations
 \item elast: demand elasticity
 \item cap: lobying
 \item labvar: labor market covariate
 \item sic3: 3-digit SIC industry classification
-\item k_serv: bla
+\item k_serv: physical capital, factor share
 \item inv: Inventories, factor share
-\item engsci: Engineers and scientists, factor share
-\item whitecol: White collar, factor share
-\item skill: Skilled, factor share
-\item semskill: Semi-skilled, factor share
-\item cropland: Cropland, factor shaer
-\item pasture: Pasture, factor share
-\item forest: Forest, factor share
-\item coal: Coal, factor share
-\item petro: Petroleum, factor share
-\item minerals: Minerals, factor share
-\item scrconc: Seller concentration
-\item bcrconc: Buyer concentration
-\item scrcomp: Seller number of firms
-\item bcrcomp: Buyer number of firms
-\item meps: Scale
-\item kstock: Capital stock
-\item puni: bla
-\item geog2: Geographic concentration
-\item tenure: Average worker tenure, years
-\item klratio: Capital-labor ratio
-\item bunion: bla
+\item engsci: engineers and scientists, factor share
+\item whitecol: white collar, factor share
+\item skill: skilled, factor share
+\item semskill: semi-skilled, factor share
+\item cropland: cropland, factor shaer
+\item pasture: pasture, factor share
+\item forest: forest, factor share
+\item coal: coal, factor share
+\item petro: petroleum, factor share
+\item minerals: minerals, factor share
+\item scrconc: seller concentration
+\item bcrconc: buyer concentration
+\item scrcomp: seller number of firms
+\item bcrcomp: buyer number of firms
+\item meps: scale
+\item kstock: capital stock
+\item puni: proportion of workers union
+\item geog2: geographic concentration
+\item tenure: average worker tenure, years
+\item klratio: capital-labor ratio
+\item bunion:
 }
 }
 \source{

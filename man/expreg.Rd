@@ -18,7 +18,7 @@ expreg(
 )
 }
 \arguments{
-\item{formula}{a two-part right hand side formula, first part
+\item{formula}{a two-part right hand side formula, the first part
 describing the covariates and the second part the instruments}
 
 \item{data}{a data frame,}
@@ -34,7 +34,7 @@ error}
 \item{...}{further arguments}
 }
 \value{
-An object of class \code{c('micsr')} which is a list
+An object of class \code{"micsr"} which is a list
 containing the following components:
 \itemize{
 \item coefficients: a named vector of coefficients,
@@ -53,8 +53,8 @@ containing the following components:
 }
 \description{
 Exponential conditional mean models are particularly useful for
-non-negative responses (including count data). The one or two steps
-GMM estimator is used to fit the model.
+non-negative responses (including count data). Least squares and one or two steps
+IV estimators are available
 }
 \examples{
 cigmales <- dplyr::mutate(cigmales,
@@ -72,3 +72,4 @@ expreg(birthwt ~ cigarettes + parity + race + sex | parity + race + sex +
 \author{
 Yves Croissant
 }
+\keyword{models}

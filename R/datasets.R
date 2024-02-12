@@ -7,8 +7,8 @@
 #' - birthwt: birth weight
 #' - cigarettes: number of cigarettes smoked per day during pregnancy
 #' - parity: birth order
-#' - race: a factor with levels other and white
-#' - sex: a factor with levels female and male
+#' - race: a factor with levels `"other"` and `"white"`
+#' - sex: a factor with levels `"female"` and `"male"`
 #' - edmother: number of years of education of the mother
 #' - edfather: number of years of education of the father
 #' - faminc: family income
@@ -27,12 +27,12 @@ NULL
 #' @format a tibble containing:
 #' - donation: the amount of charitable giving
 #' - donparents: the amount of charitable giving of the parents
-#' - education: the level of education of household's head, a factor with levels `less_high_school`, `high_school`, `some_college`, `college`, `post_college`
-#' - religion: a factor with levels `none`, `catholic`, `protestant`, `jewish` and `other`.
+#' - education: the level of education of household's head, a factor with levels `"less_high_school"`, `"high_school"`, `"some_college"`, `"college"`, `"post_college"`
+#' - religion: a factor with levels `"none"`, `"catholic"`, `"protestant"`, `"jewish"` and `"other"`
 #' - income: income
 #' - married: a dummy for married couples
 #' - south: a dummy for households living in the south
-#' @source this data set was kindly provided by Mark Ottoni Wilhelm
+#' @source kindly provided by Mark Ottoni Wilhelm.
 #' @references
 #' \insertRef{WILH:08}{micsr}
 #' @importFrom Rdpack reprompt
@@ -52,7 +52,7 @@ NULL
 #' - age: age in years
 #' - educ: schooling in years
 #' - famsize: number of family members
-#' - race: a factor with levels "other" and "white"
+#' - race: a factor with levels `"other"` and `"white"`
 #' - reslgth: number of years the state's restaurant smoking restrictions had been in place in 1979
 #' - lagprice: one-year lag of cigarette price
 #' @source kindly provided by John Mullahy
@@ -70,11 +70,11 @@ NULL
 #' - drinks: number of drinks in the past 2 weeks
 #' - advice: 1 if reveived a drining advice
 #' - age: age in 10 years cathegories
-#' - race: a factor with levels `white`, `black` and `other`
-#' - marital: marital status, one of `single`, `married`, `widow`, `separated`
-#' - region: one of `west`, `northeast`, `midwest` and `south`
-#' - empstatus: one of `other`, `emp` and `unemp`
-#' - limits: limits on daily activities, one of `none`, `some` and `major`
+#' - race: a factor with levels `"white"`, `"black"` and `"other"`
+#' - marital: marital status, one of `"single"`, `"married"`, `"widow"`, `"separated"`
+#' - region: one of `"west"`, `"northeast"`, `"midwest"` and `"south"`
+#' - empstatus: one of `"other"`, `"emp"` and `"unemp"`
+#' - limits: limits on daily activities, one of `"none"`, `"some"` and `"major"`
 #' - income: monthly income ($1000)
 #' - educ: education in years
 #' - medicare: insurance through medicare
@@ -117,7 +117,7 @@ NULL
 #' - ceo_age: CEO age
 #' - gap: 12 month maturity mismatch
 #' - cfa: ratio of cash flow to total assets
-#' @source Lee Adkin's home page https://learneconometrics.com/
+#' @source Lee Adkin's home page \url{https://learneconometrics.com/}
 #' @references
 #' \insertRef{ADKI:12}{micsr}
 #' 
@@ -161,6 +161,33 @@ NULL
 #' @importFrom Rdpack reprompt
 NULL
 
+#' Household Production
+#' @name housprod
+#' @docType data
+#' @keywords dataset
+#' @description  a cross-section of 819 households from 1984 
+#' @format a tibble containing:
+#' - mjob: dummy, 1 if male has paid job
+#' - fjob: dummy, 1 if female has paid job
+#' - mtime: home production time male (minutes per day)
+#' - ftime: home production time female (minutes per day)
+#' - mwage: net hourly wage rate male (estimate imputed if mjob=0)
+#' - fwage: net hourly wage rate female (estimate imputed if fjob=0)
+#' - mage: age male
+#' - meduc: years of schooling male
+#' - fage: age female
+#' - feduc: years of schooling female
+#' - owner: dummy, 1 if houseownwers
+#' - fsize: family size
+#' - ychild: number of children younger than 7 years old in the household
+#' - cars: number of cars in the household
+#' - nonlabinc: non-labour income (in units of 1000 Swedish Kronor)
+#' @source JAE data archive
+#' @references
+#' \insertRef{KERK:KOOR:03}{micsr}
+#' @importFrom Rdpack reprompt
+NULL
+
 #' Choice between car and transit
 #' @name mode_choice
 #' @docType data
@@ -178,70 +205,42 @@ NULL
 #' @importFrom Rdpack reprompt
 NULL
 
-#' Private insurance and doctor visits
-#' @name private_ins
-#' @docType data
-#' @keywords dataset
-#' @description  a cross-section of 7555 individuals from 2010 
-#' @format a tibble containing:
-#' - size: family size
-#' - smsa: lives in a msa
-#' - age: age
-#' - sex: sex
-#' - educ: number of years of education
-#' - wage: wage
-#' - nbemp: number of employees in the firm
-#' - pluriloc: a dummy for firms with multiple locations
-#' - privateins: a dummy for private insurance
-#' - doctor: a dummy if doctor visits
-#' - married: a dummy equal 1 if ever married
-#' - income: income
-#' - region: a factor for the region, one of `northeast`, `midwest`, `south` and `west`
-#' - race: a factor for the race, one of `white`, `black`, `minority` and `asian`
-#' - mental: a factor for mental health, one of `poor`, `fair`, `good`, `verygood` and `excellent`
-#' - physical: a factor for physical health, one of `poor`, `fair`, `good`, `verygood` and `excellent`
-#' @source JAE data archive
-#' @references
-#' \insertRef{HAN:LEE:19}{micsr}
-#' @importFrom Rdpack reprompt
-NULL
-
 #' Lobying from Capitalists and Unions and Trade Protection
 #' @name trade_protection
 #' @docType data
 #' @keywords dataset
 #' @description  a cross-section of 194 United States 
 #' @format a tibble containing:
-#' - ntb: NTB coverage ratio, proportion
-#' - exports: exportations
+#' - ntb: nontariff barrier coverage ratio
+#' - vshipped: value of shipments
 #' - imports: importations
 #' - elast: demand elasticity
 #' - cap: lobying
 #' - labvar: labor market covariate
 #' - sic3: 3-digit SIC industry classification
-#' - k_serv: bla
+#' - k_serv: physical capital, factor share
 #' - inv: Inventories, factor share
-#' - engsci: Engineers and scientists, factor share
-#' - whitecol: White collar, factor share
-#' - skill: Skilled, factor share
-#' - semskill: Semi-skilled, factor share
-#' - cropland: Cropland, factor shaer
-#' - pasture: Pasture, factor share
-#' - forest: Forest, factor share
-#' - coal: Coal, factor share
-#' - petro: Petroleum, factor share
-#' - minerals: Minerals, factor share
-#' - scrconc: Seller concentration
-#' - bcrconc: Buyer concentration
-#' - scrcomp: Seller number of firms
-#' - bcrcomp: Buyer number of firms
-#' - meps: Scale
-#' - kstock: Capital stock
-#' - puni: bla
-#' - geog2: Geographic concentration
-#' - tenure: Average worker tenure, years
-#' - klratio: Capital-labor ratio
-#' - bunion: bla
+#' - engsci: engineers and scientists, factor share
+#' - whitecol: white collar, factor share
+#' - skill: skilled, factor share
+#' - semskill: semi-skilled, factor share
+#' - cropland: cropland, factor shaer
+#' - pasture: pasture, factor share
+#' - forest: forest, factor share
+#' - coal: coal, factor share
+#' - petro: petroleum, factor share
+#' - minerals: minerals, factor share
+#' - scrconc: seller concentration
+#' - bcrconc: buyer concentration
+#' - scrcomp: seller number of firms
+#' - bcrcomp: buyer number of firms
+#' - meps: scale
+#' - kstock: capital stock
+#' - puni: proportion of workers union
+#' - geog2: geographic concentration
+#' - tenure: average worker tenure, years
+#' - klratio: capital-labor ratio
+#' - bunion: 
 #' @source American Economic Association Data Archive : \url{https://www.aeaweb.org/aer/}
 #' @references
 #' \insertRef{MATS:SHER:06}{micsr}
@@ -259,7 +258,7 @@ NULL
 #' - workschl: share of trips for work or school vs personal business or pleasure
 #' - size: number of individuals in the household
 #' - dist: distance to central business district in kilometers
-#' - smsa: a factor with levels "small" (less than 2.5 million population) and "large" (more than 2.5 million population)
+#' - smsa: a factor with levels `"small"` (less than 2.5 million population) and `"large"` (more than 2.5 million population)
 #' - fulltime: number of fulltime workers in household
 #' - adults: number of adults in household
 #' - distnod: distace from home to nearest transit node, in blocks
@@ -298,7 +297,7 @@ NULL
 #' - contact: contacted a temporary work agency
 #' - region: one of  `"Tuscany"` and `"Sicily"`
 #' - city: the city
-#' - group: one of `"control"` and `"treated"
+#' - group: one of `"control"` and `"treated"`
 #' - sector: the sector
 #' - occup: occupation, one of `"nojob"`, `"selfemp"`, `"bluecol"` and `"whitecol"`
 #' - empstat: employment status, one of `"empl"`, `"unemp"` and `"olf"` (out of labor force)
@@ -311,3 +310,24 @@ NULL
 #' @importFrom Rdpack reprompt
 NULL
 
+#' Apple production
+#' @name apples
+#' @docType data
+#' @keywords dataset
+#' @description  yearly observations of 173 farms from 1984 to 1986 
+#' @format a tibble containing:
+#' - id: farm's id
+#' - year: year
+#' - capital: capital stock
+#' - labor: quantity of labor
+#' - materials: quantity of materials
+#' - apples: production of apples
+#' - otherprod: other productions
+#' - pc: price of capital
+#' - pl: price of labor
+#' - pm: price of materials
+#' @source Journal of Applied Econometrics Data Archive : \url{http://qed.econ.queensu.ca/jae/}
+#' @references
+#' \insertRef{IVAL:LADO:OSSA:SIMI:96}{micsr}
+#' @importFrom Rdpack reprompt
+NULL

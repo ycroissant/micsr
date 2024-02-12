@@ -1,24 +1,24 @@
-#' Shi test for non-nested models
+#' Non-degenerate Vuong test
 #' 
-#' The Shi test correct the bias of the Vuong test
+#' An unhanced version of the Vuong test with a small-sample bias
+#' correction
 #' 
-#' @aliases ndvtest
-#' @param x a first fitted model,
-#' @param y a second fitted model,
-#' @param size the size of the test,
+#' @aliases ndvuong
+#' @param x a first fitted model
+#' @param y a second fitted model
+#' @param size the size of the test
 #' @param pval should the p-value be computed ?
-#' @param nested a boolean, `TRUE` for nested models,
-#' @param vartest a boolean, if `TRUE`, the variance test is computed,
-#' @param ndraws the number of draws for the simulations,
-#' @param diffnorm a creuser,
-#' @param seed the seed,
+#' @param nested a boolean, `TRUE` for nested models
+#' @param vartest a boolean, if `TRUE`, the variance test is computed
+#' @param ndraws the number of draws for the simulations
+#' @param diffnorm a creuser
+#' @param seed the seed
 #' @param numbers a user provided matrix of random numbers
-#' @param nd a boolean, if `TRUE` (the default) the non-degenarate Vuong test is computed,
-#' @param print.level the level of details to be printed,
+#' @param nd a boolean, if `TRUE` (the default) the non-degenarate Vuong test is computed
+#' @param print.level the level of details to be printed
 #' @return an object of class \code{"htest"}
 #' @importFrom Rdpack reprompt
 #' @importFrom stats pnorm
-#' @importFrom CompQuadForm davies
 #' @seealso the classical Vuong test is implemented in `pscl::vuong` and `nonnest2::vuongtest`.
 #' @references
 #'
@@ -31,9 +31,9 @@
 ## #' @examples
 ## #' ll <- lm(dist ~ log(speed), cars)
 ## #' loglin <- loglm(dist ~ log(speed), cars)
-## #' ndvtest(ll, loglin)
+## #' ndvuong(ll, loglin)
 #' @export
-ndvtest <- function(x, y, size = 0.05, pval = TRUE,
+ndvuong <- function(x, y, size = 0.05, pval = TRUE,
                     nested = FALSE, vartest = FALSE,
                     ndraws = 1E04, diffnorm = 0.1, seed = 1,
                     numbers = NULL, nd = TRUE,
@@ -48,15 +48,15 @@ ndvtest <- function(x, y, size = 0.05, pval = TRUE,
     set.seed(seed)
 
     # the two models are renamed f and g like in Vuong paper, the
-    # generics llcont, estfun and bread are used to extract the
+    # generics llobs, estfun and bread are used to extract the
     # relevant features of the log-likelihood
     f <- x                    ;  g  <- y    
-    N <- length(llcont(f))
+    N <- length(llobs(f))
     K <- ncol(estfun(f)) + ncol(estfun(g))
     
     # Compute the LR statistic as an average and its variance
     LR <- as.numeric(logLik(f) - logLik(g)) / N
-    w2 <- sum((llcont(f)- llcont(g)) ^ 2) / N - LR ^ 2#(LR / N) ^ 2
+    w2 <- sum((llobs(f)- llobs(g)) ^ 2) / N - LR ^ 2#(LR / N) ^ 2
     
     # solveA is a block-diagonal matrix containing (H_f / N) ^ -1 and
     # - (H_g / N) ^ - 1. The bread function returns - (H / N) ^ - 1 =
@@ -165,7 +165,7 @@ ndvtest <- function(x, y, size = 0.05, pval = TRUE,
         # compute the variance test and quit"
         W <- eigen(crossprod(B, - solveA), only.values = TRUE)$values
         stat <- N * w2
-        pvalue <- CompQuadForm::davies(stat, W ^ 2)$Qq
+        pvalue <- mydavies(stat, W ^ 2)$Qq
         results <- list(statistic = c(w2 = w2),
                         p.value = pvalue,
                         data.name = data.name,
@@ -179,7 +179,7 @@ ndvtest <- function(x, y, size = 0.05, pval = TRUE,
             # chi^2
             Tvuong <- 2 * LR * N
             W <- eigen(crossprod(B, - solveA), only.values = TRUE)$values
-            pval_vuong <- CompQuadForm::davies(Tvuong, W)$Qq
+            pval_vuong <- mydavies(Tvuong, W)$Qq
             if (nd){
                 # for the non-degenarate version, just modify the
                 # numerator, and compute the one sided p-value
@@ -298,13 +298,9 @@ sandwich::bread
 #' @export
 sandwich::meat
 
-#' @importFrom nonnest2 llcont
-#' @export
-nonnest2::llcont
-
 #' Simulated pdfs for the Vuong statistics using linear models
 #'
-#' This function can be used to reproduce the examples given of Shi
+#' This function can be used to reproduce the examples given by Shi
 #' (2015) which illustrate the fact that the distribution of the Vuong
 #' statistic may be very different from a standard normal
 #' 
@@ -356,20 +352,14 @@ vuong_sim <- function(N = 1E03, R = 1E03, Kf = 15, Kg = 1, a = 0.125){
 #' @keywords dataset
 #'
 #' @format a list of three fitted models:
-#' - group: the group-rule-utilitarian model,
-#' - intens: the intensity model,
-#' - sur: the reduced form SUR model.
+#' - group: the group-rule-utilitarian model
+#' - intens: the intensity model
+#' - sur: the reduced form SUR model
 #'
 #' @description these three models are replication in R of stata's
 #'     code available on the web site of the American Economic
 #'     Association. The estimation is complicated by the fact that
-#'     some linear constraints are imposed. The estimation was
-#'     performed using the `maxLik` package. As the Hessian is near
-#'     singular, the `bread` method for `maxLik` which use the `vcov`
-#'     method returns an error. Therefore, we use a new `maxLik2`
-#'     class and write specific `llcont`, `estfun` and `bread` methods
-#'     for this class.
-#'
+#'     some linear constraints are imposed.
 #' @source
 #' [American Economic Association data archive](https://www.aeaweb.org/aer/).
 #' @references
@@ -377,19 +367,19 @@ vuong_sim <- function(N = 1E03, R = 1E03, Kf = 15, Kg = 1, a = 0.125){
 #'
 #' @examples
 #' \dontrun{
-#' ndvtest(turnout$group, turnout$intens)
-#' ndvtest(turnout$group, turnout$sur)
-#' ndvtest(turnout$intens, turnout$sur)
+#' ndvuong(turnout$group, turnout$intens)
+#' ndvuong(turnout$group, turnout$sur)
+#' ndvuong(turnout$intens, turnout$sur)
 #' }
 NULL
 
 
-## #' @rdname ndvtest
+## #' @rdname ndvuong
 ## #' @method bread maxLik2
 ## #' @export
 ## bread.maxLik2 <- function(x, ...) - solve(x$hessian) * length(x$lnl)
 
-## #' @rdname ndvtest
+## #' @rdname ndvuong
 ## #' @method estfun maxLik2
 ## #' @export
 ## estfun.maxLik2 <- function(x, ...) x$gradient
@@ -399,3 +389,6 @@ NULL
 ## #' @export
 ## logLik.maxLik2 <- function(object, ...) sum(object$lnl)
 
+
+
+# @importFrom CompQuadForm davies

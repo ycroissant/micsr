@@ -19,9 +19,9 @@ escount(
 )
 }
 \arguments{
-\item{formula}{a Formula object which includes two responses (the
+\item{formula}{a \code{Formula} object which includes two responses (the
 count and the binomial variables) and two sets of covariates
-(for the count component and for the selection equation).}
+(for the count component and for the selection equation)}
 
 \item{data}{a data frame,}
 
@@ -29,21 +29,20 @@ count and the binomial variables) and two sets of covariates
 
 \item{start}{an optional vector of starting values,}
 
-\item{R}{the number of points for the Gauss-Hermite quadrature
-approximation,}
+\item{R}{the number of points for the Gauss-Hermite quadrature}
 
 \item{hessian}{if \code{TRUE}, the numerical hessian is computed,
 otherwise the covariance matrix of the coefficients is computed
-using the outer product of the gradient,}
+using the outer product of the gradient}
 
 \item{method}{one of \code{'ML'} for maximum likelihood estimation (the
-default) or \code{'twosteps'} for the two-steps NLS method,}
+default) or \code{'twosteps'} for the two-steps NLS method}
 
 \item{model}{one of \code{'es'} for endogenous switching (the default)
-or \code{'ss'} for sample selection.}
+or \code{'ss'} for sample selection}
 }
 \value{
-an object of class \code{'escount'} and \code{'micsr'} which is a
+an object of class \verb{c("escount,micsr)"}, a
 list containing the following components:
 \itemize{
 \item coefficients: a  named vector of coefficients,
@@ -62,9 +61,8 @@ list containing the following components:
 }
 }
 \description{
-Heckman's like estimator are extended to count data, using either
-non-linear least squares, using a correction term computed from a
-first-stage probit estimation or maximum likelihood
+Heckman's like estimator for count data, using either
+maximum likelihood or a two-steps estimator
 }
 \examples{
 trips_2s <- escount(trips | car ~ workschl + size + dist + smsa + fulltime + distnod +
@@ -79,3 +77,4 @@ trips_ml <- update(trips_2s, method = "ml")
 \author{
 Yves Croissant
 }
+\keyword{models}

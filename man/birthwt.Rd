@@ -10,8 +10,8 @@ a tibble containing:
 \item birthwt: birth weight
 \item cigarettes: number of cigarettes smoked per day during pregnancy
 \item parity: birth order
-\item race: a factor with levels other and white
-\item sex: a factor with levels female and male
+\item race: a factor with levels \code{"other"} and \code{"white"}
+\item sex: a factor with levels \code{"female"} and \code{"male"}
 \item edmother: number of years of education of the mother
 \item edfather: number of years of education of the father
 \item faminc: family income

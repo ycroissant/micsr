@@ -9,7 +9,7 @@
 #' methods.
 #'
 #' @name micsr
-#' @param x,object an object which inherits the `micsr` class,
+#' @param x,object an object which inherits the `micsr` class
 #' @param formula a formula
 #' @param subset a character which indicates which subset of
 #'     coefficients should be extracted: one of `noinst` (all the
@@ -17,25 +17,27 @@
 #'     variables), `all`, `covar` (only the coefficients of the
 #'     covariates), `inst` (only the coefficients of the instrumental
 #'     variables) and `misc` (ony the "miscelanous" coefficients,
-#'     typicaly a standard deviation or a coefficient of correlation),
+#'     typicaly a standard deviation or a coefficient of correlation)
 #' @param vcov the method used to compute the covariance matrix of the
 #'     estimators (only for the ML estimator), one of `hessian` (the
 #'     opposite of the inverse of the hessian), `info` (the inverse of
 #'     the opposite of the expected value of the hessian), `opg` (the
 #'     outer product of the gradient)
-#' @param digits,width see `base::print`
+#' @param digits,width see `print`
 #' @param conf.int,conf.level see `broom:tidy.lm`
 #' @param lhs,rhs see `Formula::model.frame.Formula`
 #' @param type,omega,sandwich see `sandwich::sandwich`
 #' @param newdata a new data frame to compute the predictions
-#' @param k see `stats::AIC`
+#' @param k see `AIC`
 #' @param ... further arguments
 #' @importFrom stats nobs deviance BIC AIC logLik predict deviance
 #' @importFrom sandwich bread estfun vcovHC sandwich
 #' @importFrom Formula model.part
-#' @importFrom Rcpp evalCpp
 #' @useDynLib micsr, .registration=TRUE
 NULL
+
+# @importFrom Rcpp evalCpp
+
 
 #' @importFrom dplyr mutate
 #' @export
@@ -65,14 +67,11 @@ sandwich::estfun
 #' @export
 sandwich::vcovHC
 
-#' @importFrom nonnest2 llcont
+
+#' @rdname micsr
 #' @export
-nonnest2::llcont
-
-
-## #' @rdname micsr
-## #' @export
-## llcont <- function(x, ...) UseMethod("llcont")
+llobs <- function(x, ...)
+    UseMethod("llobs")
 
 #' @importFrom Formula model.part
 #' @export
@@ -175,7 +174,7 @@ summary.micsr <- function(object, ...,
     object$coefficients <- cbind(b, std.err, z, p)
     colnames(object$coefficients) <- c("Estimate", "Std. Error", "z-value", "Pr(>|z|)")
     if (.est_method == "gmm"){
-        object$sargantest <- sargantest(object)
+        object$sargan <- sargan(object)
     }
     structure(object, class = c("summary.micsr", "micrs"))
 }
@@ -240,7 +239,7 @@ print.summary.micsr <- function (x, digits = max(3, getOption("digits") - 2), wi
         cat("Implied value for rho   : ", format(x$rho, digits = digits), "\n", sep = "")
     }
     if (.est_method == "gmm"){
-        print(x$sargantest)
+        print(x$sargan)
     }
 }
 
@@ -416,10 +415,15 @@ nobs.micsr <- function(object, ...){
 }
 
 #' @rdname micsr
-#' @method llcont micsr
+#' @method llobs micsr
 #' @export
-llcont.micsr <- function(x, ...) x$value
+llobs.micsr <- function(x, ...) x$value
 
+
+#' @rdname micsr
+#' @method llobs mlogit
+#' @export
+llobs.mlogit <- function(x, ...) log(fitted(x, outcome = TRUE))
 
 #' @rdname micsr
 #' @method tidy micsr

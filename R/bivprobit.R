@@ -3,20 +3,24 @@
 #' Estimation of bivariate probit models by maximum likelihood
 #'
 #' @name bivprobit
-#' @param formula a symbolic description of the model, (for the count
-#'     component and for the selection equation).
+#' @param formula a symbolic description of the model, a two-part left
+#'     and right hand side formula
 #' @param data a data frame,
 #' @param subset,weights,na.action,offset see `stats::lm`,
+#' @param method the optimization method, one of `"newton"` and
+#'     `"bfgs"`
 #' @param type for the `logLik` method
 #' @param ... further arguments
 #' @param object a `bivprobit` object
 #' @param type for the `logLik` method
-#' @return an object of class `micsr`, see `micsr::micsr` for further details
+#' @return an object of class `micsr`, see `micsr::micsr` for further
+#'     details
+#' @keywords models
 #' @examples
-#' pins <- bivprobit(doctor | privateins ~ privateins + size + smsa + age + sex + educ + log(wage) |
-#'                   . - privateins + pluriloc + nbemp, private_ins)
+#' bivprobit(mjob | fjob ~ meduc + ychild + owner | feduc + ychild + owner , housprod)
 #' @export
-bivprobit <- function (formula, data, weights, subset, na.action, offset, ...) {
+bivprobit <- function (formula, data, weights, subset, na.action, offset, method = c("newton", "bfgs"), ...) {
+    .method <- match.arg(method)
     .call <- match.call()
     cl <- match.call(expand.dots = FALSE)
     .formula <- cl$formula <- Formula(formula)
@@ -113,19 +117,23 @@ bivprobit <- function (formula, data, weights, subset, na.action, offset, ...) {
     start_2 <- coef(pbt2)
     names(start_1) <- paste("eq1", colnames(X1), sep = "_")
     names(start_2) <- paste("eq2", colnames(X2), sep = "_")
-    .start <- c(start_1, start_2, rho = 0)
+    .start <- c(start_1, start_2, rho = 0.1)
+    
+    if (.method == "newton")
+        .coefs <- newton(lnl, .start, trace = 0, direction = "max", X1 = X1, X2 = X2, q1 = q1, q2 = q2, ...)
+    if (.method == "bfgs"){
     # use of optim, newton not reliable
-    f <- function(x) - lnl(x, sum = TRUE, robust = TRUE, gradient = FALSE, hessian = FALSE, X1 = X1, X2 = X2, q1 = q1, q2 = q2)
-    g <- function(x) - attr(lnl(x, sum = TRUE, robust = TRUE, gradient = TRUE, hessian = FALSE, X1 = X1, X2 = X2, q1 = q1, q2 = q2), "gradient")
-    w <- optim(.start, f, g, method = "BFGS")
-    .coefs <- w$par
+        f <- function(x) - lnl(x, sum = TRUE, robust = TRUE, gradient = FALSE, hessian = FALSE, X1 = X1, X2 = X2, q1 = q1, q2 = q2)
+        g <- function(x) - attr(lnl(x, sum = TRUE, robust = TRUE, gradient = TRUE, hessian = FALSE, X1 = X1, X2 = X2, q1 = q1, q2 = q2), "gradient")
+        w <- optim(.start, f, g, method = "BFGS")
+        .coefs <- w$par
+    }
     .coefs_null <- newton(lnl, c(qnorm(mean((q1 + 1) / 2)), qnorm(mean((q2 + 1) / 2)), 0),
                           trace = FALSE, direction = "max",
                           X1 = matrix(rep(1, N), ncol = 1), X2 = matrix(rep(1, N), ncol = 1), q1 = q1, q2 = q2)
     lnl_null <- lnl(.coefs_null, gradient = FALSE, sum = TRUE, 
         robust = TRUE, X1 = matrix(rep(1, N), ncol = 1), X2 = matrix(rep(1, 
             N), ncol = 1), q1 = q1, q2 = q2)
-print(.coefs_null)
     .coefs[K1 + K2 + 1] <- atan(.coefs[K1 + K2 + 1]) * 2 / pi
     .lnl_conv <- lnl(.coefs, sum = FALSE, gradient = TRUE, hessian = TRUE, 
         robust = FALSE, X1 = X1, X2 = X2, q1 = q1, q2 = q2)

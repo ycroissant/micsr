@@ -10,11 +10,11 @@ a tibble containing:
 \item drinks: number of drinks in the past 2 weeks
 \item advice: 1 if reveived a drining advice
 \item age: age in 10 years cathegories
-\item race: a factor with levels \code{white}, \code{black} and \code{other}
-\item marital: marital status, one of \code{single}, \code{married}, \code{widow}, \code{separated}
-\item region: one of \code{west}, \code{northeast}, \code{midwest} and \code{south}
-\item empstatus: one of \code{other}, \code{emp} and \code{unemp}
-\item limits: limits on daily activities, one of \code{none}, \code{some} and \code{major}
+\item race: a factor with levels \code{"white"}, \code{"black"} and \code{"other"}
+\item marital: marital status, one of \code{"single"}, \code{"married"}, \code{"widow"}, \code{"separated"}
+\item region: one of \code{"west"}, \code{"northeast"}, \code{"midwest"} and \code{"south"}
+\item empstatus: one of \code{"other"}, \code{"emp"} and \code{"unemp"}
+\item limits: limits on daily activities, one of \code{"none"}, \code{"some"} and \code{"major"}
 \item income: monthly income ($1000)
 \item educ: education in years
 \item medicare: insurance through medicare

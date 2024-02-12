@@ -1,59 +1,61 @@
 #' Truncated response model
 #'
 #' Estimation of models for which the response is truncated, either on
-#' censored or truncated samples using linear models, maximum
-#' likelihood or two-steps estimators
+#' censored or truncated samples using OLS, NLS, maximum
+#' likelihood, two-steps estimators or trimmed estimators
 #'
 #' @name tobit1
 #' @param formula a symbolic description of the model; if two right
-#'     hand sides are provided, the second one is used to parametrize
-#'     the conditional variance,
-#' @param data a data frame,
-#' @param subset a subset,
-#' @param weights an optional vector of weights (currently only
-#'     supported by ml method
+#'     hand sides are provided, the second one described the set of
+#'     instruments if `scedas` is `NULL`, which is the
+#'     default. Otherwise, the second part indicates the set of
+#'     covariates for the variance function
+#' @param data,subset,weights see `lm`
 #' @param start an optional vector of starting values
-#' @param left,right left and right limits of the dependent
-#'     variable. The default is respectively 0 and +Inf which
+#' @param left,right left and right truncation points for the response
+#'     The default is respectively 0 and +Inf which
 #'     corresponds to the most classic (left-zero truncated) tobit
-#'     model,
+#'     model
 #' @param scedas the functional form used to specify the conditional
-#'     variance, which is of the form: s_n = s_o f(Z'g), where Z are
-#'     the covariates indicated in the second part of the formula and
-#'     z_o and g a set of parameters to estimate. Currently, f can
-#'     either be set to `"exp"` or `"pnorm"`,
+#'     variance, either `"exp"` or `"pnorm"`
 #' @param sample either `"censored"` (the default) to estimate the
 #'     censored (tobit) regression model or `"truncated"` to estimated
-#'     the truncated regression model,
+#'     the truncated regression model
 #' @param method one of `"ml"` for maximum likelihood, `"lm"` for
-#'     (biased) least squares estimators and `"twosteps"` for two-steps
-#'     consistent estimators, `"trimmed"` for symetrically censored
-#'     estimator,
+#'     (biased) least squares estimators, `"twosteps"` for
+#'     two-steps consistent estimators, `"trimmed"` for symetrically
+#'     censored estimator, `"minchisq"` and `"test"`. The last two are
+#'     only relevant for instrumental variable estimation (when the
+#'     formula is a two-parts formula and `scedas` is `NULL`)
 #' @param trace a boolean (the default if `FALSE`) if `TRUE` some
-#'     information about the optimization process is printed,
-#' @param ... further arguments.
+#'     information about the optimization process is printed
+#' @param ... further arguments
 #' @importFrom tibble tibble
 #' @importFrom stats binomial coef dnorm glm lm model.matrix
 #'     model.response pnorm sigma df.residual fitted logLik
 #'     model.frame printCoefmat residuals terms vcov nobs
 #'     model.weights .getXlevels predict delete.response predict
 #'     update
-#' @return
-#' An object of class `c('tobit1', 'lm')`, which is a list containg the following components:
-#' - coefficients: a named vector of coefficients,
-#' - linear.predictor: the linear fit,
-#' - fitted.values: the fitted values,
-#' - residuals: the residuals,
-#' - df.residual: the residual degrees of freedom,
-#' - hessian: the hessian of the log-likelihood function at the optimum,
+#' @keywords models
+#' @return An object of class `c("tobit1", "lm")`, which is a list
+#'     containg the following components:
+#' - coefficients: a named vector of coefficients
+#' - linear.predictor: the linear fit
+#' - fitted.values: the fitted values
+#' - residuals: the residuals
+#' - df.residual: the residual degrees of freedom
+#' - hessian: the hessian of the log-likelihood function at the
+#'     optimum
 #' - vcov: an estimator of the covariance matrix of the coefficients,
-#' - gradObs: a N x K matrix containing the individual contributions to the gradient,
-#' - logLik: the value of the log-likelihood at the optimum,
-#' - model: the model frame,
-#' - terms: the terms object used,
+#' - gradient: a N x K matrix containing the individual contributions
+#' to the gradient
+#' - logLik: the value of the log-likelihood at the optimum
+#' - model: the model frame
+#' - terms: the terms object used
 #' - call: the matched call
 #' - xlevels: a record of the levels of the factors used in fitting
-#' - na.action: intormation returned by `model.frame` on the special handling of `NA`'s.
+#' - na.action: intormation returned by `model.frame` on the special
+#'     handling of `NA`'s
 #' @author Yves Croissant
 #' @references \insertRef{POWE:86}{micsr}
 #' @examples
@@ -62,26 +64,47 @@
 #'              religion + married + south, data = charitable)
 #' scls <- update(ml, method = "trimmed")
 #' tr <- update(ml, sample = "truncated")
+#' nls <- update(tr, method = "nls")
 #' @export
 tobit1 <- function(formula, data, subset = NULL, weights = NULL,
                    start = NULL, left = 0, right = Inf,
-                   scedas = c("exp", "pnorm"),
+                   scedas = NULL,
                    sample = c("censored", "truncated"),
-                   method = c("ml", "lm", "twosteps", "trimmed", "nls"),
+                   method = c("ml", "lm", "twosteps", "trimmed",
+                              "nls", "minchisq", "test"),
                    trace = FALSE,
                    ...){
     .call <- match.call()
     .method <- match.arg(method)
     .sample <- match.arg(sample)
-    .scedas <- match.arg(scedas)
-    cl <- match.call(expand.dots = FALSE)
-    .formula <- cl$formula <- Formula(formula)
+    .scedas <- scedas
+    if (! is.null(scedas)){
+        if (! scedas %in% c("exp", "pnorm"))
+            stop("scedas should be either equal to exp or to pnorm")
+        .scedas <- .scedas
+    }
+    mf <- cl <- match.call(expand.dots = FALSE)
+    .formula <- Formula(formula)
+    if (length(.formula)[2] == 2 & is.null(.scedas)){
+        mf$model <- "tobit"
+        if (! .method %in% c("twosteps", "minchisq", "ml", "test"))
+            stop("method should be one of twosteps, minchisq, ml and test")
+        mf$method <- .method
+        mf[[1L]] <- as.name("ivldv")#quote(micsr::ivldv())
+        result <- eval(mf, parent.frame())
+        result$call <- .call
+        return(result)
+    } else {
+        if (! .method %in% c("twosteps", "ml", "nls", "lm", "trimmed"))
+            stop("method should be one of twosteps, ml, nls and lm")
+    }
+
+    .formula <- mf$formula <- Formula(formula)
     m <- match(c("formula", "data", "subset", "weights"),
-               names(cl), 0L)
+               names(mf), 0L)
     zerotrunc <- ifelse(left == 0 & is.infinite(right) & (right > 0), TRUE, FALSE)
     # construct the model frame and components
-    cl <- cl[c(1L, m)]
-    mf <- cl
+    mf <- mf[c(1L, m)]
     mf[[1L]] <- as.name("model.frame")
     mf <- eval(mf, parent.frame())
     mt <- attr(mf, "terms")
@@ -101,7 +124,6 @@ tobit1 <- function(formula, data, subset = NULL, weights = NULL,
     wt <- model.weights(mf)
     if (is.null(wt)) wt <- rep(1, N)
     else wt <- wt / mean(wt)
-    
     # identify the untruncated observations
     P <- as.numeric(y > left & y < right)
     Plog <- as.logical(P)
@@ -121,13 +143,13 @@ tobit1 <- function(formula, data, subset = NULL, weights = NULL,
     # compute the starting values if they are not provided
     if (is.null(start)){
         init_lm <- cl
+        init_lm <- cl[c(1L, m)]
         init_lm[[1L]] <- as.name("lm")
         if (length(.formula)[2] > 1)
             init_lm$formula <- formula(.formula, rhs = 1)
         init_lm <- eval(init_lm, parent.frame())
         coefs_init <- c(coef(init_lm), sigma = sigma(init_lm))
     }
-
     # lm estimator, biased
     if (.method == "lm"){
         if (.sample == "truncated") result <- lm(y ~ X - 1, subset = Plog)
@@ -144,7 +166,7 @@ tobit1 <- function(formula, data, subset = NULL, weights = NULL,
                        fomula = .formula,
                        model = model.frame(result),
                        terms = terms(model.frame(result)),
-                       call = cl,
+                       call = .call,
                        est_method = "lm")
     }
 
@@ -187,7 +209,7 @@ tobit1 <- function(formula, data, subset = NULL, weights = NULL,
                        logLik = NA,
                        model = model.frame(result),
                        terms = terms(model.frame(result)),
-                       call = cl,
+                       call = .call,
                        est_method = "twosteps")
     }
 
@@ -252,13 +274,13 @@ tobit1 <- function(formula, data, subset = NULL, weights = NULL,
                        model = mf,
                        terms = NA,
                        status = status,
-                       call = cl,
+                       call = .call,
                        est_method = "trimmed")
     }
     
     # non-linear least-squares
     if (.method == "nls"){
-        if (! zerotrunc) stop("nls estimator only implemented for simple tobit")
+        if (! zerotrunc | .sample != "truncated") stop("nls estimator only implemented for simple truncated model")
         if (.sample == "truncated"){
             fun_nls <-  function(x, gradient = FALSE, hessian = FALSE){
                 beta <- x[1:ncol(X)]
@@ -291,6 +313,8 @@ tobit1 <- function(formula, data, subset = NULL, weights = NULL,
                 }
                 f
             }
+            
+
             coefs <- coefs_init
             coefs <- newton(fun_nls, coefs, trace = trace)
             f <- fun_nls(coefs, gradient = TRUE, hessian = TRUE)
@@ -329,6 +353,7 @@ tobit1 <- function(formula, data, subset = NULL, weights = NULL,
             lnl_conv <- lnl_tp(coefs, X = X, y = y, wt = wt,
                                sum = FALSE, gradient = TRUE, hessian = TRUE,
                                left = left, right = right, sample = .sample)
+            npar <- structure(c(covariates = ncol(X), vcov = 1), default = c("covariates", "vcov"))
         }
         else{
             sup_coef <- rep(0, ncol(Z))
@@ -341,6 +366,7 @@ tobit1 <- function(formula, data, subset = NULL, weights = NULL,
                                scedas = .scedas, Z = Z,
                                sum = FALSE, gradient = TRUE, hessian = TRUE,
                                left = left, right = right, sample = .sample)
+            npar <- structure(c(covariates = ncol(X), scedas = ncol(Z) + 1), default = c("covariates"))
         }
             
         .hessian <- attr(lnl_conv, "hessian")
@@ -400,6 +426,7 @@ tobit1 <- function(formula, data, subset = NULL, weights = NULL,
                        hessian = .hessian,
                        info = .info,
                        vcov = .vcov,
+                       npar = npar,
                        gradient = .gradient,
                        value = as.numeric(lnl_conv),
                        logLik = .logLik,
@@ -411,5 +438,5 @@ tobit1 <- function(formula, data, subset = NULL, weights = NULL,
                        est_method = "ml"
                        )
     }
-    structure(result, class = c("micsr"))
+    structure(result, class = c("tobit1", "micsr"))
 }

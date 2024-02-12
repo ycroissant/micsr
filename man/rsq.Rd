@@ -3,17 +3,17 @@
 \name{rsq}
 \alias{rsq}
 \alias{rsq.lm}
-\alias{rsq.binomreg}
+\alias{rsq.micsr}
 \title{Coefficient of determination}
 \usage{
 rsq(x, type)
 
 \method{rsq}{lm}(x, type = c("raw", "adj"))
 
-\method{rsq}{binomreg}(
+\method{rsq}{micsr}(
   x,
   type = c("mcfadden", "cox_snell", "cragg_uhler", "aldrich_nelson", "veall_zimm",
-    "estrella", "cor", "ess", "rss", "tjur", "mckel_zavo", "f", "wald")
+    "estrella", "cor", "ess", "rss", "tjur", "mckel_zavo", "w", "lm", "lr")
 )
 }
 \arguments{

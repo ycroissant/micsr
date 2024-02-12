@@ -30,6 +30,7 @@
 #' @param format one of `"rst"` `"pipe"` and `"simple"`, this argument
 #'     is passed to `knitr::kable`
 #' @param ... further arguments
+#' @keywords models
 #' @importFrom dplyr pull filter bind_rows arrange case_when top_n
 #'     right_join transmute
 #' @importFrom tibble add_column add_row
@@ -41,13 +42,11 @@
 #' @references \insertRef{DEHE:WAHB:02}{micsr}
 #'
 #' \insertRef{BECK:ICHI:02}{micsr}
-#' @return an object of class `"pscore"`
-#'
-#' a `"pscore"` object has the following elements:
+#' @return an object of class `"pscore"`, with the following elements:
 #'
 #' - `strata`: a tibble containing the stratas, the frequencies, the
 #' means and the variances of the propensity scores for treated and
-#' controled observations,
+#' controled observations
 #' - `cov_balance`: a tibble containing the results of the balancing
 #' tests for every covariate; the results for the class with the
 #' lowest p-value is reported

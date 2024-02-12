@@ -31,3 +31,4 @@ however, is is more convenient to use a set of dummy variables.
 \examples{
 charitable \%>\% dummy(religion, education)
 }
+\keyword{misc}
