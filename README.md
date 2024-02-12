@@ -39,15 +39,6 @@ tools and data sets:
   - `stder`: extract the standard errors of a fitted model,
   - `npar`: extract the number of parameters in a fitted model.
 
-
-- miscellanous tools
-  - `gaze`: print a short summary of an object,
-  - `dummy`: generate a set of dummy variables from a factor,
-  - `newton`: Newton-Raphson optimization method, using the analytical gradient and hessian,
-  - `mills`: compute the inverse mills ratio and its first two derivatives,
-  - `stder`: extract the standard errors of a fitted model,
-  - `npar`: extract the number of parameters in a fitted model.
-
 - data sets:
   - `apples`: Apple production, Ivaldi and al. (1996), constrained
   linear model,
@@ -77,6 +68,16 @@ endogenous switching model for count data,
   - `twa`: Temporary help jobs and permanent employment, Ichino,
 Mealli and Nannicini (2008), matching.
 
+- vignettes:
+  - charitable: Estimating the Tobit-1 model with the charitable
+data set
+  - escount: Endogenous switching or sample selection models for
+count data
+  - expreg: Exponentional conditional mean models with endogeneity
+  - ndvvuong: Implementation of Shi's non-degeranate Vuong test
+
+
+
 We tried to keep the sets of package on which **micsr** depends on as
 small as possible. **micsr** depends on **Formula**, **generics**,
 **Rdpack**, **knitr**, **sandwich** and on a subset of the
@@ -87,21 +88,12 @@ al., 2023), and the distribution function of quadratic forms in normal
 variables from the **CompQuadForm** package (Duchesne and Lafaye,
 2010).
 
-- vignettes:
-
-  - charitable: Estimating the Tobit-1 model with the charitable
-data set
-  - escount: Endogenous switching or sample selection models for
-count data
-  - expreg: Exponentional conditional mean models with endogeneity
-  - ndvvuong: Implementation of Shi's non-degeranate Vuong test
-
 
 
 ## Installation
 
-The `micsr` is not yet on CRAN. To install it, first install the `remotes` package and enter:
+The `micsr` is not yet on CRAN. To install it, first install the `pak` package and enter:
 
 ```
-remotes::install_github("ycroissant/micsr", build_vignettes = TRUE)
+pak::pkg_install("ycroissant/micsr")
 ```

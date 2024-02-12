@@ -1,4 +1,4 @@
-#' micsr package: Microeconometrics Package
+#' **micsr** : Microeconometrics with R
 #'
 #' The micsr package is the companion package to the book
 #' "Microeconometrics with R" (Chapman and Hall/CRC The R Series). It
@@ -8,9 +8,10 @@
 #' - functions to estimate models:
 #'
 #'   - `binomreg`: binomial regression models, Rivers and Vuong (1988),
+#'   - `bivprobit`: bivariate probit model
 #'   - `clm`: constrained linear models,
 #'   - `escount`: endogenous switching and selection model for count data, Terza (1998),
-#'   - `expcm`: exponential conditional mean models, Mullahy (1997),
+#'   - `expreg`: exponential conditional mean models, Mullahy (1997),
 #'   - `loglm`: log-linear models,
 #'   - `ordreg`: ordered regression models,
 #'   - `poisreg`: poisson models,
@@ -29,7 +30,7 @@
 #'
 #' - miscellanous tools
 #'
-#'   - `sight`: print a short summary of an object,
+#'   - `gaze`: print a short summary of an object,
 #'   - `dummy`: generate a set of dummy variables from a factor,
 #'   - `newton`: Newton-Raphson optimization method, using the analytical gradient and hessian,
 #'   - `mills`: compute the inverse mills ratio and its first two derivatives,
@@ -66,7 +67,16 @@
 #'   - `twa`: Temporary help jobs and permanent employment, Ichino,
 #' Mealli and Nannicini (2008), matching.
 #'
+#' - vignettes:
 #'
+#'   - charitable: Estimating the Tobit-1 model with the charitable
+#'   data set
+#'   - escount: Endogenous switching or sample selection models for
+#'   count data
+#'   - expreg: Exponentional conditional mean models with endogeneity
+#'   - ndvvuong: Implementation of Shi's non-degeranate Vuong test
+#'
+#' 
 #' We tried to keep the sets of package on which **micsr** depends on
 #' as small as possible. **micsr** depends on **Formula**,
 #' **generics**, **Rdpack**, **knitr**, **sandwich** and on a subset
