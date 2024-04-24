@@ -18,21 +18,7 @@
 #'     default) or `'twosteps'` for the two-steps NLS method
 #' @param model one of `'es'` for endogenous switching (the default)
 #'     or `'ss'` for sample selection
-#' @return an object of class `c("escount,micsr)"`, a
-#'     list containing the following components:
-#' - coefficients: a  named vector of coefficients,
-#' - sigma, rho: the estimated values of sigma and rho for the `twosteps` method,
-#' - residuals: the vector of residuals,
-#' - fitted.values: the fitted values
-#' - vcov: estimation of the covariance matrix of the estimators
-#' - value: value of the objective function at convergence
-#' - model: the model frame
-#' - call: the matched call
-#' - K: the number of covariates
-#' - L: the number of instruments
-#' - df.residual: the degrees of freedom of the regression
-#' - xlevels: a record of the levels of the factors used in fitting
-#' - na.action: information returned by `model.frame` on the sepcial handling of `NA`'s
+#' @return an object of class `c("escount,micsr)"`, see `micsr::micsr` for further details.
 #' @importFrom stats .getXlevels coef glm model.matrix model.response
 #'     model.frame model.offset model.weights formula fitted nobs
 #'     optim pchisq pnorm poisson printCoefmat vcov binomial dnorm
@@ -88,9 +74,7 @@ escount <- function(formula,
     offset <- model.offset(mf)
     X <- model.matrix(.formula, mf, rhs = 1)
     names_X <- colnames(X)
-    old_options <- options(warn = -1)
     Z <- model.matrix(.formula, mf, rhs = 2)
-    options(old_options)
     names_Z <- colnames(Z)
     y <- model.part(.formula, mf, lhs = 1, drop = TRUE)
     d <- model.part(.formula, mf, lhs = 2, drop = TRUE)

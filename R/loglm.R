@@ -6,7 +6,7 @@
 #' @name loglm
 #' @param formula,data see `lm`
 #' @return
-#' An object of class `micsr`
+#' An object of class `"micsr"`, see `micsr::micsr` for further details.
 #' @author Yves Croissant
 #' @keywords models
 #' @examples

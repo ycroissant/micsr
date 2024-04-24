@@ -18,7 +18,7 @@
 #'     coefficients are 0
 #' @author Yves Croissant
 #' @references \insertRef{ZELL:REVA:69}{micsr}
-#' @return An object of class `micsr`
+#' @return a function.
 #' @export
 zellner_revankar <- function(theta, y, Z, sum = FALSE, gradient = TRUE,
                          hessian = TRUE, repar = TRUE){

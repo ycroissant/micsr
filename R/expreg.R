@@ -15,20 +15,7 @@
 #'     get a model with respectively a multiplicative or an additive
 #'     error
 #' @param ... further arguments
-#' @return An object of class `"micsr"` which is a list
-#'     containing the following components:
-#' - coefficients: a named vector of coefficients,
-#' - residuals: the vector of residuals,
-#' - fitted.values: the fitted values
-#' - vcov: estimation of the covariance matrix of the estimators
-#' - value: value of the objective function at convergence
-#' - model: the model frame
-#' - call: the matched call
-#' - K: the number of covariates
-#' - L: the number of instruments
-#' - df.residual: the degrees of freedom of the regression
-#' - xlevels: a record of the levels of the factors used in fitting
-#' - na.action: information returned by `model.frame` on the sepcial handling of `NA`'s
+#' @return an object of class `"micsr"`, see `micsr::micsr` for further details.
 #' @importFrom stats .getXlevels coef glm model.matrix model.response
 #'     nobs optim pchisq pnorm poisson printCoefmat vcov model.frame
 #' @importFrom Formula Formula

@@ -14,7 +14,7 @@
 #'     methods
 #' @param signif.stars a boolean indicating whether the stars should
 #'     be printed
-#' @return invisibly its first argument
+#' @return returns invisibly its first argument
 #' @keywords misc
 #' @examples
 #' t.test(extra ~ group, sleep) %>% gaze
@@ -49,11 +49,21 @@ gaze.micsr <- function(x, ..., coef = NULL,
 
 #' @rdname gaze
 #' @export
-gaze.ivreg <- function(x, ..., coef,
-                          digits = max(3L, getOption("digits") - 3L), 
-                          signif.stars = getOption("show.signif.stars")){
+gaze.ivreg <- function(x, ..., coef = NULL,
+                       digits = max(3L, getOption("digits") - 3L),
+                       signif.stars = FALSE){
+#                          signif.stars = getOption("show.signif.stars")){
   gaze.lm(x, ..., coef = coef, digits = digits, signif.stars = signif.stars)
 }
+
+#' @rdname gaze
+#' @export
+gaze.mlogit <- function(x, ..., coef = NULL,
+                       digits = max(3L, getOption("digits") - 3L),
+                       signif.stars = FALSE){
+  gaze.lm(x, ..., coef = coef, digits = digits, signif.stars = signif.stars)
+}
+
 
 #' @rdname gaze
 #' @export

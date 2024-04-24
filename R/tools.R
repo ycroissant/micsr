@@ -7,7 +7,7 @@
 #' @param deriv one of 0 (the default, returns the inverse Mills
 #'     ratio), 1 (the first derivative) and 2 (the second derivative)
 #' @keywords misc
-#' @return a numeric
+#' @return a numeric.
 #' @export
 mills <- function(x, deriv = 0){
     if (! deriv %in% 0:2) stop("irrelevant value of deriv")
@@ -35,7 +35,7 @@ d2mills <- function(x) mills(x) * ( (x + mills(x)) * (x + 2 * mills(x)) - 1)
 #' @param ... further arguments, passed to fun
 #' @keywords misc
 #' @return a numeric vector, the parameters at the optimum of the
-#'     function
+#'     function.
 #' @export
 newton <- function(fun, coefs, trace = 0, direction = c("min", "max"), tol = sqrt(.Machine$double.eps), maxit = 500, ...){
     if (trace){
@@ -81,7 +81,7 @@ newton <- function(fun, coefs, trace = 0, direction = c("min", "max"), tol = sqr
 #' 
 #' @name stder
 #' @param x a fitted model or a matrix of covariance
-#' @param .vcov a function that computes a covariance matrix, or a character
+#' @param vcov a function that computes a covariance matrix, or a character
 #' @param ... further arguments
 #' @return a numeric vector
 #' @keywords misc
@@ -90,7 +90,8 @@ stder <- function(x, .vcov, ...) UseMethod("stder")
 
 #' @rdname stder
 #' @export
-stder.default <- function(x, .vcov = NULL, ...){
+stder.default <- function(x, vcov = NULL, ...){
+    .vcov <- vcov
     if (is.matrix(x)) std <- sqrt(diag(x))
     else{
         if (! is.null(.vcov)){
@@ -201,13 +202,13 @@ dummy <- function (x, ..., keep = FALSE, prefix = NULL, ref = FALSE) {
 #' generic and has a special method for `micsr` objects with a
 #' `subset` argument that enables to compute the number of parameters
 #' for a subset of coefficients. The default method returns the length
-#' of the vector of coefficients extracted using the `coef` function
+#' of the vector of coefficients extracted using the `coef` function.
 #'
 #' @name npar
 #' @param x a fitted model
 #' @param subset a character indicating the subset of coefficients
 #'     (only relevant for `micsr` models).
-#' @return an integer
+#' @return an integer.
 #' @keywords misc
 #' @author Yves Croissant
 #' @export
@@ -232,4 +233,57 @@ npar.micsr <- function(x, subset = NULL){
     sum(as.numeric(result))
 }
 
+
+compute_rank <- function(x){
+    abs_eigen_value <- abs(eigen(crossprod(x), only.values = TRUE)$values)
+    sum(abs_eigen_value > sqrt(.Machine$double.eps))
+}
+
+
+maximize <- function(x, start, method = c("bfgs", "nr"), trace, ...){
+    if (method == "bfgs"){
+        fun <- function(param) x(param, gradient = FALSE, hessian = FALSE, opposite = TRUE, ...)
+        grad <- function(param) attr(x(param, gradient = TRUE, hessian = FALSE, opposite = TRUE, ...), "gradient")
+        result <- optim(start, fun, grad, method = "BFGS", control = list(trace = trace))$par
+    }
+    if (method == "nr"){
+        result <- nlm(x, start, print.level = trace, gradient = TRUE, hessian = TRUE, sum = TRUE, opposite = TRUE, ...)$estimate
+    }
+    result
+}
+
+quad_form <- function(x, m = NULL, inv = TRUE, subset = NULL, vcov = NULL, ...){
+    .sub <- subset
+    if (is.list(x)){
+        if (is.null(coef(x))) stop("x should be a fitted model")
+        .vcov <- vcov
+        .coef <- coef(x)
+        if (! is.null(.vcov)){
+            if (is.character(.vcov)){
+                if (! inherits(x, "micsr"))
+                    stop("object should be of class micsr")
+                .vcov <- vcov(x, vcov = .vcov)
+            }
+            if (is.function(.vcov)) .vcov <- .vcov(x, ...)
+        }
+        else .vcov <- vcov(x)
+        if (is.null(.sub)) .sub <- 1:length(.coef)
+        x <- .coef[.sub]
+        m <- .vcov[.sub, .sub]
+    }
+    if (is.null(m)) stop("a matrix should be provided")
+    if (length(m) == 1) m <- matrix(m, 1, 1)
+    if (! is.matrix(m)  | ! is.numeric(m)) stop("the m argument should be a numeric matrix")
+    if (nrow(m) != ncol(m)) stop("the matrix should be square")
+    if (! is.numeric(x)) stop("the first argument should be numeric")
+    if (is.matrix(x)) stop("the first argument shouldn't be a matrix")
+    if (length(x) != nrow(m)) stop("the length of the vector should be equal to the dimensions of the matrix")
+    .sub <- subset
+    if (is.null(.sub)) .sub <- 1:length(x)
+    x <- x[.sub]
+    m <- m[.sub, .sub]
+    if (inv) qf <- as.numeric(crossprod(x, solve(m, x)))
+    else qf <- as.numeric(crossprod(x, crossprod(m, x)))
+    qf
+}
 

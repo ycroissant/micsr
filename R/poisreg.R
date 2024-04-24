@@ -14,7 +14,7 @@
 #' @param method the optimization method, one of `"newton"` and `"bfgs"`
 #' @param ... further arguments
 #' @return an object of class `c("poisreg", "micsr")`, see
-#'     `micsr::micsr` for further details
+#'     `micsr::micsr` for further details.
 #' @importFrom stats glm plogis qlogis
 #' @importFrom Formula Formula
 #' @keywords models
@@ -233,7 +233,7 @@ poisreg <- function(formula, data, weights, subset, na.action, offset,
                                      solve(.vcov)))))
     .lr <- 2 * unname(.logLik["model"] - .logLik["null"])
     .rsq <- c(w = .w / (.w + N), lr = 1 - exp(-.lr / N), lm = .lm / N)
-    tests <- c(w = .w, lm = .lm, lr = .lr)
+    tests <- c(wald = .w, score = .lm, lr = .lr)
     result <- list(coefficients = .coefs,
                    model = mf,
                    gradient = attr(.lnl_conv, "gradient"),

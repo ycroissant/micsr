@@ -45,7 +45,7 @@ ndvuong(
 \item{print.level}{the level of details to be printed}
 }
 \value{
-an object of class \code{"htest"}
+an object of class \code{"htest"}.
 }
 \description{
 An unhanced version of the Vuong test with a small-sample bias

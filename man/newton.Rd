@@ -32,7 +32,7 @@ computation is printed}
 }
 \value{
 a numeric vector, the parameters at the optimum of the
-function
+function.
 }
 \description{
 The Newton-Raphson method use the gradient and the hessian of a

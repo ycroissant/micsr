@@ -32,10 +32,8 @@ bivprobit <- function (formula, data, weights, subset, na.action, offset, method
     mf$dot <- "previous"
     mf <- eval(mf, parent.frame())
     mt <- attr(mf, "terms")
-    old_options <- options(warn = -1)
     X1 <- model.matrix(.formula, mf, rhs = 1)
     X2 <- model.matrix(.formula, mf, rhs = 2)
-    options(old_options)
     y1 <- model.part(.formula, mf, lhs = 1, drop = TRUE)
     y2 <- model.part(.formula, mf, lhs = 2, drop = TRUE)
     q1 <- 2 * y1 - 1

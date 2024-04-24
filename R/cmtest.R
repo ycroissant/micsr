@@ -50,8 +50,7 @@
 #' @export
 cmtest <- function(x, test = c("normality", "reset", "heterosc",
                                "skewness", "kurtosis"),
-                   powers = 2:3, heter_cov = NULL, opg = FALSE){    
-    
+                   powers = 2:3, heter_cov = NULL, opg = FALSE){        
     UseMethod("cmtest")
 }
 
@@ -394,4 +393,130 @@ cmtest_probit <- function(param, X, y, mf, test = c("normality", "reset", "heter
                    p.value = pval,
                    method = test.name),
               class = "htest")
+}
+
+
+#' @rdname cmtest
+#' @export
+cmtest.weibreg <- function(x, test = c("normality", "reset", "heterosc",
+                               "skewness", "kurtosis"),
+                   powers = 2:3, heter_cov = NULL, opg = FALSE){    
+    .powers <- sort(powers)
+    .first_moment <- ifelse(1 %in% .powers, TRUE, FALSE)
+    delta <- coef(x)["shape"]
+    mf <- model.frame(x)
+    X <- model.matrix(terms(x), mf)
+    beta <- coef(x)[1:ncol(X)]
+    lp <- drop(X %*% beta)
+    y <- model.response(mf)
+    e <- y[, 2]
+    y <- model.response(mf)[, 2]
+    .gres <- gres(x)
+    .gres_u <- .gres - (1 - e)
+    N <- nobs(x)
+    G <- x$gradient
+    funs <- list(function(x) log(x) + 0.5772,
+                 function(x) x ^ 2 - 2 ,
+                 function(x) x ^ 3 - 6,
+                 function(x) x ^ 4 - 24)
+    M <- sapply(.powers, function(i) funs[[i]](.gres))
+    m <- apply(M, 2, sum)
+    if (! opg){
+        H <- x$hessian / N
+        if (! mixing) W <- cbind(-  delta * X, log(y) - lp) * .gres_u
+        else{
+            vari <- coef(x)["var"]
+            eps_1 <- exp(delta * (log(y) - lp))
+            W <- cbind(- delta * X, log(y) - lp) * eps_1 / (1 + vari * eps_1)
+            W <- cbind(W, (- .gres_u + eps_1 / (1 + vari * eps_1)) / vari)
+        }
+        funs <- list(function(x) 1 / x,
+                     function(x) 2 * x,
+                     function(x) 3 * x ^ 2,
+                     function(x) 4 * x ^ 3)
+        V <- sapply(.powers, function(i) funs[[i]](.gres))
+        W <- sapply(seq_along(1:ncol(V)), function(x) apply(V[, x] * W, 2, mean))
+    } else {
+        H <- - crossprod(G) / N
+        W <- - t(G) %*% M / N
+    }
+    stat <- drop(t(m) %*% solve(crossprod(M - G %*% solve(H) %*% W)) %*% m)
+    names(stat) <- "chisq"
+    test.name <- "Unit exponential distribution test"
+    param = c(df = length(.powers))
+    .data.name <- paste(deparse(formula(x)))
+    pval <- pchisq(stat, lower.tail = FALSE, df = param)
+    structure(list(statistic = stat, parameter = param, p.value = pval,
+                   data.name = .data.name,
+                   method = test.name), class = "htest")
+}
+
+
+cmtest.weibreg <- function(x, test = c("normality", "reset", "heterosc",
+                               "skewness", "kurtosis"),
+                   powers = 2:3, heter_cov = NULL, opg = FALSE){    
+    .mixing <- x$call$mixing
+    if (is.null(.mixing)) .mixing <- FALSE
+    .powers <- sort(powers)
+    .first_moment <- ifelse(1 %in% .powers, TRUE, FALSE)
+    if (.first_moment) .powers2 <- .powers[- match(1, .powers)] else .powers2 <- .powers
+    delta <- coef(x)["shape"]
+    mf <- model.frame(x)
+    X <- model.matrix(terms(x), mf)
+    beta <- coef(x)[1:ncol(X)]
+    lp <- drop(X %*% beta)
+    y <- model.response(mf)[, 1]
+    .gres <- gres(x)
+    N <- nobs(x)
+    G <- x$gradient
+    funs <- list(function(x) log(x) + 0.572215,
+                 function(x) x ^ 2 - 2 ,
+                 function(x) x ^ 3 - 6,
+                 function(x) x ^ 4 - 24)
+    M <- sapply(.powers, function(i) funs[[i]](.gres))
+    m <- apply(M, 2, sum)
+    if (! opg){
+        H <- x$hessian / N
+        if (! .mixing) W <- cbind(-  delta * X, log(y) - lp) * .gres
+        else{
+            vari <- coef(x)["var"]
+            eps_1 <- exp(delta * (log(y) - lp))
+            W <- cbind(- delta * X, log(y) - lp) * eps_1 / (1 + vari * eps_1)
+            W <- cbind(W,
+                       - 1 / vari ^ 2* log(1 + vari * eps_1) + 1 / vari * eps_1 / (1 + vari * eps_1))
+        }
+        funs <- list(function(x) NA,
+                     function(x) 2 * x,
+                     function(x) 3 * x ^ 2,
+                     function(x) 4 * x ^ 3)
+        if (length(.powers2)){
+            V <- sapply(.powers2, function(i) funs[[i]](.gres))
+            W <- sapply(seq_along(1:ncol(V)), function(x) apply(V[, x] * W, 2, mean))
+        } else W <- c()
+        if (.first_moment){
+            lp <- drop(X %*% beta)
+            eps_unc <- exp(delta * (log(y) - lp))
+            if (! .mixing){
+                w1 <- apply(cbind(- delta * X, log(y) - lp) * eps_unc / .gres, 2, mean)
+            }
+            else{
+                w1 <- apply(cbind(- delta * X, log(y) - lp) * eps_1 / .gres / (1 + vari * eps_1), 2, mean)
+                w1_vari <- sum(- 1 / vari ^ 2 * log(1 + vari * eps_1) + 1 / vari * eps_1 / (1 + vari * eps_1))
+                w1 <- c(w1, w1_vari)
+            }
+            W <- cbind(w1, W)
+        }
+    } else {
+        H <- - crossprod(G) / N
+        W <- - t(G) %*% M / N
+    }
+    stat <- drop(t(m) %*% solve(crossprod(M - G %*% solve(H) %*% W)) %*% m)
+    names(stat) <- "chisq"
+    test.name <- "Unit exponential distribution test"
+    param = c(df = length(.powers))
+    .data.name <- paste(deparse(formula(x)))
+    pval <- pchisq(stat, lower.tail = FALSE, df = param)
+    structure(list(statistic = stat, parameter = param, p.value = pval,
+                   data.name = .data.name,
+                   method = test.name), class = "htest")
 }

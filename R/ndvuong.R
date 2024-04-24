@@ -16,7 +16,7 @@
 #' @param numbers a user provided matrix of random numbers
 #' @param nd a boolean, if `TRUE` (the default) the non-degenarate Vuong test is computed
 #' @param print.level the level of details to be printed
-#' @return an object of class \code{"htest"}
+#' @return an object of class `"htest"`.
 #' @importFrom Rdpack reprompt
 #' @importFrom stats pnorm
 #' @seealso the classical Vuong test is implemented in `pscl::vuong` and `nonnest2::vuongtest`.
@@ -366,11 +366,9 @@ vuong_sim <- function(N = 1E03, R = 1E03, Kf = 15, Kg = 1, a = 0.125){
 #' \insertRef{COAT:CONL:04}{micsr}
 #'
 #' @examples
-#' \dontrun{
 #' ndvuong(turnout$group, turnout$intens)
 #' ndvuong(turnout$group, turnout$sur)
 #' ndvuong(turnout$intens, turnout$sur)
-#' }
 NULL
 
 

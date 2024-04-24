@@ -10,7 +10,7 @@ loglm(formula, data)
 \item{formula, data}{see \code{lm}}
 }
 \value{
-An object of class \code{micsr}
+An object of class \code{"micsr"}, see \code{micsr::micsr} for further details.
 }
 \description{
 Estimation of log-linear model; the estimation is done by \code{lm}, but

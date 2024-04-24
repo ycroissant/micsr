@@ -11,7 +11,8 @@ ordreg(
   subset,
   na.action,
   offset,
-  link = c("probit", "logit"),
+  link = c("probit", "logit", "cloglog"),
+  method = c("bfgs", "nr"),
   start = NULL,
   ...
 )
@@ -25,6 +26,8 @@ ordreg(
 
 \item{link}{one of \code{probit} and \code{logit}}
 
+\item{method}{optimization method}
+
 \item{start}{a vector of starting values, in this case, no
 estimation}
 
@@ -32,7 +35,7 @@ estimation}
 }
 \value{
 an object of class \code{micsr}, see \code{micsr::micsr} for further
-details
+details.
 }
 \description{
 Maximum-likelihood estimation of a model for which the response is
@@ -40,5 +43,11 @@ ordinal
 }
 \examples{
 mod1 <- ordreg(factor(dindx) ~ rhs1 + catchup, fin_reform, link = "logit")
+library(survival)
+ud <- unemp_duration \%>\%
+      mutate(years = floor(duration / 365),
+             years = ifelse(years == 6, 5, years))
+mod2 <- ordreg(Surv(years, censored == "no") ~ gender + age + log(1 + wage), ud,
+               link = "cloglog", method = "bfgs")
 }
 \keyword{models}

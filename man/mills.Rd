@@ -13,7 +13,7 @@ mills(x, deriv = 0)
 ratio), 1 (the first derivative) and 2 (the second derivative)}
 }
 \value{
-a numeric
+a numeric.
 }
 \description{
 The inverse Mills ratio is used in several econometric models,

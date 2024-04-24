@@ -14,8 +14,10 @@ binomreg(
   subset,
   na.action,
   offset,
+  contrasts = NULL,
   link = c("identity", "probit", "logit"),
   method = c("ml", "twosteps", "minchisq", "test"),
+  robust = TRUE,
   start = NULL,
   ...
 )
@@ -31,7 +33,7 @@ binomreg(
 
 \item{data}{a data frame,}
 
-\item{subset, weights, na.action, offset}{see \code{stats::lm},}
+\item{subset, weights, na.action, offset, contrasts}{see \code{stats::lm},}
 
 \item{link}{one of \code{"identity"}, \code{"probit"} and "\code{logit}" to fit
 respectively the linear probability, the probit and the logit
@@ -40,7 +42,10 @@ model}
 \item{method}{\code{"ml"} for maximum likelihood (the only relevant
 method for a regression without instrumental variables),
 \code{"twosteps"} for two-steps estimator, \code{"minchisq"} for minimum
-chi-squared estimator and \code{"test"} to get the exogeneity test}
+chi-squared estimator and \code{"test"} to get the exogeneity test,}
+
+\item{robust}{only when \code{method = "twosteps"}, should the robust
+covariance matrix be computed?}
 
 \item{start}{a vector of starting values}
 

@@ -13,20 +13,19 @@
 #' @param data,subset,weights see `lm`
 #' @param start an optional vector of starting values
 #' @param left,right left and right truncation points for the response
-#'     The default is respectively 0 and +Inf which
-#'     corresponds to the most classic (left-zero truncated) tobit
-#'     model
+#'     The default is respectively 0 and +Inf which corresponds to the
+#'     most classic (left-zero truncated) tobit model
 #' @param scedas the functional form used to specify the conditional
 #'     variance, either `"exp"` or `"pnorm"`
 #' @param sample either `"censored"` (the default) to estimate the
 #'     censored (tobit) regression model or `"truncated"` to estimated
 #'     the truncated regression model
 #' @param method one of `"ml"` for maximum likelihood, `"lm"` for
-#'     (biased) least squares estimators, `"twosteps"` for
-#'     two-steps consistent estimators, `"trimmed"` for symetrically
-#'     censored estimator, `"minchisq"` and `"test"`. The last two are
-#'     only relevant for instrumental variable estimation (when the
-#'     formula is a two-parts formula and `scedas` is `NULL`)
+#'     (biased) least squares estimators, `"twosteps"` for two-steps
+#'     consistent estimators, `"trimmed"` for symetrically censored
+#'     estimator, `"minchisq"` and `"test"`. The last two are only
+#'     relevant for instrumental variable estimation (when the formula
+#'     is a two-parts formula and `scedas` is `NULL`)
 #' @param trace a boolean (the default if `FALSE`) if `TRUE` some
 #'     information about the optimization process is printed
 #' @param ... further arguments
@@ -37,25 +36,8 @@
 #'     model.weights .getXlevels predict delete.response predict
 #'     update
 #' @keywords models
-#' @return An object of class `c("tobit1", "lm")`, which is a list
-#'     containg the following components:
-#' - coefficients: a named vector of coefficients
-#' - linear.predictor: the linear fit
-#' - fitted.values: the fitted values
-#' - residuals: the residuals
-#' - df.residual: the residual degrees of freedom
-#' - hessian: the hessian of the log-likelihood function at the
-#'     optimum
-#' - vcov: an estimator of the covariance matrix of the coefficients,
-#' - gradient: a N x K matrix containing the individual contributions
-#' to the gradient
-#' - logLik: the value of the log-likelihood at the optimum
-#' - model: the model frame
-#' - terms: the terms object used
-#' - call: the matched call
-#' - xlevels: a record of the levels of the factors used in fitting
-#' - na.action: intormation returned by `model.frame` on the special
-#'     handling of `NA`'s
+#' @return An object of class `c("tobit1", "micsr")`, see
+#'     `micsr::micsr` for further details.
 #' @author Yves Croissant
 #' @references \insertRef{POWE:86}{micsr}
 #' @examples

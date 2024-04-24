@@ -25,11 +25,9 @@ some linear constraints are imposed.
 Turnout in Texas liquor referenda
 }
 \examples{
-\dontrun{
 ndvuong(turnout$group, turnout$intens)
 ndvuong(turnout$group, turnout$sur)
 ndvuong(turnout$intens, turnout$sur)
-}
 }
 \references{
 \insertRef{COAT:CONL:04}{micsr}

@@ -20,16 +20,7 @@ scoretest(x, y, ...)
 removed from the test}
 }
 \value{
-an object of \code{'htest'} containing the following
-components:
-\itemize{
-\item data.mane: a character string describing the fitted model
-\item statistic: the value of the test statistic
-\item parameter: degrees of freedom
-\item p.value: the p.value of the test
-\item method: a character indicating what type of test is performed
-\item alternative: a character indicating the alternative hypothesis
-}
+an object of class \code{"htest"}.
 }
 \description{
 Score test, also knowned as Lagrange multiplier tests

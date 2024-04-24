@@ -3,7 +3,7 @@
 \docType{package}
 \name{micsr-package}
 \alias{micsr-package}
-\title{micsr package: Microeconometrics Package}
+\title{\strong{micsr} : Microeconometrics with R}
 \description{
 The micsr package is the companion package to the book
 "Microeconometrics with R" (Chapman and Hall/CRC The R Series). It
@@ -15,9 +15,10 @@ tools and data sets:
 \item functions to estimate models:
 \itemize{
 \item \code{binomreg}: binomial regression models, Rivers and Vuong (1988),
+\item \code{bivprobit}: bivariate probit model
 \item \code{clm}: constrained linear models,
 \item \code{escount}: endogenous switching and selection model for count data, Terza (1998),
-\item \code{expcm}: exponential conditional mean models, Mullahy (1997),
+\item \code{expreg}: exponential conditional mean models, Mullahy (1997),
 \item \code{loglm}: log-linear models,
 \item \code{ordreg}: ordered regression models,
 \item \code{poisreg}: poisson models,
@@ -36,7 +37,7 @@ tools and data sets:
 }
 \item miscellanous tools
 \itemize{
-\item \code{sight}: print a short summary of an object,
+\item \code{gaze}: print a short summary of an object,
 \item \code{dummy}: generate a set of dummy variables from a factor,
 \item \code{newton}: Newton-Raphson optimization method, using the analytical gradient and hessian,
 \item \code{mills}: compute the inverse mills ratio and its first two derivatives,
@@ -72,6 +73,15 @@ endogenous switching model for count data,
 (2004), non-degenerate Vuong test,
 \item \code{twa}: Temporary help jobs and permanent employment, Ichino,
 Mealli and Nannicini (2008), matching.
+}
+\item vignettes:
+\itemize{
+\item charitable: Estimating the Tobit-1 model with the charitable
+data set
+\item escount: Endogenous switching or sample selection models for
+count data
+\item expreg: Exponentional conditional mean models with endogeneity
+\item ndvvuong: Implementation of Shi's non-degeranate Vuong test
 }
 }
 

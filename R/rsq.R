@@ -5,7 +5,7 @@
 #' @name rsq
 #' @param x fitted model
 #' @param type the type of coefficient of determination
-#' @return a numeric scalar
+#' @return a numeric scalar.
 #' @importFrom stats model.response model.frame resid logLik
 #' @examples
 #' pbt <- binomreg(mode ~ cost + ivtime + ovtime, data = mode_choice, link = 'probit')
@@ -29,7 +29,7 @@ rsq.lm <- function(x, type = c("raw", "adj")){
 rsq.micsr <- function(x, type = c("mcfadden", "cox_snell", "cragg_uhler",
                                      "aldrich_nelson", "veall_zimm", "estrella",
                                      "cor", "ess", "rss", "tjur",
-                                  "mckel_zavo", "w", "lm", "lr")){
+                                  "mckel_zavo", "wald", "score", "lr")){
     type <- match.arg(type)
     y <- model.response(model.frame(x))
     if (! is.numeric(y)) y <- as.numeric(y)
@@ -46,11 +46,11 @@ rsq.micsr <- function(x, type = c("mcfadden", "cox_snell", "cragg_uhler",
     }
     LR <- 2 * (logL - logL0)
     LR_star <- - 2 * logL0
-    if (type %in% c("w", "lm", "lr")){
+    if (type %in% c("wald", "score", "lr")){
         if (! inherits(x, "micsr")) stop("only implemented for micsr objects")
-        if (type == "w") r2 <- x$tests["w"] / (N + x$tests["w"])
-        if (type == "lm") r2 <- x$tests["lm"] / N
-        if (type == "lr") r2 <- 1 - exp(- x$tests["lr"] / N)
+        if (type == "wald") r2 <- unname(x$tests["wald"] / (N + x$tests["wald"]))
+        if (type == "score") r2 <- unname(x$tests["score"] / N)
+        if (type == "lr") r2 <- unname(1 - exp(- x$tests["lr"] / N))
     }
     if (type == "f") r2 <- K * F / (K * F + df.model) 
     if (type == "mcfadden") r2 <- 1 - logL / logL0

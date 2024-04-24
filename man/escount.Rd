@@ -42,23 +42,7 @@ default) or \code{'twosteps'} for the two-steps NLS method}
 or \code{'ss'} for sample selection}
 }
 \value{
-an object of class \verb{c("escount,micsr)"}, a
-list containing the following components:
-\itemize{
-\item coefficients: a  named vector of coefficients,
-\item sigma, rho: the estimated values of sigma and rho for the \code{twosteps} method,
-\item residuals: the vector of residuals,
-\item fitted.values: the fitted values
-\item vcov: estimation of the covariance matrix of the estimators
-\item value: value of the objective function at convergence
-\item model: the model frame
-\item call: the matched call
-\item K: the number of covariates
-\item L: the number of instruments
-\item df.residual: the degrees of freedom of the regression
-\item xlevels: a record of the levels of the factors used in fitting
-\item na.action: information returned by \code{model.frame} on the sepcial handling of \code{NA}'s
-}
+an object of class \verb{c("escount,micsr)"}, see \code{micsr::micsr} for further details.
 }
 \description{
 Heckman's like estimator for count data, using either

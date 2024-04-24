@@ -35,7 +35,7 @@ the constant return to scale hypothesis implies that two
 coefficients are 0}
 }
 \value{
-An object of class \code{micsr}
+a function.
 }
 \description{
 Log-likelihood function for the generalized production function of

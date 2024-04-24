@@ -31,9 +31,8 @@ covariates for the variance function}
 \item{start}{an optional vector of starting values}
 
 \item{left, right}{left and right truncation points for the response
-The default is respectively 0 and +Inf which
-corresponds to the most classic (left-zero truncated) tobit
-model}
+The default is respectively 0 and +Inf which corresponds to the
+most classic (left-zero truncated) tobit model}
 
 \item{scedas}{the functional form used to specify the conditional
 variance, either \code{"exp"} or \code{"pnorm"}}
@@ -43,11 +42,11 @@ censored (tobit) regression model or \code{"truncated"} to estimated
 the truncated regression model}
 
 \item{method}{one of \code{"ml"} for maximum likelihood, \code{"lm"} for
-(biased) least squares estimators, \code{"twosteps"} for
-two-steps consistent estimators, \code{"trimmed"} for symetrically
-censored estimator, \code{"minchisq"} and \code{"test"}. The last two are
-only relevant for instrumental variable estimation (when the
-formula is a two-parts formula and \code{scedas} is \code{NULL})}
+(biased) least squares estimators, \code{"twosteps"} for two-steps
+consistent estimators, \code{"trimmed"} for symetrically censored
+estimator, \code{"minchisq"} and \code{"test"}. The last two are only
+relevant for instrumental variable estimation (when the formula
+is a two-parts formula and \code{scedas} is \code{NULL})}
 
 \item{trace}{a boolean (the default if \code{FALSE}) if \code{TRUE} some
 information about the optimization process is printed}
@@ -55,27 +54,8 @@ information about the optimization process is printed}
 \item{...}{further arguments}
 }
 \value{
-An object of class \code{c("tobit1", "lm")}, which is a list
-containg the following components:
-\itemize{
-\item coefficients: a named vector of coefficients
-\item linear.predictor: the linear fit
-\item fitted.values: the fitted values
-\item residuals: the residuals
-\item df.residual: the residual degrees of freedom
-\item hessian: the hessian of the log-likelihood function at the
-optimum
-\item vcov: an estimator of the covariance matrix of the coefficients,
-\item gradient: a N x K matrix containing the individual contributions
-to the gradient
-\item logLik: the value of the log-likelihood at the optimum
-\item model: the model frame
-\item terms: the terms object used
-\item call: the matched call
-\item xlevels: a record of the levels of the factors used in fitting
-\item na.action: intormation returned by \code{model.frame} on the special
-handling of \code{NA}'s
-}
+An object of class \code{c("tobit1", "micsr")}, see
+\code{micsr::micsr} for further details.
 }
 \description{
 Estimation of models for which the response is truncated, either on

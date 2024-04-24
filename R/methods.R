@@ -30,6 +30,40 @@
 #' @param newdata a new data frame to compute the predictions
 #' @param k see `AIC`
 #' @param ... further arguments
+#' @return
+#' 
+#' Objects of class `micsr` share a lot of common elements with `lm`:
+#' `coefficients`, `residuals`, `fitted.values`, `model`, `terms`,
+#' `df.residual`, `xlevels`, `na.action`, and `call`. `npar` is a
+#' named vector containing the index of subset of coefficients, it is
+#' used to print a subset of the results.  It also has a `est_method`
+#' element and, depending of its value, contains further elements. In
+#' particular, for model fitted by maximum likelihood, `value`
+#' contains the individual contribution to the log-likelihood
+#' function, `gradient` the individual contribution to the gradient,
+#' `hessian` the hessian and `information` the information
+#' matrix. `logLik` contains the log-likelihood values of the
+#' proposed, null and saturated models. `tests` contains the values of
+#' the test that all the coefficients of the covariates are 0, using
+#' the three classical tests.
+#'
+#' The `llobs` function is provided as a generic to extract the
+#' individual contributions to the log-likelihood
+#' 
+#' Specific methods have been writen for `micsr` objects: `nobs`,
+#' `generics::tidy`, `generics::glance`, `sandwich::meat`,
+#' `sandwich::estfun`, `predict`, `model.matrix`,
+#' `Formula::model.part`.
+#'
+#' `logLik`, `BIC`, `AIC` and `deviance` methods have a `type`
+#' argument to select theproposed, null or saturated model.
+#'
+#' `vcov` and `summary` methods have a `vcov` argument to select the
+#' estimator of the covariance matrix, which can be either based on
+#' the hessian, the gradient or the information.
+#'
+#' `vcov`, `summary` and `coef` have a subset argument to select only
+#' a subset of the coefficients
 #' @importFrom stats nobs deviance BIC AIC logLik predict deviance
 #' @importFrom sandwich bread estfun vcovHC sandwich
 #' @importFrom Formula model.part
@@ -308,9 +342,7 @@ predict.micsr <- function(object, ..., newdata = NULL){
         .formula <- Formula(formula(object$terms))
         mf <- model.frame(.formula, newdata, dot = "previous")
         X <- model.matrix(.formula, mf, rhs = 1)
-        old_options <- options(warn = -1)
         Z <- model.matrix(.formula, mf, rhs = 2)
-        options(old_options)
         d <- model.part(.formula, newdata, lhs = 2, drop = TRUE)
         q <- 2 * d - 1
         K <- ncol(X)

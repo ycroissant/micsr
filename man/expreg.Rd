@@ -34,22 +34,7 @@ error}
 \item{...}{further arguments}
 }
 \value{
-An object of class \code{"micsr"} which is a list
-containing the following components:
-\itemize{
-\item coefficients: a named vector of coefficients,
-\item residuals: the vector of residuals,
-\item fitted.values: the fitted values
-\item vcov: estimation of the covariance matrix of the estimators
-\item value: value of the objective function at convergence
-\item model: the model frame
-\item call: the matched call
-\item K: the number of covariates
-\item L: the number of instruments
-\item df.residual: the degrees of freedom of the regression
-\item xlevels: a record of the levels of the factors used in fitting
-\item na.action: information returned by \code{model.frame} on the sepcial handling of \code{NA}'s
-}
+an object of class \code{"micsr"}, see \code{micsr::micsr} for further details.
 }
 \description{
 Exponential conditional mean models are particularly useful for

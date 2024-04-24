@@ -5,6 +5,7 @@
 \alias{gaze.lm}
 \alias{gaze.micsr}
 \alias{gaze.ivreg}
+\alias{gaze.mlogit}
 \alias{gaze.rdrobust}
 \alias{gaze.CJMrddensity}
 \alias{gaze.htest}
@@ -33,9 +34,17 @@ gaze(x, ...)
 \method{gaze}{ivreg}(
   x,
   ...,
-  coef,
+  coef = NULL,
   digits = max(3L, getOption("digits") - 3L),
-  signif.stars = getOption("show.signif.stars")
+  signif.stars = FALSE
+)
+
+\method{gaze}{mlogit}(
+  x,
+  ...,
+  coef = NULL,
+  digits = max(3L, getOption("digits") - 3L),
+  signif.stars = FALSE
 )
 
 \method{gaze}{rdrobust}(x, ..., first_stage = FALSE)
@@ -65,7 +74,7 @@ be printed}
 if \code{TRUE} the results of the first stage estimation are printed}
 }
 \value{
-invisibly its first argument
+returns invisibly its first argument
 }
 \description{
 \code{print} and \code{print.summary} methods often returns long input, which

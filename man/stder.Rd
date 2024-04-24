@@ -7,14 +7,14 @@
 \usage{
 stder(x, .vcov, ...)
 
-\method{stder}{default}(x, .vcov = NULL, ...)
+\method{stder}{default}(x, vcov = NULL, ...)
 }
 \arguments{
 \item{x}{a fitted model or a matrix of covariance}
 
-\item{.vcov}{a function that computes a covariance matrix, or a character}
-
 \item{...}{further arguments}
+
+\item{vcov}{a function that computes a covariance matrix, or a character}
 }
 \value{
 a numeric vector

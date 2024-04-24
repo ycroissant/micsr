@@ -18,7 +18,7 @@ sargan(object, ...)
 \item{...}{further arguments}
 }
 \value{
-an \code{htest} object
+an object of class \code{"htest"}.
 }
 \description{
 When a IV model is over-identified, the set of all the empirical

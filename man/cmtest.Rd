@@ -6,6 +6,7 @@
 \alias{cmtest.micsr}
 \alias{cmtest.censReg}
 \alias{cmtest.glm}
+\alias{cmtest.weibreg}
 \title{Conditional moments test}
 \usage{
 cmtest(
@@ -41,6 +42,14 @@ cmtest(
 )
 
 \method{cmtest}{glm}(
+  x,
+  test = c("normality", "reset", "heterosc", "skewness", "kurtosis"),
+  powers = 2:3,
+  heter_cov = NULL,
+  opg = FALSE
+)
+
+\method{cmtest}{weibreg}(
   x,
   test = c("normality", "reset", "heterosc", "skewness", "kurtosis"),
   powers = 2:3,

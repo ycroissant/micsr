@@ -19,7 +19,7 @@ npar(x, subset = NULL)
 (only relevant for \code{micsr} models).}
 }
 \value{
-an integer
+an integer.
 }
 \description{
 The number of observation of a fitted model is typically obtained
@@ -28,7 +28,7 @@ same information about the number of parameters. \code{npar} is such a
 generic and has a special method for \code{micsr} objects with a
 \code{subset} argument that enables to compute the number of parameters
 for a subset of coefficients. The default method returns the length
-of the vector of coefficients extracted using the \code{coef} function
+of the vector of coefficients extracted using the \code{coef} function.
 }
 \author{
 Yves Croissant

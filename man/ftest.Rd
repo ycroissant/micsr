@@ -20,7 +20,7 @@ ftest(x, ...)
 \item{covariate}{the covariate for which the test should be performed for the \code{ivreg} method}
 }
 \value{
-an object of class \code{"htest"}
+an object of class \code{"htest"}.
 }
 \description{
 Extract the F statistic that all the parameters except the

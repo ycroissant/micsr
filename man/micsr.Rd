@@ -108,6 +108,40 @@ outer product of the gradient)}
 
 \item{conf.int, conf.level}{see \code{broom:tidy.lm}}
 }
+\value{
+Objects of class \code{micsr} share a lot of common elements with \code{lm}:
+\code{coefficients}, \code{residuals}, \code{fitted.values}, \code{model}, \code{terms},
+\code{df.residual}, \code{xlevels}, \code{na.action}, and \code{call}. \code{npar} is a
+named vector containing the index of subset of coefficients, it is
+used to print a subset of the results.  It also has a \code{est_method}
+element and, depending of its value, contains further elements. In
+particular, for model fitted by maximum likelihood, \code{value}
+contains the individual contribution to the log-likelihood
+function, \code{gradient} the individual contribution to the gradient,
+\code{hessian} the hessian and \code{information} the information
+matrix. \code{logLik} contains the log-likelihood values of the
+proposed, null and saturated models. \code{tests} contains the values of
+the test that all the coefficients of the covariates are 0, using
+the three classical tests.
+
+The \code{llobs} function is provided as a generic to extract the
+individual contributions to the log-likelihood
+
+Specific methods have been writen for \code{micsr} objects: \code{nobs},
+\code{generics::tidy}, \code{generics::glance}, \code{sandwich::meat},
+\code{sandwich::estfun}, \code{predict}, \code{model.matrix},
+\code{Formula::model.part}.
+
+\code{logLik}, \code{BIC}, \code{AIC} and \code{deviance} methods have a \code{type}
+argument to select theproposed, null or saturated model.
+
+\code{vcov} and \code{summary} methods have a \code{vcov} argument to select the
+estimator of the covariance matrix, which can be either based on
+the hessian, the gradient or the information.
+
+\code{vcov}, \code{summary} and \code{coef} have a subset argument to select only
+a subset of the coefficients
+}
 \description{
 The \code{micsr} class is intend to deal with a lot of different models
 that are estimated in the \code{micsr} package. More specifically, some

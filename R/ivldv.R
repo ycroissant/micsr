@@ -343,14 +343,14 @@ endogtest.formula <- function(x, ..., data, model = c("probit", "tobit")){
     cl <- match.call()
     cl[[1]] <- as.name("ivldv")
     names(cl)[2] <- "formula"
-    cl$compute_test <- TRUE
+    cl$method <- "test"
     eval(cl, parent.frame())
 }
 
 #' @rdname ivldv
 #' @export
 endogtest.ivldv <- function(x, ...){
-    update(x, compute_test = TRUE)
+    update(x, method = TRUE)
 }
 
 

@@ -9,13 +9,7 @@
 #' @param y the second model
 #' @param omit a character containing the effects that are removed from the test
 #' @param ... further arguments
-#' @return an object of class `"htest"` containing the following components:
-#' - data.mane: a character string describing the fitted model
-#' - statistic: the value of the test statistic
-#' - parameter: degrees of freedom
-#' - p.value: the p.value of the test
-#' - method: a character indicating what type of test is performed
-#' - alternative: a character indicating the alternative hypothesis
+#' @return an object of class `"htest"`.
 #' @keywords htest
 #' @author Yves Croissant
 #' @importFrom stats pchisq
@@ -79,7 +73,7 @@ hausman.micsr <- function(x, y, omit = NULL, ...){
 #' @param x a fitted object
 #' @param covariate the covariate for which the test should be performed for the `ivreg` method
 #' @param ... further arguments
-#' @return an object of class `"htest"`
+#' @return an object of class `"htest"`.
 #' @importFrom stats pf
 #' @keywords htest
 #' @export
@@ -140,14 +134,7 @@ ftest.ivreg <- function(x, ..., covariate = NULL){
 #' @param vcov omit a character containing the effects that are
 #'     removed from the test
 #' @param ... further arguments
-#' @return an object of `'htest'` containing the following
-#'     components:
-#' - data.mane: a character string describing the fitted model
-#' - statistic: the value of the test statistic
-#' - parameter: degrees of freedom
-#' - p.value: the p.value of the test
-#' - method: a character indicating what type of test is performed
-#' - alternative: a character indicating the alternative hypothesis
+#' @return an object of class `"htest"`.
 #' @keywords htest
 #' @author Yves Croissant
 #' @importFrom stats pchisq
@@ -210,7 +197,7 @@ scoretest.micsr <- function(x, y, ..., vcov = NULL){
 #' @name sargan
 #' @param object a model fitted by GMM
 #' @param ... further arguments
-#' @return an `htest` object
+#' @return an object of class `"htest"`.
 #' @keywords htest
 #' @examples
 #' cigmales <- cigmales %>%

@@ -39,7 +39,7 @@ and \code{"lognorm"}}
 }
 \value{
 an object of class \code{c("poisreg", "micsr")}, see
-\code{micsr::micsr} for further details
+\code{micsr::micsr} for further details.
 }
 \description{
 A unified interface to perform Poisson, Negbin and log-normal Poisson models
