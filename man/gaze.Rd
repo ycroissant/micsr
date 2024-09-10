@@ -11,6 +11,7 @@
 \alias{gaze.htest}
 \alias{gaze.anova}
 \alias{gaze.LMtestlist}
+\alias{gaze.RStestlist}
 \title{Short print of the summary of an object}
 \usage{
 gaze(x, ...)
@@ -56,6 +57,8 @@ gaze(x, ...)
 \method{gaze}{anova}(x, ..., digits = 3)
 
 \method{gaze}{LMtestlist}(x, ..., digits = 3)
+
+\method{gaze}{RStestlist}(x, ..., digits = 3)
 }
 \arguments{
 \item{x}{an object,}

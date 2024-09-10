@@ -14,7 +14,7 @@ tobit1(
   right = Inf,
   scedas = NULL,
   sample = c("censored", "truncated"),
-  method = c("ml", "lm", "twosteps", "trimmed", "nls", "minchisq", "test"),
+  method = c("ml", "lm", "twostep", "trimmed", "nls", "minchisq", "test"),
   trace = FALSE,
   ...
 )
@@ -42,7 +42,7 @@ censored (tobit) regression model or \code{"truncated"} to estimated
 the truncated regression model}
 
 \item{method}{one of \code{"ml"} for maximum likelihood, \code{"lm"} for
-(biased) least squares estimators, \code{"twosteps"} for two-steps
+(biased) least squares estimators, \code{"twostep"} for two-steps
 consistent estimators, \code{"trimmed"} for symetrically censored
 estimator, \code{"minchisq"} and \code{"test"}. The last two are only
 relevant for instrumental variable estimation (when the formula

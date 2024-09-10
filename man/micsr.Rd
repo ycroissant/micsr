@@ -28,11 +28,23 @@
 \usage{
 llobs(x, ...)
 
-\method{coef}{micsr}(object, ..., subset = NA)
+\method{coef}{micsr}(object, ..., subset = NA, fixed = FALSE)
 
-\method{vcov}{micsr}(object, ..., vcov = c("info", "hessian", "opg"), subset = NA)
+\method{vcov}{micsr}(
+  object,
+  ...,
+  vcov = c("info", "hessian", "opg"),
+  subset = NA,
+  fixed = FALSE
+)
 
-\method{summary}{micsr}(object, ..., vcov = c("hessian", "info", "opg"), subset = NA)
+\method{summary}{micsr}(
+  object,
+  ...,
+  vcov = c("hessian", "info", "opg"),
+  subset = NA,
+  fixed = FALSE
+)
 
 \method{coef}{summary.micsr}(object, ...)
 
@@ -87,6 +99,8 @@ variables), \code{all}, \code{covar} (only the coefficients of the
 covariates), \code{inst} (only the coefficients of the instrumental
 variables) and \code{misc} (ony the "miscelanous" coefficients,
 typicaly a standard deviation or a coefficient of correlation)}
+
+\item{fixed}{if \code{TRUE} the fixed coefficients are extracted}
 
 \item{vcov}{the method used to compute the covariance matrix of the
 estimators (only for the ML estimator), one of \code{hessian} (the

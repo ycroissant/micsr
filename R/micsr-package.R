@@ -87,9 +87,8 @@
 #' quadratic forms in normal variables from the **CompQuadForm**
 #' package (Duchesne and Lafaye, 2010).
 #'
-#' @name micsr-package
 #' @docType package
-#' @keywords package
+#' @keywords internal
 #' @references
 #' \insertRef{ABIA:MODY:05}{micsr}
 #'
@@ -138,4 +137,4 @@
 #' \insertRef{VUON:89}{micsr}
 #'
 #' \insertRef{WILH:08}{micsr}
-NULL
+"_PACKAGE"

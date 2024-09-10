@@ -1,0 +1,127 @@
+---
+title: "micsr objects"
+bibliography: ../inst/REFERENCES.bib
+vignette: >
+  %\VignetteIndexEntry{micsr objects}
+  %\VignetteEngine{quarto::pdf}
+  %\VignetteEncoding{UTF-8}
+---
+
+**micsr** provides a special `micsr` class for fitted models, that is
+particularly convenient for models fitted by maximum likelihood.
+
+## Subsets of coefficients
+
+Often, especially for advanced models, the whole set of fitted
+parameters can be splited in several groups. For example, while fitted
+by maximum likelihood a limited dependent model (probit or tobit):
+
+```{r }
+#| warning: false
+library(micsr)
+bank_msq <- ivldv(federiv ~ eqrat + optval +  mktbk +
+                      perfor + dealdum | . - eqrat - optval +
+                      no_emp + no_subs + no_off,
+                  data = federiv, method = "ml")
+```
+
+fitted coefficients belongs to 4 different groups:
+
+- the coefficients associated with covariates (the coefficients of
+  main interest,
+- the coefficients of the residuals of the endogenous variables,
+- the coefficients of the instruments,
+- the parameters of the cholesky decomposition of the covariance
+  matrix for the endogenous variables.
+
+This information is stored in the `rpar` element of the `micsr`
+object:
+
+```{r }
+bank_msq$npar
+```
+Its a named list of integers containing the number of coefficients for
+each groups. It may have a `"default"` attribute which subset should
+be selected by default. The selection of a subset of coefficients is
+performed by the `select_coef` function:
+
+```{r }
+#| collapse: true
+bank_msq %>% select_coef
+bank_msq %>% select_coef(subset = c("resid", "chol"))
+```
+
+`select_coef` is called inside the `coef` and the `vcov` methods for
+`micsr` objects:
+
+```{r }
+#| collapse: true
+bank_msq %>% coef
+bank_msq %>% coef(subset = c("resid", "chol"))
+bank_msq %>% vcov(subset = c("resid"))
+```
+
+The `npar` function extracts the number of the whole set of
+coefficients or of specific subsets:
+
+
+```{r }
+npar(bank_msq)
+npar(bank_msq, subset = c("resid", "chol"))
+```
+
+## Estimating function, hessian and individual contribution to the log-likelihood
+
+The estimating function is a $N\times K$ matrix containing the
+derivatives of the $N$ elements of the likelihood function with
+respect to the K-lenght parameter vector. Its row-sum is the gradient
+that should be close to 0 at the optimum. The `sandwich::estfun`
+function is a generic that extract this information and several
+methods are provided for different objects. Some of these method are
+quite tiedous as the matrix is not stored in the object containing the
+fitted models. For models of class `micsr`, this matrix is stored in
+the `gradient` element and the method is just: `x$gradient`. This
+matrix is particularly usefull to compute the variance-covariance
+matrix estimator based on the outer-product of the gradient or on
+sandwich formula.
+
+The hessian is the $K\times K$ matrix of second-derivatives of the
+log-likelihood function with respect with the parameters vector. Its
+stored in the `hessian` object of a `micsr` object. In sandwich
+estimators of the covariance matrix, the "meat" is $N (- H) ^ {-1}$
+and is how the `meat` method for `micsr` objects is defined.
+
+The information matrix is either the variance of the gradient or the
+opposite of the expectation of the hessian. When the analytical
+computation of the information matrix possible, it is stored in the
+`info` element of the `micsr` object.
+
+The log-likelihood is the sum of $N$ contributions: the individual
+contributions is a N-length vector, which is stored as the `value`
+element of the `micsr` object. This vector is in particular usefull to
+compute Vuong's test.
+
+## Covariance matrix estimation
+
+Three elements of the object can be used to compute different flavors
+of the covariance matrix of the coefficients:
+
+- `gradient` to compute the outer-product of the gradient estimator,
+- `hessian` to compute the hessian-based estimator,
+- `info` to compute the information-based estimator.
+
+These matrix are computed using the `vcov` method, which has a `vcov`
+argument that can be set to `"info"`, `"hessian"` or `"opg"`.
+
+## Summary
+
+The `summary`  method use the preeciding infrastructure to compute the
+usual table of coefficients that contains the estimators, the standard
+errors, the z-statistics and the probability values. A subset of
+coefficients can be obtained using the `subset` argument and the
+covariance matrix is chosen using the `vcov` argument:
+
+```{r }
+summary(bank_msq, subset = c("chol", "resid"))
+```
+

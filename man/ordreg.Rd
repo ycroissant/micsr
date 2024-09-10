@@ -2,6 +2,7 @@
 % Please edit documentation in R/ordreg.R
 \name{ordreg}
 \alias{ordreg}
+\alias{fitted.ordreg}
 \title{Ordered regression}
 \usage{
 ordreg(
@@ -16,6 +17,8 @@ ordreg(
   start = NULL,
   ...
 )
+
+\method{fitted}{ordreg}(object, ..., type = c("outcome", "probabilities"))
 }
 \arguments{
 \item{formula}{a symbolic description of the model}
@@ -32,6 +35,11 @@ ordreg(
 estimation}
 
 \item{...}{further arguments}
+
+\item{object}{a \code{ordreg} object}
+
+\item{type}{one of \code{"outcome"} or \code{"probabilities"} for the
+\code{fitted} method}
 }
 \value{
 an object of class \code{micsr}, see \code{micsr::micsr} for further

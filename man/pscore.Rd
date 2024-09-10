@@ -105,8 +105,8 @@ lowest p-value is reported
 \item \code{unchecked_cov}: a character vector containing the names of the
 covariates for which the balancing test could be computed
 \item \code{model}: a tibble containing the original data, with
-supplementary columns: \code{gp_} for the groups, \code{resp_} for the
-outcome and \code{cls_} for the stratas
+supplementary columns: \code{.gp} for the groups, \code{.resp} for the
+outcome and \code{.cls} for the stratas
 \item \code{pscore}: the glm model fitted to compute the propensity scores
 }
 }
@@ -119,7 +119,7 @@ treatment effect using stratification methods
 data_tuscany <- dplyr::mutate(dplyr::filter(twa, region == "Tuscany"),
   dist2 = dist ^ 2, livselfemp = I((city == "livorno") * (occup == "selfemp")),
   perm = ifelse(outcome == "perm", 1, 0))
-formula_tuscany <- group | perm ~ city + sex + marital + age +
+formula_tuscany <- perm + group ~ city + sex + marital + age +
    loc + children + educ + pvoto + training +
    empstat + occup + sector + wage + hour + feduc + femp + fbluecol +
    dist + dist2 + livselfemp

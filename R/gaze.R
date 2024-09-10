@@ -239,3 +239,22 @@ gaze.LMtestlist <- function(x, ..., digits = 3){
     invisible(x)
 }
         
+#' @rdname gaze
+#' @export
+gaze.RStestlist <- function(x, ..., digits = 3){
+    .sprint <- paste("%6.", digits, "f", sep = "")
+    if (length(x) == 1) gaze(x[[1]], ..., digits= digits)
+    else{
+        .name <- unname(sapply(x, function(x) names(x$statistic)))
+        .nchar <- nchar(.name)
+        .nchar <- max(.nchar) - .nchar
+        .blanks <- sapply(.nchar, function(x) paste(rep(" ", x), collapse = ""))
+        .name <- paste(.name, .blanks, sep = "")
+        for (i in 1:length(x)){            
+            cat(.name[i], ": ", sprintf(.sprint, unname(x[[i]]$statistic)), ", df = ",
+                      unname(x[[i]]$parameter), ", p-value = ", sprintf(.sprint, unname(x[[i]]$p.value)), "\n", sep = "")
+        }
+    }
+    invisible(x)
+}
+        

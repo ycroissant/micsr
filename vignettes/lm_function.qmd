@@ -1,0 +1,610 @@
+---
+title: "lm function"
+bibliography: ../inst/REFERENCES.bib
+vignette: >
+  %\VignetteIndexEntry{lm function}
+  %\VignetteEngine{quarto::pdf}
+  %\VignetteEncoding{UTF-8}
+---
+
+OLS is by far the most important estimation method used in
+econometrics. It is implemented in **R** by the `lm` function. A deep
+understanding of the way this function is implemented, its arguments,
+its results and how to use them is particularly useful as
+other estimation functions (for example `glm` for generalized linear
+models) have a lot in common with `lm`. Moreover, if one is willing to
+implement its own estimation function, it is advisable to use at least
+some of the elements of `lm`.
+
+
+```{r }
+#| echo: false
+#| message: false
+library(micsr)
+library(dplyr)
+random_group <- random_group %>% mutate(wage = exp(lnwh))
+```
+For illustration, we use the `random_group` data set that analyze the effect of a
+training on wage. The response is hourly wage `wage` and
+the main covariate is a dummy for training. The `group` variable
+contains integer from -2 to 3, with negative values for treated
+individuals and positive values for untreated individuals. We first
+create this dummy, called `treated`:
+
+```{r }
+random_group <- random_group %>% mutate(treated = ifelse(group < 0, 1, 0))
+```
+
+## A basic model
+
+We then estimate the model, using as control the number of children
+`child` and the `age`.
+
+```{r }
+mod0 <- lm(log(wage) ~ treated + age + child, data = random_group)
+```
+
+The result is a an object of class `lm`, with the 12 following elements:
+
+```{r }
+names(mod0)
+```
+
+We won't say much about `"qr"` and `"effects"` which are technical
+elements of the computation of least squares. `"coefficients"`,
+`"residuals"` and `"fitted.values"` don't deserve further
+comments. The length of `"residuals"` and `"fitted.values"` is $N$,
+the one of `"coefficients"` is $K+1$ (if there is an
+intercept). `"rank"` is the rank of the model matrix. If the matrix
+has full rank, the rank equals the number of columns of the model
+matrix ($K + 1$), which is also the number of fitted
+coefficients.^[Actually the number of not `NA` coefficients.]
+
+```{r }
+mod0$rank
+length(mod0$coefficients)
+```
+
+`"df.residual"` is then $N - K - 1$. `"terms"` is a term
+object, which is a kind of representation of the formula of the model:
+
+```{r }
+mod0$terms
+```
+`"xlevels"` is for this model a useless list of length 0. We'll see
+latter the usefulness of this element. `assign` is a numeric vector
+indicating the relation between the variables and the coefficients:
+
+```{r }
+mod0$assign
+```
+Once again, in our simple case, it is useless: the intercept is at
+position 0, the first covariate at position 1 and so on. 
+All the elements of the model can be extracted using the `$` operator,
+for example `mod0$coefficients` for the coefficients. A safer method
+to extract elements of the model is to use generic functions with
+quasi homonymous names:
+
+
+```{r }
+coef(mod0)
+df.residual(mod0)
+resid(mod0) %>% head
+fitted(mod0) %>% head
+```
+
+```{r }
+#| results: false
+terms(mod0)
+```
+
+Several other generics enables to extract information of the model
+that are not elements of the results, for example the covariance
+matrix of the estimates, the residual standard error and the number of
+observations:
+
+```{r }
+vcov(mod0)
+sigma(mod0)
+nobs(mod0)
+```
+
+The next two sections are devoted to the last two elements of the `lm`
+object, `"model"` and `"call"`.
+
+## Model frame
+
+The element `"model"` of the `lm` object is the model frame. It's a
+special data frame:
+
+```{r }
+mod0$model %>% head(3)
+```
+Instead of using the `$` operator, the `model.frame` function can be
+used to extract the model frame:
+
+```{r }
+#| results: hide
+mod0 %>% model.frame
+```
+
+For this basic model, it looks like a subset of columns of the
+original data frame, but note that the first column contains the response
+which is `log(wage)` and not `wage`. A model frame has several attributes:
+
+```{r }
+mod0$model %>% attributes %>% names
+```
+
+The only interesting attribute is `"terms"`, the two other
+being the rows and columns' names (like for ordinary data frames).
+From the model frame, the elements of the model can be extracted. For
+this basic model, there are two elements, the matrix of covariates $X$
+and the vector of response $y$. To extract the model matrix, we use
+`model.matrix` with two arguments, the model terms and the model
+frame:
+
+```{r }
+model.matrix(terms(mod0), model.frame(mod0)) %>% head(3)
+```
+More simply, the same model matrix can be extracted using the fitted
+object as the unique argument:
+
+```{r }
+#| results: hide
+model.matrix(mod0)
+```
+
+The model matrix looks like the model frame, except that the response
+has been removed and a column of ones (called `(Intercept)`) has been
+added. Actually there is a fundamental difference between the model
+frame and the model matrix, even in this very simple example. A model
+frame is a data frame, which is a list of vectors of the same
+length. Because all the vectors have the same length, it has a tabular
+representation and therefore looks like a matrix. A model matrix is a
+matrix, which is for **R** a vector with an attribute indicating the
+dimension, ie the number of rows and of columns.
+
+```{r }
+model.matrix(mod0) %>% dim
+```
+
+Being a vector, a matrix contains only elements of the same mode, for
+example numeric. 
+The model response is extracted using `model.response` with the model
+frame as unique argument:
+
+```{r }
+mod0 %>% model.frame %>% model.response %>% head
+```
+
+## Call and update
+
+`"call"` is an object of class `"call"`, that corresponds to
+the call to the function that resulted in the `mod0` object:
+
+```{r }
+mod0$call %>% class
+mod0$call
+```
+Note that all the arguments are named, as we didn't named the first
+argument (`formula`) while calling `"lm"`. The call is very useful as
+it enables to update the model. The default `update` function is:
+`update(object, formula., ..., evaluate = TRUE)`. Its first argument is
+a fitted model and the second one is a
+formula. For example, to update `mod0` by adding the `female`,
+`single`, `migrant` and `temp` covariates (dummies for females,
+singles, migrants and temporary jobs), instead of rewriting the whole
+command:
+
+```{r }
+mod1 <- lm(log(wage) ~ treated + age + child + female + single + migrant + temp,
+           data = random_group)
+```
+
+we can update `mod0` with a new formula:
+
+
+```{r }
+mod1 <- mod0 %>% update(log(wage) ~ treated + age + child +
+                            female + single + migrant + temp)
+```
+or even more simply, we can use dots in the formula, which means "as
+before" and enables to add or to remove variables from the initial
+formula:
+
+```{r }
+mod1 <- mod0 %>% update(. ~ . + female + single + migrant + temp)
+```
+
+We have seen previously that the default `update` function has a `...`
+argument. This means that we can use in a call to update an argument
+of `lm` which is then passed to `lm` while updating the model. As an
+example, `lm` has a `subset` argument which is a logical expression
+that select a subset of the sample for which the estimation has to be
+performed. For example, starting from `mod0`, if one wishes to add the
+four dummies as previously and also to select the individuals aged at
+least 20, we can use:
+
+
+```{r }
+#| eval: false
+lm(log(wage) ~ treated + age + child + female + single + migrant + temp,
+           data = random_group, subset = age >= 20)
+```
+
+Or much more simply:
+
+
+```{r }
+#| eval: false
+update(mod0, . ~ . + female + single + migrant + temp, subset = age >= 20)
+```
+
+## Missing values
+
+When values of some variables used in the regression are missing for
+some observations, one has to indicate how to deal with this
+problem. The default behavior corresponds to the `na.action` element
+of `options()` which is a list containing options:
+
+
+```{r }
+options()$na.action
+```
+
+`na.omit` means remove from the model frame all the lines for which
+there is at least a missing value. There are a couple of other
+possible values, one of them being `na.fail` which stops the
+estimation and returns an error. `lm` has a `na.action` argument when
+the desired action can be indicated. For example, if we update the
+model with `na.action` set to `"na.fail"`:
+
+```{r }
+#| results: false
+mod1 %>% update(na.action = "na.fail")
+```
+
+we get exactly the same results has there are no missing values for
+the subset of variables we used. Now consider adding the `ten`
+covariate which is the tenure in month and has some missing
+values. Setting as previously `na.action = "na.fail"`, we'll then get
+an error message:
+
+```{r }
+#| eval: false
+mod1 %>% update(. ~ . + ten, na.action = "na.fail")
+```
+Using the default `"na.omit"` value, we get:
+
+
+```{r }
+mod2 <- mod1 %>% update(. ~ . + ten)
+names(mod2)
+```
+
+and there is now a 13^th^ element named `na.action`:
+
+```{r }
+mod2$na.action %>% unname
+```
+This is an object of class `"omit"` containing a vector of integers
+indicating the positions of the lines that have been removed because
+of missing values. We used `unname` because actually this is a named
+vector and, as in our case, when there is no row names, the "name" is
+the number (so that the name of the first element of the vector, 61,
+is "61"). This object is also returned as an attribute of the model frame:
+
+```{r }
+mod2$model %>% attributes %>% names
+```
+
+# Factors
+
+Now we introduce two further covariates `fsize` (firm size) and `edu`
+(education). These covariates are **factors** (categorical variables) and
+the modalities are called **levels**. The modalities can be extracted
+using the `levels` function:
+
+```{r }
+random_group %>% pull(fsize) %>% levels
+random_group %>% pull(edu) %>% levels
+```
+
+We introduce these two factors in the regression and we also introduce
+a quadratic term for `age`. This is done using the `poly` function
+inside the formula:
+
+```{r }
+mod3 <- lm(log(wage) ~ treated + poly(age, 2) + child + fsize + edu + 
+               female + single + migrant + temp + ten,
+            data = random_group)
+```
+
+There is now a supplementary element called `"contrasts"`. But first
+consider the already existing `"assign"` and `"xlevels"` elements:
+
+```{r }
+mod3$assign
+```
+
+`"assign"` is now a vector of length 14. The first element is 0 (for
+the intercept), the 13 remaining indicate the link between the
+position of the coefficients and the position of the covariate in the
+formula:
+
+```{r }
+mod3 %>% coef %>% names
+```
+for example, the 3^rd^ and 4^th^ values of `"assign"` are 2, which is the
+position of the `"age"` covariate, with now two coefficients. The
+8^th^ and 9^th^ values of `"assign"` are 5, they correspond to the
+two dummies introduced in the regression for the 5^th^ covariate in
+the formula which is `edu`. Let's now have a look to the `"xlevels"`
+element which used to be in the previous example a list of length 0:
+
+```{r }
+mod3$xlevels
+```
+This is now a named list containing character vectors indicating the
+different levels of the factors. Note that for a factor with $J$
+levels, only $J-1$ dummies are introduced in the regression, the one
+corresponding to the first level being omitted.
+The `contrasts` element is:
+
+```{r }
+mod3$contrasts
+```
+
+It's a named list indicating how the contrasts are computed from the
+factors. The default value is `"contr.treatment"` and consist as we
+seen previously to create $J-1$ dummies for all the levels of the
+factor but the first. Other values are possible and can be set
+individually for every factor using the `contrasts` argument of `lm`:
+
+```{r }
+mod4 <- mod3 %>% update(contrasts = list(edu = "contr.sum",
+                                         fsize = "contr.helmert"))
+mod4$contrasts
+```
+The model frame now looks like:
+
+```{r }
+mod4$model %>% head(3)
+```
+The `age` column has been replaced by a $N \times 2$ matrix containing
+the two terms of the polynomial. The two factors are in their own
+column.
+The model matrix $X$ is now:
+
+```{r }
+mod3 %>% model.matrix %>% head(3)
+mod4 %>% model.matrix %>% head(3)
+```
+The fundamental difference between the model frame (a list) and the
+model matrix (a vector with a dimension) is even clearer than in the
+previous simple example. The model frame contains a column called
+`"edu"` which is a factor. In the model matrix, this column is
+replaced by $J-1=2$ columns that contain numeric and we can see that
+the numerical coding of the variable depends on the contrast used. 
+
+## Weights and offset
+
+Instead of minimizing the sum of squares residuals $\sum_n (y_n -
+\beta ^ \top x_n) ^ 2$, **weights** $w_n$ can be used so that the objective
+function becomes $\sum_n w_n (y_n - \beta ^ \top x_n) ^ 2$, leading to the
+weighted least squares estimator. Weights can be indicating in `lm`
+using the `weights` argument, which is the unquoted name of the
+column of the data frame that contains the weights. For the
+`random_group` data set, the variable that contains the sample weights
+is `samplew`:
+
+```{r }
+mod4 <- mod3 %>% update(weights = samplew)
+```
+
+The `lm` object now has a 15^th^ element called `"weights"` which
+contains the vector of weights of length $N$. The model frame is now:
+
+```{r }
+model.frame(mod4) %>% head(3)
+```
+
+Note the last column called `"(weights)"` that contains the
+weights. The weights can be extracted from the model frame using
+`model.weights`:
+
+```{r }
+mod4 %>% model.frame %>% model.weights %>% head(3)
+```
+
+An **offset** is a variable added to the regression equation, but with no
+associated coefficients (or with a coefficient set to 1). For example, in
+the equation: $y_n = \alpha + \beta_1 x_{n1} + \beta_2 x_{n2} + x_{n3} +
+\epsilon_n$, $x_{n3}$ is an offset. Note also that the same equation can
+be rewritten as: $y_n - x_{n3} = \alpha + \beta_1 x_{n1} + \beta_2
+x_{n2} + \epsilon_n$ and that in this case, the new response is $y_n -
+x_{n3}$ and there is no offset anymore. We have seen in `mod3` that
+the coefficients for the `"Intermediate"` and `"High"` education
+values are respectively $0.23$ and $0.50$, which means approximately
+25 and 50% more wage compared to the reference level of this factor
+which is `"Low"`. Coercing the three levels of the factor to $z = 1,2,3$
+(which is actually the internal representation of the factor) and
+denoting $v = 3/4 + 1/4 z$, we get the values of 1, 1.25 and
+1.50. Therefore, we could get approximately the same results as
+`mod3` by removing `"edu"` and adding $v$ as an offset. There are two
+equivalent ways to introduce an offset: in the formula, using
+`offset(v)` or by setting the `offset` argument of `lm` to `v`:
+
+```{r }
+random_group <- random_group %>% mutate(v = 3/4 + 1/4 * as.numeric(edu))
+mod5 <- update(mod4, . ~ . + offset(v) - edu)
+mod6 <- update(mod4, . ~ . - edu, offset = v)
+```
+The two fitted models are identical, they contain a supplementary
+element called `"offset"`. The offset can be extract from the model
+frame using `model.offset`:
+
+```{r }
+mod5 %>% model.frame %>% model.offset %>% head
+```
+
+## The internal
+
+
+To conclude the presentation of the `lm` function, we'll describe the
+internal of the function. We first create a simple `mylm` function
+with the same argument as `lm`, but which returns only the call,
+obtained using the function `match.call`:
+
+```{r }
+mylm <- function (formula, data, subset, weights, na.action, method = "qr", 
+                  model = TRUE, x = FALSE, y = FALSE, qr = TRUE,
+                  singular.ok = TRUE, contrasts = NULL, offset, ...){
+    mf <- match.call()
+    mf
+}
+```
+
+We then use this function with our most advanced example:
+
+```{r }
+mf <- mylm(log(wage) ~ treated + poly(age, 2) + child + fsize + female +
+               single + migrant + temp + ten,
+           random_group,
+           subset = age > 20,
+           weights = samplew,
+           contrasts = list(fsize = "contr.helmert"),
+           offset = v
+           )
+mf
+cl <- mf
+```
+
+We saved a copy of the result as we'll need it latter on.
+The next lines of `lm` work on the call (the `mf` object returned by
+our `mylm` function). The call being a list, the idea is first to keep
+only the arguments in the call that are usefull to compute the model
+frame. This is done using the `match` function on the names of the
+call:
+
+```{r }
+names(mf)
+m <- match(c("formula", "data", "subset", "weights", "na.action", 
+             "offset"), names(mf), 0L)
+m
+```
+`m` is an integer vector indicating the position of the arguments we
+wish to keep in the call; note that the position of `na.action` is 0
+because we didn't use this argument in our call to `mylm`. The first
+element of `mf` is unnamed, this is the name of the function
+(`mylm`). We then extract from `mf` its first element  and
+those given by vector `m`:
+
+```{r }
+mf <- mf[c(1L, m)]
+mf
+```
+Then, we change the first argument (the name of the function) from
+`mylm` to `model.frame`, using the `quote` function:
+
+```{r }
+mf[[1L]] <- quote(stats::model.frame)
+mf
+```
+The call is then evaluated using the `eval` function and the result is
+the model frame:
+
+```{r }
+mf <- eval(mf)
+mf %>% head(3)
+names(attributes(mf))
+```
+We then extract the terms, and the different components of the model:
+
+```{r }
+mt <- attr(mf, "terms")                                            
+y <- model.response(mf)                                 
+w <- model.weights(mf)                                  
+offset <- model.offset(mf)                                         
+x <- model.matrix(mt, mf, list(fsize = "contr.helmert"))
+```
+Note that the model matrix is constructed using as third argument the
+`contrasts` argument of `lm`.
+The estimation is then performed by `lm.wfit` (if there were no
+weights, `lm.fit` would have been used), that take as arguments the
+components of the model previously extracted:
+
+```{r }
+z <- lm.wfit(x, y, w, offset = offset)
+names(z)
+```
+We can see that the resulting object contains a subset of the elements
+returned by `lm`. We then assign to the object the `"lm"` class:
+
+```{r }
+class(z) <- "lm"
+```
+
+And we add to `z` the elements that are not returned by `lm.wfit`:
+
+```{r }
+z$na.action <- attr(mf, "na.action")
+z$offset <- offset
+z$contrasts <- attr(x, "contrasts")
+z$xlevels <- .getXlevels(mt, mf)
+z$call <- cl
+z$terms <- mt
+z$model <- mf
+```
+`na.action` is an attribute of the model frame, `contrasts` an
+attribute of the model matrix and the `xlevels` is obtained using the
+`.getXlevels` function with the terms and the model frame as arguments.
+We then get our `lm` object that contains the fitted model:
+
+```{r }
+z
+```
+
+Finally, we include in our `mylm` function all the lines we just have described:
+
+```{r }
+mylm <- function (formula, data, subset, weights, na.action, method = "qr", 
+                  model = TRUE, x = FALSE, y = FALSE, qr = TRUE,
+                  singular.ok = TRUE, contrasts = NULL, offset, ...){
+    mf <- match.call(expand.dots = FALSE)
+    m <- match(c("formula", "data", "subset", "weights", "na.action", 
+                 "offset"), names(mf), 0L)
+    mf <- mf[c(1L, m)]
+    mf[[1L]] <- quote(stats::model.frame)
+    mf <- eval(mf, parent.frame())
+    mt <- attr(mf, "terms")                                            
+    y <- model.response(mf, "numeric")                                 
+    w <- as.vector(model.weights(mf))                                  
+    offset <- model.offset(mf)                                         
+    x <- model.matrix(mt, mf, contrasts)
+    z <- lm.wfit(x, y, w, offset = offset)
+    class(z) <- "lm"
+    z$na.action <- attr(mf, "na.action")
+    z$offset <- offset
+    z$contrasts <- attr(x, "contrasts")
+    z$xlevels <- .getXlevels(mt, mf)
+    z$call <- cl
+    z$terms <- mt
+    z$model <- mf
+    z
+}
+```
+
+to get a simplified clone of `lm`:
+
+```{r }
+mod6 <- mylm(log(wage) ~ treated + poly(age, 2) + child + fsize + female +
+                 single + migrant + temp + ten, 
+             random_group,
+             subset = age > 20,
+             weights = samplew,
+             contrasts = list(fsize = "contr.helmert"),
+             offset = v)
+```
+

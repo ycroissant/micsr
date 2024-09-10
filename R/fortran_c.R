@@ -1,6 +1,17 @@
-#  NUMERICAL INTEGRATION
-
-gaussian_quad <- function(n,kind="legendre",alpha=0,beta=0)
+#' gaussian quadrature
+#'
+#' Calculate nodes and weights for Gaussian quadrature. This function
+#' is a copy of `statmod::gauss.quad`
+#'
+#' @name gaussian_quad
+#' @param n the number of nodes and weights
+#' @param kind kind of Gaussian quadrature, one of `"legendre"`,
+#'     `"chebyshev1"`, `"chebyshev2"`, `"hermite"`, `"jacobi"` or
+#'     `"laguerre"`
+#' @param alpha,beta see `statmod::gauss.quad`
+#' @return a list containing the nodes and the weights
+#' @export
+gaussian_quad <- function(n, kind = "legendre", alpha = 0, beta = 0)
 #	Calculate nodes and weights for Gaussian quadrature.
 #	Adapted from Netlib routine gaussq.f
 #	Gordon Smyth, Walter and Eliza Hall Institute

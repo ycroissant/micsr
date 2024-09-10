@@ -144,4 +144,15 @@ package (Duchesne and Lafaye, 2010).
 
 \insertRef{WILH:08}{micsr}
 }
-\keyword{package}
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://www.r-project.org}
+}
+
+}
+\author{
+\strong{Maintainer}: Yves Croissant \email{yves.croissant@univ-reunion.fr} (\href{https://orcid.org/0000-0002-4857-7736}{ORCID})
+
+}
+\keyword{internal}

@@ -11,6 +11,9 @@
 #' @param start a vector of starting values, in this case, no
 #'     estimation
 #' @param method optimization method
+#' @param object a `ordreg` object
+#' @param type one of `"outcome"` or `"probabilities"` for the
+#'     `fitted` method
 #' @param ... further arguments
 #' @return an object of class `micsr`, see `micsr::micsr` for further
 #'     details.
@@ -189,6 +192,9 @@ ordreg <- function(formula, data, weights, subset, na.action, offset,
 }
 
 
+#' @rdname ordreg
+#' @method fitted ordreg
+#' @export
 fitted.ordreg <- function(object, ..., type = c("outcome", "probabilities")){
     .type <- match.arg(type)
     ifelse(.type == "outcome",

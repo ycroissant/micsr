@@ -5,16 +5,16 @@
 \alias{stder.default}
 \title{Extract the standard errors of estimated coefficients}
 \usage{
-stder(x, .vcov, ...)
+stder(x, vcov, ...)
 
 \method{stder}{default}(x, vcov = NULL, ...)
 }
 \arguments{
 \item{x}{a fitted model or a matrix of covariance}
 
-\item{...}{further arguments}
-
 \item{vcov}{a function that computes a covariance matrix, or a character}
+
+\item{...}{further arguments}
 }
 \value{
 a numeric vector
@@ -22,7 +22,7 @@ a numeric vector
 \description{
 The standard errors are a key element while presenting the results
 of a model. They are the second column of the table of coefficient
-and are used to compute the t/z-value. \code{stderr} enables to retrieve
+and are used to compute the t/z-value. \code{stder} enables to retrieve
 easily the vector of standard errors, either from a fitted model or
 from a matrix of covariance
 }

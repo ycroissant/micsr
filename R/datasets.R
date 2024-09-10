@@ -377,3 +377,28 @@ NULL
 #' \insertRef{SUEY:95}{micsr}
 #' @importFrom Rdpack reprompt
 NULL
+
+
+#' Random control group
+#' @name random_group
+#' @docType data
+#' @keywords dataset
+#' @description  a cross-section of 2166 individuals from 2001 
+#' @format a tibble containing:
+#' - female: 1 for females
+#' - age: age
+#' - child: children
+#' - migrant: non-dutch
+#' - single: 1 for singles
+#' - temp: one for temporary job
+#' - ten: firm tenure (months)
+#' - edu: education, one of `"Low"`, `"Intermediate"` and `"High"`
+#' - fsize: firm size, one of `"up to 50"`, `"50 to 200"` and `"more than 200"`
+#' - samplew: sample weights
+#' - lnwh: log of hearly wage
+#' - group: group indicator, from -2 to 3
+#' @source Journal of Applied Econometrics Data Archive : \url{http://qed.econ.queensu.ca/jae/}
+#' @references
+#' \insertRef{LEUV:OOST:08}{micsr}
+#' @importFrom Rdpack reprompt
+NULL

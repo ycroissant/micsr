@@ -21,7 +21,7 @@
 #'     censored (tobit) regression model or `"truncated"` to estimated
 #'     the truncated regression model
 #' @param method one of `"ml"` for maximum likelihood, `"lm"` for
-#'     (biased) least squares estimators, `"twosteps"` for two-steps
+#'     (biased) least squares estimators, `"twostep"` for two-steps
 #'     consistent estimators, `"trimmed"` for symetrically censored
 #'     estimator, `"minchisq"` and `"test"`. The last two are only
 #'     relevant for instrumental variable estimation (when the formula
@@ -52,7 +52,7 @@ tobit1 <- function(formula, data, subset = NULL, weights = NULL,
                    start = NULL, left = 0, right = Inf,
                    scedas = NULL,
                    sample = c("censored", "truncated"),
-                   method = c("ml", "lm", "twosteps", "trimmed",
+                   method = c("ml", "lm", "twostep", "trimmed",
                               "nls", "minchisq", "test"),
                    trace = FALSE,
                    ...){
@@ -69,16 +69,16 @@ tobit1 <- function(formula, data, subset = NULL, weights = NULL,
     .formula <- Formula(formula)
     if (length(.formula)[2] == 2 & is.null(.scedas)){
         mf$model <- "tobit"
-        if (! .method %in% c("twosteps", "minchisq", "ml", "test"))
-            stop("method should be one of twosteps, minchisq, ml and test")
+        if (! .method %in% c("twostep", "minchisq", "ml", "test"))
+            stop("method should be one of twostep, minchisq, ml and test")
         mf$method <- .method
         mf[[1L]] <- as.name("ivldv")#quote(micsr::ivldv())
         result <- eval(mf, parent.frame())
         result$call <- .call
         return(result)
     } else {
-        if (! .method %in% c("twosteps", "ml", "nls", "lm", "trimmed"))
-            stop("method should be one of twosteps, ml, nls and lm")
+        if (! .method %in% c("twostep", "ml", "nls", "lm", "trimmed"))
+            stop("method should be one of twostep, ml, nls and lm")
     }
 
     .formula <- mf$formula <- Formula(formula)
@@ -116,7 +116,7 @@ tobit1 <- function(formula, data, subset = NULL, weights = NULL,
     if (.sample == "censored" & ! is_cens_smpl)
         stop("the tobit model requires a censored sample")
 
-    if (.method != "twosteps" & is_cens_smpl & .sample == "truncated"){
+    if (.method != "twostep" & is_cens_smpl & .sample == "truncated"){
         X <- X[Plog, ]
         y <- y[Plog]
         wt <- wt[Plog]
@@ -153,7 +153,7 @@ tobit1 <- function(formula, data, subset = NULL, weights = NULL,
     }
 
     # Two-steps estimator a la Heckman
-    if (.method == "twosteps"){
+    if (.method == "twostep"){
         if (! is_cens_smpl)
             stop("2 steps estimator requires a censored sample")
         pbt <- glm(P ~ X - 1, family = binomial(link = 'probit'))
@@ -192,7 +192,7 @@ tobit1 <- function(formula, data, subset = NULL, weights = NULL,
                        model = model.frame(result),
                        terms = terms(model.frame(result)),
                        call = .call,
-                       est_method = "twosteps")
+                       est_method = "twostep")
     }
 
     # trimmed estimator

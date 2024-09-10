@@ -101,12 +101,12 @@ ivldv <- function(formula,
     y <- model.response(mf)
     q <- 2 * y - 1
     # model matrices
-    ZZ <- rm_intercept(model.matrix(Formula(formula), mf, rhs = 1))  # L covariates (X1 + Y)
-    X <- rm_intercept(model.matrix(Formula(formula), mf, rhs = 2))  # K exogenous variables (X1 + X2)
+    ZZ <- rm_intercept(model.matrix(Formula(formula), mf, rhs = 1))   # L covariates (X1 + Y)
+    X <- rm_intercept(model.matrix(Formula(formula), mf, rhs = 2))    # K exogenous variables (X1 + X2)
     names_X <- colnames(X)
     W <- ZZ[, setdiff(colnames(ZZ), colnames(X)), drop = FALSE]       # G endogenous variables (W)
     X1 <- ZZ[, intersect(colnames(ZZ), colnames(X)), drop = FALSE]    # K1 exogenous covariates (X1)
-    X2 <- X[, setdiff(colnames(X), colnames(X1)), drop = FALSE]    # K1 exogenous covariates (X1)
+    X2 <- X[, setdiff(colnames(X), colnames(X1)), drop = FALSE]       # K2 exogenous covariates (X1)
     ZZ <- cbind(X1, W)
     names_ZZ <- colnames(ZZ)
     if (has.int){

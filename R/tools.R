@@ -75,7 +75,7 @@ newton <- function(fun, coefs, trace = 0, direction = c("min", "max"), tol = sqr
 #'
 #' The standard errors are a key element while presenting the results
 #' of a model. They are the second column of the table of coefficient
-#' and are used to compute the t/z-value. `stderr` enables to retrieve
+#' and are used to compute the t/z-value. `stder` enables to retrieve
 #' easily the vector of standard errors, either from a fitted model or
 #' from a matrix of covariance
 #' 
@@ -86,7 +86,7 @@ newton <- function(fun, coefs, trace = 0, direction = c("min", "max"), tol = sqr
 #' @return a numeric vector
 #' @keywords misc
 #' @export
-stder <- function(x, .vcov, ...) UseMethod("stder")
+stder <- function(x, vcov, ...) UseMethod("stder")
 
 #' @rdname stder
 #' @export
@@ -252,6 +252,23 @@ maximize <- function(x, start, method = c("bfgs", "nr"), trace, ...){
     result
 }
 
+#' Compute quadratic form
+#'
+#' Compute quadratic form of a vector with a matrix, which can be the
+#' vector of coefficients and the covariance matrix extracted from a
+#' fitted model
+#'
+#' @name quad_form
+#' @param x a numeric vector or a fitted model
+#' @param m a square numeric matrix
+#' @param inv a boolean, if `TRUE` (the default), the quadratic form
+#'     is computed using the inverse of the matrix
+#' @param subset a subset of the vector and the corresponding subset
+#'     of the matrix
+#' @param vcov if `NULL` the `vcov` method is used, otherwise it can
+#'     be a function or, for `micsr` objects, a character
+#' @param \dots arguments passed to `vcov` if it is a function
+#' @export
 quad_form <- function(x, m = NULL, inv = TRUE, subset = NULL, vcov = NULL, ...){
     .sub <- subset
     if (is.list(x)){
@@ -276,7 +293,11 @@ quad_form <- function(x, m = NULL, inv = TRUE, subset = NULL, vcov = NULL, ...){
     if (! is.matrix(m)  | ! is.numeric(m)) stop("the m argument should be a numeric matrix")
     if (nrow(m) != ncol(m)) stop("the matrix should be square")
     if (! is.numeric(x)) stop("the first argument should be numeric")
-    if (is.matrix(x)) stop("the first argument shouldn't be a matrix")
+    if (is.matrix(x)){
+        if (! (nrow(x) == 1 | ncol(x) == 1))
+            stop("the first argument shouldn't be a matrix")
+        else x <- drop(x)
+    }
     if (length(x) != nrow(m)) stop("the length of the vector should be equal to the dimensions of the matrix")
     .sub <- subset
     if (is.null(.sub)) .sub <- 1:length(x)

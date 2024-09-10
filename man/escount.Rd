@@ -14,7 +14,7 @@ escount(
   start = NULL,
   R = 16,
   hessian = FALSE,
-  method = c("twosteps", "ml"),
+  method = c("twostep", "ml"),
   model = c("es", "ss")
 )
 }
@@ -36,7 +36,7 @@ otherwise the covariance matrix of the coefficients is computed
 using the outer product of the gradient}
 
 \item{method}{one of \code{'ML'} for maximum likelihood estimation (the
-default) or \code{'twosteps'} for the two-steps NLS method}
+default) or \code{'twostep'} for the two-step NLS method}
 
 \item{model}{one of \code{'es'} for endogenous switching (the default)
 or \code{'ss'} for sample selection}
@@ -46,11 +46,11 @@ an object of class \verb{c("escount,micsr)"}, see \code{micsr::micsr} for furthe
 }
 \description{
 Heckman's like estimator for count data, using either
-maximum likelihood or a two-steps estimator
+maximum likelihood or a two-step estimator
 }
 \examples{
-trips_2s <- escount(trips | car ~ workschl + size + dist + smsa + fulltime + distnod +
-realinc + weekend + car | . - car - weekend + adults, data = trips, method = "twosteps")
+trips_2s <- escount(trips + car ~ workschl + size + dist + smsa + fulltime + distnod +
+realinc + weekend + car | . - car - weekend + adults, data = trips, method = "twostep")
 trips_ml <- update(trips_2s, method = "ml")
 }
 \references{
