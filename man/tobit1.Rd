@@ -7,8 +7,11 @@
 tobit1(
   formula,
   data,
-  subset = NULL,
-  weights = NULL,
+  subset,
+  weights,
+  na.action,
+  offset,
+  contrasts = NULL,
   start = NULL,
   left = 0,
   right = Inf,
@@ -26,7 +29,7 @@ instruments if \code{scedas} is \code{NULL}, which is the
 default. Otherwise, the second part indicates the set of
 covariates for the variance function}
 
-\item{data, subset, weights}{see \code{lm}}
+\item{data, subset, weights, na.action, offset, contrasts}{see \code{lm}}
 
 \item{start}{an optional vector of starting values}
 

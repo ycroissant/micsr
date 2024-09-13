@@ -6,7 +6,7 @@
 #' @name ordreg
 #' @param formula a symbolic description of the model
 #' @param data a data frame
-#' @param subset,weights,na.action,offset see `lm`
+#' @param subset,weights,na.action,offset,contrasts see `lm`
 #' @param link one of `probit` and `logit`
 #' @param start a vector of starting values, in this case, no
 #'     estimation
@@ -29,7 +29,7 @@
 #' mod2 <- ordreg(Surv(years, censored == "no") ~ gender + age + log(1 + wage), ud,
 #'                link = "cloglog", method = "bfgs")
 #' @export
-ordreg <- function(formula, data, weights, subset, na.action, offset,
+ordreg <- function(formula, data, weights, subset, na.action, offset, contrasts = NULL, 
                    link = c("probit", "logit", "cloglog"),
                    method = c("bfgs", "nr"), start = NULL,  ...){
     .method <- match.arg(method)
@@ -37,7 +37,7 @@ ordreg <- function(formula, data, weights, subset, na.action, offset,
     .link <- match.arg(link)
     cl <- match.call(expand.dots = FALSE)
     .formula <- cl$formula <- Formula(formula)
-    m <- match(c("formula", "data", "subset", "weights"),
+    m <- match(c("formula", "data", "subset", "weights", "na.action", "offset"),
                names(cl), 0L)
     # construct the model frame and components
     cl <- cl[c(1L, m)]
@@ -46,6 +46,9 @@ ordreg <- function(formula, data, weights, subset, na.action, offset,
     mf <- eval(mf, parent.frame())
     mt <- attr(mf, "terms")
     y <- model.response(mf)
+    w <- as.vector(model.weights(mf))
+    if (is.null(w)) w <- 1 else w <- w / sum(w) * length(w)
+    offset <- model.offset(mf)
     if (inherits(y, "Surv")){
         y <- as.matrix(model.response(mf))
         e <- as.logical(y[, 2])
@@ -55,7 +58,7 @@ ordreg <- function(formula, data, weights, subset, na.action, offset,
         e <- rep(1, length(y))
         if (! inherits(y, "factor")) y <- as.factor(y)
     }
-    X <- model.matrix(mt, mf)
+    X <- model.matrix(mt, mf, contrasts)
     X <- X[, - 1, drop = FALSE]
     if (compute_rank(X) < ncol(X)){
         .rank <- compute_rank(X)
@@ -182,12 +185,17 @@ ordreg <- function(formula, data, weights, subset, na.action, offset,
                    fitted.values = .fitted.values,
                    df.residual = .df.residual,
                    est_method = "ml",
-                   formula = formula,
+                   terms = mt,
                    npar = .npar,
                    tests = tests,
                    value = as.numeric(.lnl_conv),
                    call = .call
                    )
+    result$na.action <- attr(mf, "na.action")
+    result$offset <- offset
+    result$contrasts <- attr(X, "contrasts")
+    result$xlevels <- .getXlevels(mt, mf)
+
     structure(result, class = c("ordreg", "binomreg", "micsr"))
 }
 

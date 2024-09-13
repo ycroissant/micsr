@@ -248,6 +248,10 @@ escount <- function(formula,
                        call = .call,
                        est_method = "ml"
                        )
+        result$na.action <- attr(mf, "na.action")
+        result$offset <- offset
+        result$contrasts <- attr(X, "contrasts")
+        result$xlevels <- .getXlevels(mt, mf)
     }
     if (.est_method == "twostep"){
         if (model == "ss"){

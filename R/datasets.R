@@ -344,7 +344,7 @@ NULL
 #' - gender: a factor with levels \code{male} and \code{female}
 #' - age: the age
 #' - wage: the last daily wage before unemployment
-#' @source The Royal Statistical Society Datasets Website \url{https://www.blackwellpublishing.com/rss/}
+#' @source The Royal Statistical Society Datasets Website
 #' @references
 #' \insertRef{WICH:WILK:08}{micsr}
 #' @importFrom Rdpack reprompt

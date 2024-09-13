@@ -120,7 +120,7 @@ binomreg <- function(formula, data, weights, subset, na.action, offset, contrast
             q <- 2 * y - 1
             lnl <- pnorm(q * linpred, log.p = TRUE)
             if (gradient) grad <-  q * mills(q * linpred) * X
-            if (hessian) hess <- -   crossprod(w * sqrt(- dmills(q * linpred)) * X)
+            if (hessian) hess <- -   crossprod(w * sqrt(- mills(q * linpred, 1)) * X)
             if (information) info <- crossprod(w * sqrt(mills(linpred) * mills(- linpred)) * X)
             if (sum){
                 lnl <- sum(lnl * w)
@@ -203,7 +203,7 @@ binomreg <- function(formula, data, weights, subset, na.action, offset, contrast
                    fitted.values = .fitted,
                    df.residual = .df.residual,
                    est_method = "ml",
-                   formula = formula,
+                   terms = mt,
                    npar = .npar,
                    value = as.numeric(.lnl_conv),
                    tests = tests,

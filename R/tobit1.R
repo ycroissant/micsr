@@ -10,7 +10,7 @@
 #'     instruments if `scedas` is `NULL`, which is the
 #'     default. Otherwise, the second part indicates the set of
 #'     covariates for the variance function
-#' @param data,subset,weights see `lm`
+#' @param data,subset,weights,na.action,offset,contrasts see `lm`
 #' @param start an optional vector of starting values
 #' @param left,right left and right truncation points for the response
 #'     The default is respectively 0 and +Inf which corresponds to the
@@ -48,7 +48,7 @@
 #' tr <- update(ml, sample = "truncated")
 #' nls <- update(tr, method = "nls")
 #' @export
-tobit1 <- function(formula, data, subset = NULL, weights = NULL,
+tobit1 <- function(formula, data, subset, weights, na.action, offset, contrasts = NULL,
                    start = NULL, left = 0, right = Inf,
                    scedas = NULL,
                    sample = c("censored", "truncated"),
@@ -82,7 +82,7 @@ tobit1 <- function(formula, data, subset = NULL, weights = NULL,
     }
 
     .formula <- mf$formula <- Formula(formula)
-    m <- match(c("formula", "data", "subset", "weights"),
+    m <- match(c("formula", "data", "subset", "weights", "na.action", "offset"),
                names(mf), 0L)
     zerotrunc <- ifelse(left == 0 & is.infinite(right) & (right > 0), TRUE, FALSE)
     # construct the model frame and components
@@ -91,13 +91,13 @@ tobit1 <- function(formula, data, subset = NULL, weights = NULL,
     mf <- eval(mf, parent.frame())
     mt <- attr(mf, "terms")
     if (length(.formula)[2] > 1){
-        X <- model.matrix(.formula, mf, rhs = 1)
+        X <- model.matrix(.formula, mf, rhs = 1, contrasts.arg = contrasts)
         formh <- formula(.formula, rhs = 2)
         if (attr(terms(formh), "intercept") == 1L) formh <- update(formh, . ~ . - 1)
         Z <- model.matrix(formh, mf)
     }
     else{
-        X <- model.matrix(.formula, mf)
+        X <- model.matrix(.formula, mf, contrasts)
         Z <- NULL
     }
     K <- ncol(X)
@@ -106,6 +106,7 @@ tobit1 <- function(formula, data, subset = NULL, weights = NULL,
     wt <- model.weights(mf)
     if (is.null(wt)) wt <- rep(1, N)
     else wt <- wt / mean(wt)
+    offset <- model.offset(mf)
     # identify the untruncated observations
     P <- as.numeric(y > left & y < right)
     Plog <- as.logical(P)
@@ -270,11 +271,11 @@ tobit1 <- function(formula, data, subset = NULL, weights = NULL,
                 e <- as.numeric(y - X %*% beta - sigma * mills(X %*% beta / sigma))
                 bXs <- as.numeric(X %*% beta) / sigma
                 if (gradient | hessian){
-                    e_beta <- - (1 + dmills(bXs))
-                    e_sigma <- dmills(bXs) * bXs - mills(bXs)
-                    e_beta_beta <- - d2mills(bXs) / sigma
-                    e_beta_sigma <- d2mills(bXs) * bXs / sigma
-                    e_sigma_sigma <- - d2mills(bXs) * bXs ^ 2 / sigma
+                    e_beta <- - (1 + mills(bXs, 1))
+                    e_sigma <- mills(bXs, 1) * bXs - mills(bXs)
+                    e_beta_beta <- - mills(bXs, 2) / sigma
+                    e_beta_sigma <- mills(bXs, 2) * bXs / sigma
+                    e_sigma_sigma <- - mills(bXs, 2) * bXs ^ 2 / sigma
                     grad_beta <-  (- 2 * e * e_beta) * X
                     grad_sigma <- - 2 * e * e_sigma
                 }
@@ -419,6 +420,11 @@ tobit1 <- function(formula, data, subset = NULL, weights = NULL,
                        na.action = attr(mf, "na.action"),
                        est_method = "ml"
                        )
+        result$na.action <- attr(mf, "na.action")
+        result$offset <- offset
+        result$contrasts <- attr(X, "contrasts")
+        result$xlevels <- .getXlevels(mt, mf)
+        structure(result, class = c("binomreg", "micsr"))
     }
     structure(result, class = c("tobit1", "micsr"))
 }

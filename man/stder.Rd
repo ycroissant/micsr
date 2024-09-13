@@ -5,14 +5,24 @@
 \alias{stder.default}
 \title{Extract the standard errors of estimated coefficients}
 \usage{
-stder(x, vcov, ...)
+stder(x, vcov, subset = NA, fixed = FALSE, grep = NULL, invert = FALSE, ...)
 
-\method{stder}{default}(x, vcov = NULL, ...)
+\method{stder}{default}(
+  x,
+  vcov = NULL,
+  subset = NA,
+  fixed = FALSE,
+  grep = NULL,
+  invert = FALSE,
+  ...
+)
 }
 \arguments{
 \item{x}{a fitted model or a matrix of covariance}
 
 \item{vcov}{a function that computes a covariance matrix, or a character}
+
+\item{subset, grep, fixed, invert}{invert see `micsr::select_coef}
 
 \item{...}{further arguments}
 }

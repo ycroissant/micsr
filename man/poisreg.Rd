@@ -11,6 +11,7 @@ poisreg(
   subset,
   na.action,
   offset,
+  contrasts = NULL,
   start = NULL,
   mixing = c("none", "gamma", "lognorm"),
   method = c("bfgs", "newton"),
@@ -24,7 +25,7 @@ component and for the selection equation)}
 
 \item{data}{a data frame}
 
-\item{subset, weights, na.action, offset}{see \code{stats::lm},}
+\item{subset, weights, na.action, offset, contrasts}{see \code{stats::lm},}
 
 \item{start}{a vector of starting values}
 

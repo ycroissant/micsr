@@ -1,3 +1,12 @@
+mateub <- function(x, ...){
+    un <- match.call(expand.dots = TRUE)
+    deux <- match.call(expand.dots = FALSE)
+    print(un)
+    print(deux)
+    print(deux$...)
+    deux$...
+}
+
 #' Compute the inverse Mills ratio and its first two derivatives
 #'
 #' The inverse Mills ratio is used in several econometric models,
@@ -82,15 +91,16 @@ newton <- function(fun, coefs, trace = 0, direction = c("min", "max"), tol = sqr
 #' @name stder
 #' @param x a fitted model or a matrix of covariance
 #' @param vcov a function that computes a covariance matrix, or a character
+#' @param subset,grep,fixed,invert invert see `micsr::select_coef
 #' @param ... further arguments
 #' @return a numeric vector
 #' @keywords misc
 #' @export
-stder <- function(x, vcov, ...) UseMethod("stder")
+stder <- function(x, vcov, subset = NA, fixed = FALSE, grep = NULL, invert = FALSE, ...) UseMethod("stder")
 
 #' @rdname stder
 #' @export
-stder.default <- function(x, vcov = NULL, ...){
+stder.default <- function(x, vcov = NULL, subset = NA, fixed = FALSE, grep = NULL, invert = FALSE, ...){
     .vcov <- vcov
     if (is.matrix(x)) std <- sqrt(diag(x))
     else{
@@ -98,7 +108,7 @@ stder.default <- function(x, vcov = NULL, ...){
             if (is.character(.vcov)){
                 if (! inherits(x, "micsr"))
                     stop("object should be of class micsr")
-                std <- sqrt(diag(vcov(x, vcov = .vcov)))
+                std <- sqrt(diag(vcov(x, vcov = .vcov, subset = subset, fixed = fixed, grep = grep, invert = invert)))
             }
             if (is.function(.vcov)){
                 std <- sqrt(diag(.vcov(x, ...)))
@@ -308,3 +318,67 @@ quad_form <- function(x, m = NULL, inv = TRUE, subset = NULL, vcov = NULL, ...){
     qf
 }
 
+#' select a subset of coefficients
+#'
+#' `micsr` objects have a `rpar` element which is vector of integers
+#' with names that indicates the kind of the coefficients. For
+#' example, if the 6 first coefficients are covariates parameters and
+#' the next 3 parameters that define the distribution of the errors,
+#' `npar` will be c(covariates = 6, vcov = 3). It has an attribute
+#' which indicates the subset of coefficients that should be selected
+#' by default. `select_coef` has a `subset` argument (a character
+#' vector) and returns a vector of integers which is the position of
+#' the coefficients to extract.
+#'
+#' @name select_coef
+#' @param object a fitted model
+#' @param subset a character vector, the type of parameters to extract
+#' @param fixed if `TRUE`, the fixed parameters are selected
+#' @param grep a regular expression
+#' @param invert should the coefficients that **don't** match the
+#'     pattern should be selected ?
+#' @return a numeric vector
+#' @export
+select_coef <- function(object, subset = NA, fixed = FALSE, grep = NULL, invert = FALSE){   
+    # ancillary  : instruments, heteroscedasticity
+    # covariates : 
+    # misc       : standard deviations / coefficients of correlation / cholesky matrix
+    # vcov       : - ancillary
+    # all        : all coefficients
+    .grep <- grep
+    .npar <- object$npar
+    .names <- names(object$coefficients)
+    .fixed <- attr(object$coefficients, "fixed")
+    if (is.null(.fixed)) .fixed <- rep(FALSE, sum(.npar))
+    if (is.null(.npar) | is.null(attr(.npar, "default"))) idx <- 1:length(object$coefficients)
+    else{
+        if (length(subset) == 1){
+            if (is.na(subset)) .subset = attr(.npar, "default")
+            else{
+                if (subset == "all") .subset <- names(.npar)
+                else{
+                    if (subset %in% names(.npar)) .subset <- subset
+                    else stop("irrelevant subset argument")
+                }
+            }
+        }
+        else{
+            .subset <- subset
+            if (! all(.subset %in% names(.npar))) stop("irrelevant subset")
+        }
+        idx <- data.frame(subset = rep(names(.npar), times = .npar),
+                          idx = 1:sum(.npar),
+                          fixed = .fixed)
+        .sel <- .subset
+        idx <- subset(idx, subset %in% .sel)
+        if (! fixed) idx <- subset(idx, ! fixed)
+        idx <- idx$idx
+        names(idx) <- .names[idx]
+    }
+    idx
+    if (! is.null(.grep)){
+        z <- grep(.grep, names(idx), invert = invert)
+        idx <- idx[z]
+    }
+    idx
+}

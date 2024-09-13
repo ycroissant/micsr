@@ -28,14 +28,16 @@
 \usage{
 llobs(x, ...)
 
-\method{coef}{micsr}(object, ..., subset = NA, fixed = FALSE)
+\method{coef}{micsr}(object, ..., subset = NA, fixed = FALSE, grep = NULL, invert = TRUE)
 
 \method{vcov}{micsr}(
   object,
   ...,
   vcov = c("info", "hessian", "opg"),
   subset = NA,
-  fixed = FALSE
+  fixed = FALSE,
+  grep = NULL,
+  invert = TRUE
 )
 
 \method{summary}{micsr}(
@@ -43,7 +45,9 @@ llobs(x, ...)
   ...,
   vcov = c("hessian", "info", "opg"),
   subset = NA,
-  fixed = FALSE
+  fixed = FALSE,
+  grep = NULL,
+  invert = TRUE
 )
 
 \method{coef}{summary.micsr}(object, ...)
@@ -92,15 +96,7 @@ llobs(x, ...)
 
 \item{...}{further arguments}
 
-\item{subset}{a character which indicates which subset of
-coefficients should be extracted: one of \code{noinst} (all the
-coefficients except those corresponding to instrumental
-variables), \code{all}, \code{covar} (only the coefficients of the
-covariates), \code{inst} (only the coefficients of the instrumental
-variables) and \code{misc} (ony the "miscelanous" coefficients,
-typicaly a standard deviation or a coefficient of correlation)}
-
-\item{fixed}{if \code{TRUE} the fixed coefficients are extracted}
+\item{subset, grep, fixed, invert}{invert see `micsr::select_coef}
 
 \item{vcov}{the method used to compute the covariance matrix of the
 estimators (only for the ML estimator), one of \code{hessian} (the

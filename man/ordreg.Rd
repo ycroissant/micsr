@@ -12,6 +12,7 @@ ordreg(
   subset,
   na.action,
   offset,
+  contrasts = NULL,
   link = c("probit", "logit", "cloglog"),
   method = c("bfgs", "nr"),
   start = NULL,
@@ -25,7 +26,7 @@ ordreg(
 
 \item{data}{a data frame}
 
-\item{subset, weights, na.action, offset}{see \code{lm}}
+\item{subset, weights, na.action, offset, contrasts}{see \code{lm}}
 
 \item{link}{one of \code{probit} and \code{logit}}
 

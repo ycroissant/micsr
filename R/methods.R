@@ -11,14 +11,7 @@
 #' @name micsr
 #' @param x,object an object which inherits the `micsr` class
 #' @param formula a formula
-#' @param subset a character which indicates which subset of
-#'     coefficients should be extracted: one of `noinst` (all the
-#'     coefficients except those corresponding to instrumental
-#'     variables), `all`, `covar` (only the coefficients of the
-#'     covariates), `inst` (only the coefficients of the instrumental
-#'     variables) and `misc` (ony the "miscelanous" coefficients,
-#'     typicaly a standard deviation or a coefficient of correlation)
-#' @param fixed if `TRUE` the fixed coefficients are extracted
+#' @param subset,grep,fixed,invert invert see `micsr::select_coef
 #' @param vcov the method used to compute the covariance matrix of the
 #'     estimators (only for the ML estimator), one of `hessian` (the
 #'     opposite of the inverse of the hessian), `info` (the inverse of
@@ -112,64 +105,6 @@ llobs <- function(x, ...)
 #' @export
 Formula::model.part
 
-#select_coef <- function(object, which = c("noinst", "all", "covar", "inst", "misc")){ 
-
-
-
-#' select a subset of coefficients
-#'
-#' `micsr` objects have a `rpar` element which is vector of integers
-#' with names that indicates the kind of the coefficients. For
-#' example, if the 6 first coefficients are covariates parameters and
-#' the next 3 parameters that define the distribution of the errors,
-#' `npar` will be c(covariates = 6, vcov = 3). It has an attribute
-#' which indicates the subset of coefficients that should be selected
-#' by default. `select_coef` has a `subset` argument (a character
-#' vector) and returns a vector of integers which is the position of
-#' the coefficients to extract.
-#'
-#' @name select_coef
-#' @param object a fitted model
-#' @param subset a character vector, the type of parameters to extract
-#' @param fixed if `TRUE`, the fixed parameters are selected
-#' @return a numeric vector
-#' @export
-select_coef <- function(object, subset = NA, fixed = FALSE){   
-    # ancillary  : instruments, heteroscedasticity
-    # covariates : 
-    # misc       : standard deviations / coefficients of correlation / cholesky matrix
-    # vcov       : - ancillary
-    # all        : all coefficients
-    .npar <- object$npar
-    .fixed <- attr(object$coefficients, "fixed")
-    if (is.null(.fixed)) .fixed <- rep(FALSE, sum(.npar))
-    if (is.null(.npar) | is.null(attr(.npar, "default"))) idx <- 1:length(object$coefficients)
-    else{
-        if (length(subset) == 1){
-            if (is.na(subset)) .subset = attr(.npar, "default")
-            else{
-                if (subset == "all") .subset <- names(.npar)
-                else{
-                    if (subset %in% names(.npar)) .subset <- subset
-                    else stop("irrelevant subset argument")
-                }
-            }
-        }
-        else{
-            .subset <- subset
-            if (! all(.subset %in% names(.npar))) stop("irrelevant subset")
-        }
-        idx <- data.frame(subset = rep(names(.npar), times = .npar),
-                          idx = 1:sum(.npar),
-                          fixed = .fixed)
-        .sel <- .subset
-        idx <- subset(idx, subset %in% .sel)
-        if (! fixed) idx <- subset(idx, ! fixed)
-        idx <- idx$idx
-    }
-    idx
-}
-
 pretty_nms <- function(x, subset = NA){
     .subset <- subset
     .cov_subsets <- c("covariates", "heterosc", "instruments")
@@ -183,12 +118,11 @@ pretty_nms <- function(x, subset = NA){
 
 #' @rdname micsr
 #' @export
-coef.micsr <- function(object, ..., subset = NA, fixed = FALSE){
+coef.micsr <- function(object, ..., subset = NA, fixed = FALSE, grep  = NULL, invert = TRUE){
     .subset <- subset
     is.na_subset <- (length(.subset) == 1) && is.na(.subset)
     if (is.na_subset) .subset <- attr(object$npar, "default")
-    .est_method <- object$est_method
-    .sel <- select_coef(object, .subset, fixed)
+    .sel <- select_coef(object, .subset, fixed = fixed, grep = grep)
     .coef <- object$coefficients[.sel]
     names(.coef) <- pretty_nms(names(.coef), .subset)
     .coef
@@ -197,7 +131,7 @@ coef.micsr <- function(object, ..., subset = NA, fixed = FALSE){
 #' @rdname micsr
 #' @export
 vcov.micsr <- function(object, ..., vcov = c("info", "hessian", "opg"),
-                       subset = NA, fixed = FALSE){
+                       subset = NA, fixed = FALSE, grep = NULL, invert = TRUE){
     .subset <- subset
     is.na_subset <- (length(.subset) == 1) && is.na(.subset)
     if (is.na_subset) .subset <- attr(object$npar, "default")
@@ -211,7 +145,7 @@ vcov.micsr <- function(object, ..., vcov = c("info", "hessian", "opg"),
     }
     else .vcov <- object$vcov
     nms <- rownames(.vcov)
-    .sel <- select_coef(object, subset = .subset, fixed = fixed)
+    .sel <- select_coef(object, subset = .subset, fixed = fixed, grep = grep)
     nms <- nms[.sel]
     .vcov <- .vcov[.sel, .sel, drop = FALSE]
     colnames(.vcov) <- rownames(.vcov) <- pretty_nms(nms, .subset)
@@ -222,15 +156,15 @@ vcov.micsr <- function(object, ..., vcov = c("info", "hessian", "opg"),
 #' @export
 summary.micsr <- function(object, ...,
                           vcov = c("hessian", "info", "opg"),
-                          subset = NA, fixed = FALSE){
+                          subset = NA, fixed = FALSE, grep = NULL, invert = TRUE){
     .subset <- subset
     is.na_subset <- (length(.subset) == 1) && is.na(.subset)
     if (is.na_subset) .subset <- attr(object$npar, "default")
     .est_method <- object$est_method
     .vcov_method <- match.arg(vcov)
-    .vcov <- vcov(object, subset = .subset, vcov = .vcov_method, fixed = fixed)
+    .vcov <- vcov(object, subset = .subset, vcov = .vcov_method, fixed = fixed, grep = grep)
     std.err <- sqrt(diag(.vcov))
-    b <- coef(object, subset = .subset, fixed = fixed)
+    b <- coef(object, subset = .subset, fixed = fixed, grep = grep)
     z <- b / std.err
     p <- 2 * pnorm(abs(z), lower.tail = FALSE)
     object$coefficients <- cbind(b, std.err, z, p)
@@ -307,14 +241,10 @@ print.summary.micsr <- function (x, digits = max(3, getOption("digits") - 2), wi
 
 #' @rdname micsr
 #' @export
-logLik.micsr <- function(object, ...){
-    if (object$est_method != "ml") NULL
-    else object$value
-}
-
 logLik.micsr <- function(object, ..., type = c("model", "null", "saturated")){
     .type <- match.arg(type)
     .val <- object$logLik[.type]
+    if (is.na(.val)) stop(paste("the ", .type, " log-likelihood is not available", sep = ""))
     .nobs <- nobs(object)
     .df <- switch(.type,
                   model = npar(object),
@@ -426,9 +356,13 @@ model.part.micsr <- function(object, ..., lhs = 1){
 #' @export
 model.matrix.micsr <- function(object, formula = NULL, ..., rhs = 1){
 #    .formula <- Formula(formula(paste(deparse(object$call$formula), collapse = "")))
-    if (is.null(formula)) .formula <- object$formula
-    else{ .formula <- Formula(formula)
-        .formula <- update(object$formula, formula)
+    ## if (is.null(formula)) .formula <- object$formula
+    ## else{ .formula <- Formula(formula)
+    ##     .formula <- update(object$formula, formula)
+    ## }
+    if (is.null(formula)) .formula <- object$terms
+    else{.formula <- Formula(formula)
+        .formula <- update(object$terms, formula)
     }
     cl <- object$call
     cl$formula <- .formula

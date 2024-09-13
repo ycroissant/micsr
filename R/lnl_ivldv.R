@@ -64,6 +64,7 @@ lnliv_ldv <- function(param, X1, X2, W, y, sum = TRUE, gradient = FALSE, right, 
         lnl_c <- lnl_f_c + lnl_g_c
         if (model == "tobit") lnl_s <- lnl_f_s
         gradObs <- cbind(lnl_beta, lnl_rho, lnl_pi, lnl_c)
+        colnames(gradObs) <- names(param)
         if (model == "tobit") gradObs <- cbind(gradObs, lnl_s)
         if (sum) gradObs <- apply(gradObs, 2, sum)
         attr(lnl, "gradient") <- gradObs

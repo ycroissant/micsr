@@ -6,7 +6,7 @@
 #' @param formula a symbolic description of the model, (for the count
 #'     component and for the selection equation)
 #' @param data a data frame
-#' @param subset,weights,na.action,offset see `stats::lm`,
+#' @param subset,weights,na.action,offset,contrasts see `stats::lm`,
 #' @param start a vector of starting values
 #' @param mixing the mixing distribution, one of `"none"`, `"gamma"`
 #'     and `"lognorm"`
@@ -22,7 +22,7 @@
 #' nb1 <- poisreg(trips ~ workschl + size + dist + smsa + fulltime + distnod +
 #'                realinc + weekend + car, trips, mixing = "gamma", vlink = "nb1")
 #' @export
-poisreg <- function(formula, data, weights, subset, na.action, offset,
+poisreg <- function(formula, data, weights, subset, na.action, offset, contrasts = NULL, 
                     start = NULL, mixing = c("none", "gamma", "lognorm"),
                     method = c("bfgs", "newton"), vlink = c("nb1", "nb2"), ...){
     .call <- match.call()
@@ -32,14 +32,17 @@ poisreg <- function(formula, data, weights, subset, na.action, offset,
     .mixing <- match.arg(mixing)
     .vlink <- match.arg(vlink)
     # construct the model frame and components
-    m <- match(c("formula", "data", "subset", "weights"),
+    m <- match(c("formula", "data", "subset", "weights", "na.action", "offset"),
                names(cl), 0L)
     cl <- cl[c(1L, m)]
     mf <- cl
     mf[[1L]] <- as.name("model.frame")
     mf <- eval(mf, parent.frame())
     mt <- attr(mf, "terms")
-    X <- model.matrix(mt, mf)
+    X <- model.matrix(mt, mf, contrasts)
+    w <- as.vector(model.weights(mf))
+    if (is.null(w)) w <- 1 else w <- w / sum(w) * length(w)
+    offset <- model.offset(mf)
     y <- model.response(mf)
     yb <- mean(y)
     K <- ncol(X)
@@ -244,12 +247,16 @@ poisreg <- function(formula, data, weights, subset, na.action, offset,
                    fitted.values = .fitted,
                    df.residual = .df.residual,
                    est_method = "ml",
-                   formula = formula,
+                   terms = mt,
                    npar = .npar,
                    value = as.numeric(.lnl_conv),
                    tests = tests,
                    call = .call
                    )
+    result$na.action <- attr(mf, "na.action")
+    result$offset <- offset
+    result$contrasts <- attr(X, "contrasts")
+    result$xlevels <- .getXlevels(mt, mf)
     structure(result, class = c("poisreg", "micsr"))
 }
 

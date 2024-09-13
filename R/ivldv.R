@@ -154,7 +154,7 @@ ivldv <- function(formula,
             UAX <- rbind(crossprod(U * a11, X), apply(X * a12, 2, sum))
         }
         if (model == "probit"){
-            dmls <- dmills(q * lp)
+            dmls <- mills(q * lp, 1)
             UAU <- crossprod(U * sqrt(- dmls))
             UAX <- crossprod(U * (- dmls), X)
         }
@@ -192,7 +192,7 @@ ivldv <- function(formula,
         if (model == "probit"){
             newey_2 <- glm(y ~ X + Wres, family = binomial(link = 'probit'))
             # this is not the default vcov computed by glm
-            vcov_step_2 <- solve(crossprod(sqrt(- dmills(q * drop(cbind(1, X, Yres) %*% coef(newey_2)))) * cbind(1, X, Yres)))
+            vcov_step_2 <- solve(crossprod(sqrt(- mills(q * drop(cbind(1, X, Yres) %*% coef(newey_2)), 1)) * cbind(1, X, Yres)))
         }
         if (model == "tobit"){
             newey_2 <- tobit1(y ~ X + Wres, left = left, right = right)
@@ -303,7 +303,8 @@ ivldv <- function(formula,
     if (.est_method == "ml"){
         result$hessian <- - .optim$hessian
         result$gradient <- .gradient
-        result$value <- .logLik
+        result$logLik <- c(model = .logLik)
+        result$value <- .llcount
         .npar <- c(covariates = K1 + G + has.int,
                    resid = G,
                    instruments = (K1 + K2 + has.int) * G,
@@ -330,8 +331,13 @@ ivldv <- function(formula,
         .npar <- c(covariates = K1 + G + has.int)
     }
     result$npar <- .npar
+    result$na.action <- attr(mf, "na.action")
+    result$offset <- offset
+    result$contrasts <- attr(X, "contrasts")
+    result$xlevels <- .getXlevels(mt, mf)
     structure(result, class = c("ivldv", "micsr"))
 }
+
 #' @rdname ivldv
 #' @export
 endogtest <- function(x, ...) UseMethod("endogtest")
