@@ -60,12 +60,20 @@ bank_msq %>% coef
 bank_msq %>% coef(subset = c("resid", "chol"))
 bank_msq %>% vcov(subset = c("resid"))
 ```
+Another way to select a subset of coefficients is to provide a regular
+expression for the `grep` argument. For example, to get all the
+coefficients that contains `"Intercept"`:
+
+```{r }
+#| collapse: true
+bank_msq %>% vcov(subset = c("all"), grep = "Intercept")
+```
 
 The `npar` function extracts the number of the whole set of
 coefficients or of specific subsets:
 
-
 ```{r }
+#| collapse: true
 npar(bank_msq)
 npar(bank_msq, subset = c("resid", "chol"))
 ```
@@ -113,6 +121,21 @@ of the covariance matrix of the coefficients:
 These matrix are computed using the `vcov` method, which has a `vcov`
 argument that can be set to `"info"`, `"hessian"` or `"opg"`.
 
+```{r }
+vcov(bank_msq, subset = "resid", vcov = "opg")
+```
+
+The vector of standard errors are often used, in particular in the
+table of coefficients. It can be obtained by taking the square root of
+the diagonal elements of the covariance matrix, or more simply by
+using `micsr::stder`
+
+```{r }
+#| collapse: true
+vcov(bank_msq, subset = "resid") %>% diag %>% sqrt
+stder(bank_msq, subset = "resid")
+```
+
 ## Summary
 
 The `summary`  method use the preeciding infrastructure to compute the
@@ -122,6 +145,6 @@ coefficients can be obtained using the `subset` argument and the
 covariance matrix is chosen using the `vcov` argument:
 
 ```{r }
-summary(bank_msq, subset = c("chol", "resid"))
+summary(bank_msq, subset = c("chol", "resid"), vcov = "opg")
 ```
 

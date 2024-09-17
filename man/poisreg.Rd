@@ -16,6 +16,7 @@ poisreg(
   mixing = c("none", "gamma", "lognorm"),
   method = c("bfgs", "newton"),
   vlink = c("nb1", "nb2"),
+  check_gradient = FALSE,
   ...
 )
 }

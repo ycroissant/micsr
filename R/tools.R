@@ -1,3 +1,25 @@
+check_gradient <- function(f, coefs){
+    object <- f(coefs)
+    anal_grad <- attr(object, "gradient")
+    anal_hess <- attr(object, "hessian")
+    num_grad <- numDeriv::grad(f, coefs)
+    num_hess <- numDeriv::hessian(f, coefs)
+    max_grad <- max(abs(anal_grad - num_grad))
+#    print(cbind(anal_grad, num_grad))
+#    print(num_hess[1:5, 1:5])
+#    print(anal_hess[1:5, 1:5])
+    if (any(is.na(num_hess))) message("some NA in the numerical hessian")
+    max_hess <- max(abs(anal_hess[! is.na(num_hess)] - num_hess[! is.na(num_hess)]) / sd(anal_hess))
+    structure(list(gradient = max_grad, hessian = max_hess), class = "check_gradient",
+              gradient = cbind(num_grad, anal_grad), anal_hess = anal_hess, num_hess = num_hess)
+}
+
+## print.check_gradient <- function(x, ...){
+##     cat("maximum gradient difference : ", x$gradient, "\n",
+##         "maximum hessian  difference : ", x$hessian,  "\n")
+## }
+
+
 mateub <- function(x, ...){
     un <- match.call(expand.dots = TRUE)
     deux <- match.call(expand.dots = FALSE)

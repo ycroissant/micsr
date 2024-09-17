@@ -66,6 +66,9 @@ NULL
 
 # @importFrom Rcpp evalCpp
 
+#' @importFrom survival Surv
+#' @export
+survival::Surv
 
 #' @importFrom dplyr mutate
 #' @export
@@ -203,6 +206,11 @@ print.summary.micsr <- function (x, digits = max(3, getOption("digits") - 2), wi
         .est_method_lib <- "Maximum likelihood estimation"
         gof_stat <- "log-Likelihood"
     }
+    if (.est_method == "lm"){
+        .est_method_lib <- "Ordinary Least Squares"
+        gof_stat <- NA
+    }
+
     if (.est_method == "twosteps"){
         .est_method_lib <- "Two-steps estimation"
         gof_stat <- "deviance"

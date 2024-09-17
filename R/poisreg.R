@@ -24,7 +24,8 @@
 #' @export
 poisreg <- function(formula, data, weights, subset, na.action, offset, contrasts = NULL, 
                     start = NULL, mixing = c("none", "gamma", "lognorm"),
-                    method = c("bfgs", "newton"), vlink = c("nb1", "nb2"), ...){
+                    method = c("bfgs", "newton"), vlink = c("nb1", "nb2"),
+                    check_gradient = FALSE, ...){
     .call <- match.call()
     cl <- match.call(expand.dots = FALSE)
     .formula <- cl$formula <- Formula(formula)
@@ -40,9 +41,9 @@ poisreg <- function(formula, data, weights, subset, na.action, offset, contrasts
     mf <- eval(mf, parent.frame())
     mt <- attr(mf, "terms")
     X <- model.matrix(mt, mf, contrasts)
-    w <- as.vector(model.weights(mf))
-    if (is.null(w)) w <- 1 else w <- w / sum(w) * length(w)
-    offset <- model.offset(mf)
+    wt <- as.vector(model.weights(mf))
+    if (is.null(wt)) wt <- 1 else wt <- wt / sum(wt) * length(wt)
+    .offset <- model.offset(mf)
     y <- model.response(mf)
     yb <- mean(y)
     K <- ncol(X)
@@ -54,16 +55,17 @@ poisreg <- function(formula, data, weights, subset, na.action, offset, contrasts
     
     # Poisson model
     if (.mixing == "none"){
-        lnl <- function(coefs, gradient = FALSE, hessian = FALSE, information = FALSE, sum = TRUE, X, y){
+        lnl <- function(coefs, gradient = FALSE, hessian = FALSE, information = FALSE,
+                        sum = TRUE, X, y, weights){
             linpred <- drop(X %*% coefs)
             mu <- exp(linpred)
             lnl <- - mu + y * log(mu) - lfactorial(y)
             if (gradient) grad <- (y - mu) * X
-            if (hessian) hess <- -  crossprod( mu * X, X)
+            if (hessian) hess <- -  crossprod(weights *  mu * X, X)
             if (information) info <- crossprod( mu * X, X)
             if (sum){
-                lnl <- sum(lnl)
-                if (gradient) grad <- apply(grad, 2, sum)
+                lnl <- sum(weights * lnl)
+                if (gradient) grad <- apply(weights * grad, 2, sum)
             }
             if (gradient) attr(lnl, "gradient") <- grad
             if (hessian) attr(lnl, "hessian") <- hess
@@ -81,16 +83,17 @@ poisreg <- function(formula, data, weights, subset, na.action, offset, contrasts
     # Negbin model
     if (.mixing == "gamma"){
         if (vlink == 'nb1') k <- 1 else k <- 2
-        lnl <- function(coefs, gradient = FALSE, hessian = FALSE, information = FALSE, sum = TRUE, X, y){
+        lnl <- function(coefs, gradient = FALSE, hessian = FALSE, information = FALSE,
+                        sum = TRUE, X, y, weights){
             K <- ncol(X)
             beta <- coefs[1L:K]
             sigma <- coefs[K + 1L]
             bX <- as.numeric(crossprod(t(X), beta))
             l <- exp(bX)
             v <- l ^ (2 - k) / sigma
-            lnL <- lgamma(y + v) - lgamma(y + 1) - lgamma(v) + v * log(v) -
+            lnl <- lgamma(y + v) - lgamma(y + 1) - lgamma(v) + v * log(v) -
                 v * log(v + l) + y * log(l) - y * log(v + l)
-            if (sum) lnL <- sum(lnL)
+            if (sum) lnl <- sum(weights * lnl)
             if (gradient){
                 lb <- l
                 vb <- (2 - k) * v
@@ -100,8 +103,8 @@ poisreg <- function(formula, data, weights, subset, na.action, offset, contrasts
                 gb <- (Ll * l + (2 - k) * v * Lv)
                 gs <- - v / sigma * Lv
                 gradi <-  cbind(gb * X, sigma = gs)
-                if (sum) gradi <- apply(gradi, 2, sum)
-                attr(lnL, "gradient") <- gradi
+                if (sum) gradi <- apply(weights * gradi, 2, sum)
+                attr(lnl, "gradient") <- gradi
             }
             if (hessian){
                 Lll <- (v + y) / (l + v) ^ 2 - y / l ^ 2
@@ -119,13 +122,13 @@ poisreg <- function(formula, data, weights, subset, na.action, offset, contrasts
                     lb * (Llv * vs)
                 Hvv <- Lv * vss +
                     vs * (Lvv * vs)
-                Hbb <- crossprod(X * Hbb, X)
-                Hbv <- apply(Hbv * X, 2, sum)
-                Hvv <- sum(Hvv)
+                Hbb <- crossprod(weights * X * Hbb, X)
+                Hbv <- apply(weights * Hbv * X, 2, sum)
+                Hvv <- sum(weights * Hvv)
                 H <- rbind(cbind(Hbb, sigma = Hbv), sigma = c(Hbv, Hvv))
-                attr(lnL, "hessian") <- H
+                attr(lnl, "hessian") <- H
             }
-            lnL
+            lnl
         }
         if (is.null(start)){
             start <- c(rep(0, K), 1E-08)
@@ -136,7 +139,8 @@ poisreg <- function(formula, data, weights, subset, na.action, offset, contrasts
         attr(.npar, "null") <- 1
     }
     if (.mixing == "lognorm"){
-        lnl <- function(coefs, gradient = FALSE, hessian = FALSE, information = FALSE, sum = TRUE, X, y){
+        lnl <- function(coefs, gradient = FALSE, hessian = FALSE, information = FALSE,
+                        sum = TRUE, X, y, weights){
             K <- ncol(X)
             beta <- coefs[1L:K]
             sigma <- coefs[K + 1L]
@@ -149,7 +153,7 @@ poisreg <- function(formula, data, weights, subset, na.action, offset, contrasts
             O <- matrix(gq$nodes, nrow = nrow(qr), ncol = ncol(qr), byrow = TRUE)
             q <- apply(W * qr, 1, sum)
             lnl <- - 0.5 * log(pi) - lfactorial(y) + log(q)
-            if (sum) lnl <- sum(lnl)
+            if (sum) lnl <- sum(weights * lnl)
             if (gradient){
                 q_nr <- exp(- exp(lambda)) * exp(lambda * y)
                 dq_nr <- q_nr * (y - exp(lambda))
@@ -157,16 +161,16 @@ poisreg <- function(formula, data, weights, subset, na.action, offset, contrasts
                 dq_n <- apply(W * dq_nr, 1, sum)
                 dsq_n <- apply(W * dq_nr * sqrt(2) * O, 1, sum)
                 g <- cbind(dq_n / q_n * X, sigma = dsq_n / q_n)
-                if (sum) g <- apply(g, 2, sum)
+                if (sum) g <- apply(weights * g, 2, sum)
                 attr(lnl, "gradient") <- g
             }
             if (hessian){
-                d2q_n <- apply(W * (dq_nr * (y - exp(lambda)) - q_nr * exp(lambda)), 1, sum)
-                H <- crossprod(d2q_n * X / q_n, X) - crossprod(dq_n / q_n * X)
-                d2cq_n <- apply(W * (dq_nr * (y - exp(lambda)) - q_nr * exp(lambda)) * sqrt(2) * O, 1, sum)
-                d2sq_n <- apply(W * (dq_nr * (y - exp(lambda)) - q_nr * exp(lambda)) * 2  * O ^ 2, 1, sum)
-                H_gs <- apply(d2cq_n * X / q_n, 2, sum) - apply(dsq_n * dq_n / q_n ^ 2 * X, 2, sum)
-                H_ss <- sum(d2sq_n / q_n) - sum(dsq_n ^ 2 / q_n ^  2)
+                d2q_n <- apply(weights * (W * (dq_nr * (y - exp(lambda)) - q_nr * exp(lambda))), 1, sum)
+                H <- crossprod(weights * d2q_n * X / q_n, X) - crossprod(sqrt(weights) * dq_n / q_n * X)
+                d2cq_n <- apply(weights * W * (dq_nr * (y - exp(lambda)) - q_nr * exp(lambda)) * sqrt(2) * O, 1, sum)
+                d2sq_n <- apply(weights * W * (dq_nr * (y - exp(lambda)) - q_nr * exp(lambda)) * 2  * O ^ 2, 1, sum)
+                H_gs <- apply(weights * d2cq_n * X / q_n, 2, sum) - apply(weights * dsq_n * dq_n / q_n ^ 2 * X, 2, sum)
+                H_ss <- sum(weights * d2sq_n / q_n) - sum(weights * dsq_n ^ 2 / q_n ^  2)
                 H <- rbind(cbind(H, sigma = H_gs), sigma = c(H_gs, H_ss))
                 attr(lnl, "hessian") <- H
             }
@@ -200,19 +204,25 @@ poisreg <- function(formula, data, weights, subset, na.action, offset, contrasts
     ## cat("_________________\n")
 
     if (.method == "bfgs"){
-        f <- function(x) - lnl(x, X = X, y = y)
-        g <- function(x) - attr(lnl(x, X = X, y = y, gradient = TRUE), "gradient")
+        f <- function(x) - lnl(x, X = X, y = y, weights = wt)
+        g <- function(x) - attr(lnl(x, X = X, y = y, weights = wt, gradient = TRUE), "gradient")
         .coefs <- optim(start, f, g, method = "BFGS")$par
     }
-    else .coefs <- newton(lnl, X = X, y = y, trace = 1, coefs = start, direction = "max")
+    else .coefs <- newton(lnl, X = X, y = y, weights = wt, trace = 1, coefs = start, direction = "max")
 
     .linpred <- drop(X %*% .coefs[1:K])
     .mu <- exp(.linpred)
-    .lnl_conv <- lnl(.coefs, X = X, y = y, gradient = TRUE, hessian = TRUE, info = TRUE, sum = FALSE)
+    .lnl_conv <- lnl(.coefs, X = X, y = y, weights = wt, gradient = TRUE,
+                     hessian = TRUE, info = TRUE, sum = FALSE)
     .fitted <- dpois(y, .mu)
     .logLik <- c(model = sum(as.numeric(.lnl_conv)),
                  saturated = .sat_logLik,
                  null = .null_logLik)
+
+    fun <- function(x) lnl(x, X = X, y = y, weights = wt, gradient = TRUE,
+                     hessian = TRUE, info = TRUE, sum = TRUE)
+    if (check_gradient) z <- check_gradient(fun, .coefs) else z <- NA
+
     
     # Null model
     .coefs_0 <- .coefs
@@ -220,7 +230,8 @@ poisreg <- function(formula, data, weights, subset, na.action, offset, contrasts
     .coefs_0[.index_0] <- .null_intercept
     .coefs_0[- .index_0] <- 0
     if (.mixing == "gamma") .coefs_0["sigma"] <- 1E-7
-    .lnl_0 <- lnl(.coefs_0, gradient = TRUE, hessian = TRUE, information = TRUE, X = X, y = y)
+    .lnl_0 <- lnl(.coefs_0, gradient = TRUE, hessian = TRUE, information = TRUE,
+                  X = X, y = y, weights = wt)
     .g_0 <- attr(.lnl_0, "gradient")
     .info_0 <- attr(.lnl_0, "info")
     if (is.null(.info_0)) .info_0 <- - attr(.lnl_0, "hessian")
@@ -239,24 +250,25 @@ poisreg <- function(formula, data, weights, subset, na.action, offset, contrasts
     tests <- c(wald = .w, score = .lm, lr = .lr)
     result <- list(coefficients = .coefs,
                    model = mf,
+                   terms = mt,
+                   value = as.numeric(.lnl_conv),
                    gradient = attr(.lnl_conv, "gradient"),
                    hessian = attr(.lnl_conv, "hessian"),
                    info = attr(.lnl_conv, "info"),
+                   fitted.values = .fitted,
                    linear.predictors = .linpred,
                    logLik = .logLik,
-                   fitted.values = .fitted,
-                   df.residual = .df.residual,
-                   est_method = "ml",
-                   terms = mt,
-                   npar = .npar,
-                   value = as.numeric(.lnl_conv),
                    tests = tests,
-                   call = .call
-                   )
-    result$na.action <- attr(mf, "na.action")
-    result$offset <- offset
-    result$contrasts <- attr(X, "contrasts")
-    result$xlevels <- .getXlevels(mt, mf)
+                   df.residual = .df.residual,
+                   npar = .npar,
+                   est_method = "ml",
+                   call = .call,
+                   na.action = attr(mf, "na.action"),
+                   weights = wt,
+                   offset = .offset,
+                   contrasts = attr(X, "contrasts"),
+                   xlevels = .getXlevels(mt, mf),
+                   check_gradient = z)
     structure(result, class = c("poisreg", "micsr"))
 }
 

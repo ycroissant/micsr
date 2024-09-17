@@ -19,6 +19,7 @@ binomreg(
   method = c("ml", "twosteps", "minchisq", "test"),
   robust = TRUE,
   start = NULL,
+  check_gradient = FALSE,
   ...
 )
 
@@ -48,6 +49,10 @@ chi-squared estimator and \code{"test"} to get the exogeneity test,}
 covariance matrix be computed?}
 
 \item{start}{a vector of starting values}
+
+\item{check_gradient}{if \code{TRUE} the numeric gradient and hessian
+are computed and compared to the analytical gradient and
+hessian}
 
 \item{...}{further arguments}
 

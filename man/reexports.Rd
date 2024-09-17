@@ -3,6 +3,7 @@
 \docType{import}
 \name{reexports}
 \alias{reexports}
+\alias{Surv}
 \alias{mutate}
 \alias{\%>\%}
 \alias{glance}
@@ -28,5 +29,7 @@ below to see their documentation.
   \item{magrittr}{\code{\link[magrittr:pipe]{\%>\%}}}
 
   \item{sandwich}{\code{\link[sandwich]{bread}}, \code{\link[sandwich]{bread}}, \code{\link[sandwich]{estfun}}, \code{\link[sandwich]{estfun}}, \code{\link[sandwich]{meat}}, \code{\link[sandwich]{vcovHC}}}
+
+  \item{survival}{\code{\link[survival]{Surv}}}
 }}
 

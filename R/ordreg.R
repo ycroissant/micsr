@@ -14,6 +14,9 @@
 #' @param object a `ordreg` object
 #' @param type one of `"outcome"` or `"probabilities"` for the
 #'     `fitted` method
+#' @param check_gradient if `TRUE` the numeric gradient and hessian
+#'     are computed and compared to the analytical gradient and
+#'     hessian
 #' @param ... further arguments
 #' @return an object of class `micsr`, see `micsr::micsr` for further
 #'     details.
@@ -31,7 +34,7 @@
 #' @export
 ordreg <- function(formula, data, weights, subset, na.action, offset, contrasts = NULL, 
                    link = c("probit", "logit", "cloglog"),
-                   method = c("bfgs", "nr"), start = NULL,  ...){
+                   method = c("bfgs", "nr"), start = NULL, check_gradient = FALSE, ...){
     .method <- match.arg(method)
     .call <- match.call()
     .link <- match.arg(link)
@@ -46,9 +49,9 @@ ordreg <- function(formula, data, weights, subset, na.action, offset, contrasts 
     mf <- eval(mf, parent.frame())
     mt <- attr(mf, "terms")
     y <- model.response(mf)
-    w <- as.vector(model.weights(mf))
-    if (is.null(w)) w <- 1 else w <- w / sum(w) * length(w)
-    offset <- model.offset(mf)
+    wt <- as.vector(model.weights(mf))
+    if (is.null(wt)) wt <- 1 else wt <- wt / mean(wt)
+    .offset <- model.offset(mf)
     if (inherits(y, "Surv")){
         y <- as.matrix(model.response(mf))
         e <- as.logical(y[, 2])
@@ -96,7 +99,8 @@ ordreg <- function(formula, data, weights, subset, na.action, offset, contrasts 
     }
 
     lnl <- function(param, gradient = FALSE, hessian = FALSE, sum = TRUE,
-                    information = FALSE, X = X, y = y, e = e, opposite = FALSE){
+                    information = FALSE, X = X, y = y, e = e, weights,
+                    opposite = FALSE){
         sgn <- ifelse(opposite, - 1, 1)
         beta <- param[1L:K]
         mu <- c(-100, param[(K + 1L):(K + J - 1L)], 100)
@@ -106,8 +110,8 @@ ordreg <- function(formula, data, weights, subset, na.action, offset, contrasts 
         Ei <- F1 - F2
         Ci <- 1 - F1
         Li <- ifelse(e == 1, Ei, Ci)
-        lnL <- sgn * sum(log(Li))
-        if (sum) lnL <- sum(lnL)
+        lnl <- sgn * log(Li)
+        if (sum) lnl <- sum(lnl * weights)
         if (gradient | hessian){
             W <- matrix(0, nrow(X), J)
             # The first two cols are not estimated coefficients (-infty and 0)
@@ -122,48 +126,61 @@ ordreg <- function(formula, data, weights, subset, na.action, offset, contrasts 
             gb <- - (f1 - f2) * X
             gradi <- sgn * cbind(gb, gmu) / Li
             .gradient <- gradi
-            if (sum) .gradient <- apply(gradi, 2, sum)
-            attr(lnL, "gradient") <- .gradient
+            colnames(.gradient) <- names(param)
+            if (sum) .gradient <- apply(gradi * weights, 2, sum)
+            attr(lnl, "gradient") <- .gradient
         }
         if (hessian){
             e1 <- e_link(mu[y + 1] - bX)              ; e2 <- e_link(mu[y] - bX)
             M1 <- cbind(- X, W1)
             M2 <- cbind(- X, W2)
-            H <- crossprod(M1 * e1 / Li, M1) - crossprod(M2 * e2 / Li, M2) - crossprod(gradi)
+            H <- crossprod(weights * M1 * e1 / Li, M1) - crossprod(weights * M2 * e2 / Li, M2) - crossprod(sqrt(weights) * gradi)
             H <- sgn * H
-            attr(lnL, "hessian") <- H
+            colnames(H) <- rownames(H) <- names(param)
+            attr(lnl, "hessian") <- H
         }
         if (information){
-            attr(lnL, "info") <- - H
+            attr(lnl, "info") <- - H
         }
-        lnL
+        lnl
     }
+    
     sup.coef <- q_link(cumsum(prop.table(table(y))))[1: (J - 1)]
     .start <- c(rep(0.1, K), sup.coef)
-    names(.start) <- c(colnames(X), nms_thr)
-    .coefs <- maximize(lnl, .start, method = .method, trace = 0, X = X, y = y, e = e)
-    .lp <- drop(X %*% .coefs[1:K])
+    nms <- c(colnames(X), nms_thr)
+    names(.start) <- nms
+
+    .coefs <- maximize(lnl, start = .start, trace = 0, method = .method, X = X, y = y, e = e, weights = wt, ...)
+    .linpred <- drop(X %*% .coefs[1:K])
     .lnl_conv <- lnl(.coefs, gradient = TRUE, hessian = TRUE, sum = FALSE,
-                     X = X, y = y, e = e, information = TRUE)
+                     X = X, y = y, e = e, weights = wt, information = TRUE)
+
+    fun <- function(x) lnl(x, gradient = TRUE, hessian = TRUE, sum = TRUE,
+                           X = X, y = y, e = e, weights = wt, information = TRUE)
+
+    if(check_gradient) z <- check_gradient(fun, .coefs) else z <- NA
+    
     .null_intercept <- sup.coef
     fy <- prop.table(table(y))
     logLik_null <- N * sum(fy * log(fy))
     logLik_saturated <- 0
     logLik_model <- sum(.lnl_conv)
-    .fitted.values <- cbind(0, F_link(outer(- .lp, .coefs[K + (1L:(J - 1))], "+")), 1)
+    .fitted.values <- cbind(0, F_link(outer(- .linpred, .coefs[K + (1L:(J - 1))], "+")), 1)
     .fitted.values <- .fitted.values[, - 1, drop = FALSE] -
         .fitted.values[, - (J + 1L), drop = FALSE]
-    .probabilities <- .fitted.values
-    .fitted.values <- as.numeric(apply(Y * .fitted.values, 1, sum))
+    colnames(.fitted.values) <- nms_y
+    ## .probabilities <- .fitted.values
+    ## .fitted.values <- as.numeric(apply(Y * .fitted.values, 1, sum))
     .df.residual <- N - K - J - 1L
-    colnames(.probabilities) <- nms_y
+    ## colnames(.probabilities) <- nms_y
+    ## .fitted.values <- .probabilities
     .npar <- c(covariates = K, threshold = J - 1L)
     attr(.npar, "default") <- "covariates"
     # Null model
     .logLik <- c(model = logLik_model, null = logLik_null, saturated = logLik_saturated)
     null_coefs <- c(rep(0, ncol(X)), .null_intercept)
     lnl_null <- lnl(null_coefs, gradient = TRUE, hessian = TRUE,
-                    information = TRUE, X = X, y = y, e = e)
+                    information = TRUE, X = X, y = y, e = e, weights = wt)
     .null_gradient <- attr(lnl_null, "gradient")
     .null_info <- attr(lnl_null, "info")
     .lm <- drop(crossprod(.null_gradient, solve(.null_info, .null_gradient)))
@@ -177,25 +194,23 @@ ordreg <- function(formula, data, weights, subset, na.action, offset, contrasts 
 
     result <- list(coefficients = .coefs,
                    model = mf,
+                   terms = mt,
+                   value = as.numeric(.lnl_conv),
                    gradient = attr(.lnl_conv, "gradient"),
                    hessian = attr(.lnl_conv, "hessian"),
-                   linear.predictors = .lp,
-                   logLik = .logLik,
-                   probabilities = .probabilities,
                    fitted.values = .fitted.values,
-                   df.residual = .df.residual,
-                   est_method = "ml",
-                   terms = mt,
-                   npar = .npar,
+                   linear.predictors = .linpred,
+                   logLik = .logLik,
                    tests = tests,
-                   value = as.numeric(.lnl_conv),
-                   call = .call
-                   )
-    result$na.action <- attr(mf, "na.action")
-    result$offset <- offset
-    result$contrasts <- attr(X, "contrasts")
-    result$xlevels <- .getXlevels(mt, mf)
-
+                   df.residual = .df.residual,
+                   npar = .npar,
+                   est_method = "ml",
+                   call = .call,
+                   na.action = attr(mf, "na.action"),
+                   offset = .offset,
+                   contrasts = attr(X, "contrasts"),
+                   xlevels = .getXlevels(mt, mf),
+                   check_gradient = z)
     structure(result, class = c("ordreg", "binomreg", "micsr"))
 }
 
@@ -205,8 +220,13 @@ ordreg <- function(formula, data, weights, subset, na.action, offset, contrasts 
 #' @export
 fitted.ordreg <- function(object, ..., type = c("outcome", "probabilities")){
     .type <- match.arg(type)
-    ifelse(.type == "outcome",
-           object$fitted.values,
-           object$probabilities)
+    .probs <- object$fitted.values
+    if(.type == "probabilities") .probs
+    else{
+        y = model.response(model.frame(object))
+        if (inherits(y, "Surv")) y <- y[, 1]
+        Y <- model.matrix(~ factor(y) - 1, data.frame(y = y))
+        as.numeric(apply(Y * .probs, 1, sum))
+    }
 }
 

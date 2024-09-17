@@ -1,4 +1,5 @@
-lnl_tp <- function(param, X, y, wt, Z = NULL, scedas = c("exp", "pnorm"), sum = TRUE, gradient = FALSE, hessian = FALSE, left = 0, right = Inf, sample = "censored"){
+lnl_tp <- function(param, X, y, wt, Z = NULL, scedas = c("exp", "pnorm"), sum = TRUE, gradient = FALSE,
+                   hessian = FALSE, left = 0, right = Inf, sample = "censored"){
 
     CENS <- sample == "censored"
     TRUNC <- ! CENS
