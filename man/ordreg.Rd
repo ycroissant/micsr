@@ -16,6 +16,7 @@ ordreg(
   link = c("probit", "logit", "cloglog"),
   method = c("bfgs", "nr"),
   start = NULL,
+  check_gradient = FALSE,
   ...
 )
 
@@ -34,6 +35,10 @@ ordreg(
 
 \item{start}{a vector of starting values, in this case, no
 estimation}
+
+\item{check_gradient}{if \code{TRUE} the numeric gradient and hessian
+are computed and compared to the analytical gradient and
+hessian}
 
 \item{...}{further arguments}
 

@@ -59,6 +59,7 @@ tobit1 <- function(formula, data, subset, weights, na.action, offset, contrasts 
     .call <- match.call()
     .method <- match.arg(method)
     .sample <- match.arg(sample)
+    zerotrunc <- ifelse(left == 0 & is.infinite(right) & (right > 0), TRUE, FALSE)
     .scedas <- scedas
     if (! is.null(scedas)){
         if (! scedas %in% c("exp", "pnorm"))
@@ -84,10 +85,9 @@ tobit1 <- function(formula, data, subset, weights, na.action, offset, contrasts 
     .formula <- mf$formula <- Formula(formula)
     m <- match(c("formula", "data", "subset", "weights", "na.action", "offset"),
                names(mf), 0L)
-    zerotrunc <- ifelse(left == 0 & is.infinite(right) & (right > 0), TRUE, FALSE)
     # construct the model frame and components
     mf <- mf[c(1L, m)]
-    mf[[1L]] <- as.name("model.frame")
+    mf[[1L]] <- quote(stats::model.frame)
     mf <- eval(mf, parent.frame())
     mt <- attr(mf, "terms")
     if (length(.formula)[2] > 1){
@@ -106,7 +106,7 @@ tobit1 <- function(formula, data, subset, weights, na.action, offset, contrasts 
     wt <- model.weights(mf)
     if (is.null(wt)) wt <- rep(1, N)
     else wt <- wt / mean(wt)
-    offset <- model.offset(mf)
+    .offset <- model.offset(mf)
     # identify the untruncated observations
     P <- as.numeric(y > left & y < right)
     Plog <- as.logical(P)
@@ -358,11 +358,11 @@ tobit1 <- function(formula, data, subset, weights, na.action, offset, contrasts 
         .logLik <- sum(as.numeric(lnl_conv))
         beta <- coefs[1:K]
         sigma <- coefs[K + 1]
-        linear.predictor <- as.numeric(X %*% beta)
-        h <- linear.predictor / sigma
+        .linpred <- as.numeric(X %*% beta)
+        h <- .linpred / sigma
         Ppos <- pnorm(h)
-        Epos <- linear.predictor + sigma * mills(h)
-        .fitted <- tibble::tibble(y = y, Ppos = Ppos, Epos = Epos, lp = linear.predictor)
+        Epos <- .linpred + sigma * mills(h)
+        .fitted <- tibble::tibble(y = y, Ppos = Ppos, Epos = Epos, lp = .linpred)
         .vcov <- solve(- .hessian)
         dimnames(.vcov) <- list(names(coefs), names(coefs))
         .terms <-  terms(mf)
@@ -401,30 +401,27 @@ tobit1 <- function(formula, data, subset, weights, na.action, offset, contrasts 
         } else .logLik <- c(model = sum(as.numeric(lnl_conv)))
         
         result <- list(coefficients = coefs,
-                       linear.predictor = linear.predictor,
-                       fitted.values = .fitted,
-                       residuals = y - .fitted$Epos,
-                       df.residual = length(y) - length(coefs),
-                       formula = .formula,
+                       model = mf,
+                       terms = mt,
+                       value = as.numeric(lnl_conv),
+                       gradient = .gradient,
                        hessian = .hessian,
                        info = .info,
-                       vcov = .vcov,
-                       npar = npar,
-                       gradient = .gradient,
-                       value = as.numeric(lnl_conv),
+                       fitted.values = .fitted,
+                       linear.predictor = .linpred,
                        logLik = .logLik,
-                       model = mf,
-                       terms = .terms,
+                       residuals = y - .fitted$Epos,
+                       df.residual = length(y) - length(coefs),
+                       npar = npar,
+                       est_method = "ml",
                        call = .call,
-                       xlevels = .getXlevels(mt, mf),
                        na.action = attr(mf, "na.action"),
-                       est_method = "ml"
-                       )
-        result$na.action <- attr(mf, "na.action")
-        result$offset <- offset
-        result$contrasts <- attr(X, "contrasts")
-        result$xlevels <- .getXlevels(mt, mf)
-        structure(result, class = c("binomreg", "micsr"))
+                       weights = wt,
+                       offset = .offset,
+                       contrasts = attr(X, "contrasts"),
+                       xlevels = .getXlevels(mt, mf))
+#                       formula = .formula,
+#                       vcov = .vcov,
     }
     structure(result, class = c("tobit1", "micsr"))
 }
