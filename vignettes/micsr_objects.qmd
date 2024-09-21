@@ -136,6 +136,81 @@ vcov(bank_msq, subset = "resid") %>% diag %>% sqrt
 stder(bank_msq, subset = "resid")
 ```
 
+## Goodness of fit measures
+
+For models fitted by maximum likelihood, most of the GOF statistics
+are based on the value of the objective function at the optimum. Three
+values of the log-likelihood are stored in the `logLik` element of a
+`micsr` object:
+
+- the value at the optimum, for the fitted `model`,
+- the value for the `saturated` model, ie the model with no degrees of
+  freedom,
+- the value for the `null` model, ie the model without any covariates.
+
+```{r }
+pbt <- binomreg(mode ~ cost + ivtime + ovtime,
+                data = mode_choice, link = 'probit')
+pbt$logLik
+```
+
+Any of these values can be extracted using the `logLik` method, which
+has a `type` argument:
+
+```{r }
+#| collapse: true
+logLik(pbt)
+logLik(pbt, type = "model")
+logLik(pbt, type = "saturated")
+logLik(pbt, type = "null")
+```
+
+Comparing fitted models using the value of the log-likelihood is not
+relevant because introducing more covariates (even if they are
+irrelevant) will necesseraly increases the value of the
+log-likelihood. **AIC** and **BIC** are two information measures that
+take into account the number of fitted parameters. The formulas are
+respectively:
+
+- $- 2 \ln L + k K$
+- $- 2 \ln L + K \ln N$
+
+```{r }
+#| collapse: true
+AIC(pbt)
+BIC(pbt)
+AIC(pbt, type = "null")
+AIC(pbt, k = 5)
+```
+
+The deviance is minus twice the difference between a model and the
+hypothetical saturated model. For a linear gaussian model, this is the
+sum of square residuals. The deviance method for `micsr` object has a
+`type` argument equal either to `"model"`(the default) or `"null"`. In the latter
+case, we obtain the "null deviance":
+
+
+```{r }
+#| collapse: true
+deviance(pbt)
+deviance(pbt, type = "null")
+```
+
+Finally, the relevance of a proposed model can be addressed using a
+test that "all the coefficients except the intercept are zero", which
+is the equivalent of the **F** test for the linear regression
+model. Three tests can be conducted, either the Wald test, the score
+test and the likelihood ratio test. The values of the statistics are
+stored in the `test` element of the result:
+
+
+```{r }
+#| collapse: true
+pbt$test
+```
+
+
+
 ## Summary
 
 The `summary`  method use the preeciding infrastructure to compute the

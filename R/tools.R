@@ -1,3 +1,5 @@
+#' @importFrom stats sd
+
 check_gradient <- function(f, coefs){
     object <- f(coefs)
     anal_grad <- attr(object, "gradient")

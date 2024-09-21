@@ -102,39 +102,39 @@ ordreg <- function(formula, data, weights, subset, na.action, offset, contrasts 
                     information = FALSE, X = X, y = y, e = e, weights,
                     opposite = FALSE){
         sgn <- ifelse(opposite, - 1, 1)
+        J <- length(unique(y))
+        K <- ncol(X)
         beta <- param[1L:K]
         mu <- c(-100, param[(K + 1L):(K + J - 1L)], 100)
         bX <- as.numeric(crossprod(t(X), beta))
         z1 <- mu[y + 1] - bX               ; z2 <- mu[y] - bX
         F1 <- F_link(z1)                   ; F2 <- F_link(z2)
-        Ei <- F1 - F2
-        Ci <- 1 - F1
-        Li <- ifelse(e == 1, Ei, Ci)
+        Li <- (2 * e - 1) * F1 - e * F2 + (1 - e)
         lnl <- sgn * log(Li)
         if (sum) lnl <- sum(lnl * weights)
         if (gradient | hessian){
             W <- matrix(0, nrow(X), J)
+            W1 <- (col(W) == (y + 1))[, - 1, drop = FALSE]
+            W2 <- (col(W) == y)[, - 1, drop = FALSE]
+            M1 <- cbind(- X, W1)
+            M2 <- cbind(- X, W2)
             # The first two cols are not estimated coefficients (-infty and 0)
             # so remove them
-            W1 <- (col(W) == (y + 1))[, - 1, drop = FALSE]  ; W2 <- (col(W) == y)[, - 1, drop = FALSE]
-            f1 <- f_link(mu[y + 1] - bX)                    ; f2 <- f_link(mu[y] - bX)
-            W1c <- matrix(FALSE, nrow(X), J - 1) ; W1c[, J - 1] <- TRUE ; W2c <- W1
-            f1c <- rep(0, length(y))                        ; f2c <- f1
-            W1 <- e * W1 + (1 - e) * W1c                    ; W2 <- e * W2 + (1 - e) * W2c
-            f1 <- e * f1 + (1 - e) * f1c                    ; f2 <- e * f2 + (1 - e) * f2c
-            gmu <- (W1 * f1 - W2 * f2)
-            gb <- - (f1 - f2) * X
-            gradi <- sgn * cbind(gb, gmu) / Li
+            f1 <- f_link(mu[y + 1] - bX)
+            f2 <- f_link(mu[y] - bX)
+            gradi <- (2 * e - 1) * f1 * M1 -  e * f2 * M2
+            gradi <- sgn * gradi / Li
             .gradient <- gradi
             colnames(.gradient) <- names(param)
             if (sum) .gradient <- apply(gradi * weights, 2, sum)
             attr(lnl, "gradient") <- .gradient
         }
         if (hessian){
-            e1 <- e_link(mu[y + 1] - bX)              ; e2 <- e_link(mu[y] - bX)
-            M1 <- cbind(- X, W1)
-            M2 <- cbind(- X, W2)
-            H <- crossprod(weights * M1 * e1 / Li, M1) - crossprod(weights * M2 * e2 / Li, M2) - crossprod(sqrt(weights) * gradi)
+            e1 <- e_link(mu[y + 1] - bX)
+            e2 <- e_link(mu[y] - bX)
+            H <- crossprod((2 * e - 1) * weights * M1 * e1 / Li,  M1) -
+                crossprod(e * weights * M2 * e2 / Li, M2) -
+                crossprod(sqrt(weights) * gradi)
             H <- sgn * H
             colnames(H) <- rownames(H) <- names(param)
             attr(lnl, "hessian") <- H
@@ -144,7 +144,7 @@ ordreg <- function(formula, data, weights, subset, na.action, offset, contrasts 
         }
         lnl
     }
-    
+
     sup.coef <- q_link(cumsum(prop.table(table(y))))[1: (J - 1)]
     .start <- c(rep(0.1, K), sup.coef)
     nms <- c(colnames(X), nms_thr)

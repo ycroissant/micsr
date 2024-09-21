@@ -54,7 +54,7 @@ tobit1 <- function(formula, data, subset, weights, na.action, offset, contrasts 
                    sample = c("censored", "truncated"),
                    method = c("ml", "lm", "twostep", "trimmed",
                               "nls", "minchisq", "test"),
-                   trace = FALSE,
+                   trace = FALSE, check_gradient = FALSE,
                    ...){
     .call <- match.call()
     .method <- match.arg(method)
@@ -104,8 +104,7 @@ tobit1 <- function(formula, data, subset, weights, na.action, offset, contrasts 
     y <- model.response(mf)
     N <- length(y)
     wt <- model.weights(mf)
-    if (is.null(wt)) wt <- rep(1, N)
-    else wt <- wt / mean(wt)
+    if (is.null(wt)) wt <- rep(1, N) else wt <- wt / mean(wt)
     .offset <- model.offset(mf)
     # identify the untruncated observations
     P <- as.numeric(y > left & y < right)
@@ -351,7 +350,13 @@ tobit1 <- function(formula, data, subset, weights, na.action, offset, contrasts 
                                left = left, right = right, sample = .sample)
             npar <- structure(c(covariates = ncol(X), scedas = ncol(Z) + 1), default = c("covariates"))
         }
-            
+
+        fun <- function(x) lnl_tp(x, X = X, y = y, wt = wt,
+                                  scedas = .scedas, Z = Z,
+                                  sum = TRUE, gradient = TRUE, hessian = TRUE,
+                                  left = left, right = right, sample = .sample)
+
+        if(check_gradient) z <- check_gradient(fun, coefs) else z <- NA
         .hessian <- attr(lnl_conv, "hessian")
         .info <- attr(lnl_conv, "info")
         .gradient <- attr(lnl_conv, "gradient")
@@ -419,7 +424,8 @@ tobit1 <- function(formula, data, subset, weights, na.action, offset, contrasts 
                        weights = wt,
                        offset = .offset,
                        contrasts = attr(X, "contrasts"),
-                       xlevels = .getXlevels(mt, mf))
+                       xlevels = .getXlevels(mt, mf),
+                       check_gradient = z)
 #                       formula = .formula,
 #                       vcov = .vcov,
     }

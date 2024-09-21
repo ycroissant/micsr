@@ -12,6 +12,9 @@
 #'     and `"lognorm"`
 #' @param vlink one of `"nb1"` and `"nb2"`
 #' @param method the optimization method, one of `"newton"` and `"bfgs"`
+#' @param check_gradient if `TRUE` the numeric gradient and hessian
+#'     are computed and compared to the analytical gradient and
+#'     hessian
 #' @param ... further arguments
 #' @return an object of class `c("poisreg", "micsr")`, see
 #'     `micsr::micsr` for further details.
@@ -100,7 +103,7 @@ poisreg <- function(formula, data, weights, subset, na.action, offset, contrasts
                 vs <- - v / sigma
                 Ll <- - (v + y) / (l + v) + y / l
                 Lv <-  log(v) + 1 - log(l + v) - (v + y) / (l + v) + digamma(y + v) - digamma(v)
-                gb <- (Ll * l + (2 - k) * v * Lv)
+                gb <- (Ll + (2 - k) * v * Lv / l) * l
                 gs <- - v / sigma * Lv
                 gradi <-  cbind(gb * X, sigma = gs)
                 if (sum) gradi <- apply(weights * gradi, 2, sum)
@@ -114,9 +117,13 @@ poisreg <- function(formula, data, weights, subset, na.action, offset, contrasts
                 vbb <- (2 - k) ^ 2 * l
                 vbs <- - (2 - k) * v / sigma
                 vss <- 2 * v / sigma ^ 2
-                Hbb <- Ll * lbb + Lv * vbb +
-                    vb * (Lvv * vb + Llv * lb) +
-                    lb * (Llv * vb + Lll * lb)
+                ## Hbb <- Ll * lbb + Lv * vbb +
+                ##     vb * (Lvv * vb + Llv * lb) +
+                ##     lb * (Llv * vb + Lll * lb)                
+                vl <- vb / l
+                Hbb <- l * Lll + Ll + l * Llv * vl + (2 - k) * ( (Lv + v * Lvv) * vl + v * Llv)
+                Hbb <- Hbb * l
+                
                 Hbv <- Lv * vbs +
                     vb * (Lvv * vs ) +
                     lb * (Llv * vs)
@@ -145,7 +152,6 @@ poisreg <- function(formula, data, weights, subset, na.action, offset, contrasts
             beta <- coefs[1L:K]
             sigma <- coefs[K + 1L]
             bX <- X %*% beta
-#            gq <- statmod::gauss.quad(40, "hermite")
             gq <- gaussian_quad(40, "hermite")
             lambda <- sapply(gq$nodes, function(r) bX + sqrt(2) * sigma * r)
             qr <- exp(- exp(lambda)) * exp(lambda * y)
@@ -166,11 +172,11 @@ poisreg <- function(formula, data, weights, subset, na.action, offset, contrasts
             }
             if (hessian){
                 d2q_n <- apply(weights * (W * (dq_nr * (y - exp(lambda)) - q_nr * exp(lambda))), 1, sum)
-                H <- crossprod(weights * d2q_n * X / q_n, X) - crossprod(sqrt(weights) * dq_n / q_n * X)
+                H <- crossprod(d2q_n * X / q_n, X) - crossprod(sqrt(weights) * dq_n / q_n * X)
                 d2cq_n <- apply(weights * W * (dq_nr * (y - exp(lambda)) - q_nr * exp(lambda)) * sqrt(2) * O, 1, sum)
                 d2sq_n <- apply(weights * W * (dq_nr * (y - exp(lambda)) - q_nr * exp(lambda)) * 2  * O ^ 2, 1, sum)
-                H_gs <- apply(weights * d2cq_n * X / q_n, 2, sum) - apply(weights * dsq_n * dq_n / q_n ^ 2 * X, 2, sum)
-                H_ss <- sum(weights * d2sq_n / q_n) - sum(weights * dsq_n ^ 2 / q_n ^  2)
+                H_gs <- apply(d2cq_n * X / q_n, 2, sum) - apply(weights * dsq_n * dq_n / q_n ^ 2 * X, 2, sum)
+                H_ss <- sum(d2sq_n / q_n) - sum(weights * dsq_n ^ 2 / q_n ^  2)
                 H <- rbind(cbind(H, sigma = H_gs), sigma = c(H_gs, H_ss))
                 attr(lnl, "hessian") <- H
             }
@@ -185,24 +191,6 @@ poisreg <- function(formula, data, weights, subset, na.action, offset, contrasts
         attr(.npar, "null") <- 1
     }
 
-    ## cat("_________________\n")
-    ## cat("numerical gradient\n")
-    ## print(numDeriv::grad(lnl, start, X = X, y = y))
-    ## cat("_________________\n")
-    ## cat("_________________\n")
-    ## cat("numerical hessian\n")
-    ## print(numDeriv::hessian(lnl, start, X = X, y = y))
-    ## cat("_________________\n")
-    ## va <- lnl(start, X = X, y = y, gradient = TRUE, hessian = TRUE)
-    ## cat("_________________\n")
-    ## cat("analytical gradient\n")
-    ## print(attr(va, "gradient"))
-    ## cat("_________________\n")
-    ## cat("_________________\n")
-    ## cat("analytical hessian\n")
-    ## print(attr(va, "hessian"))
-    ## cat("_________________\n")
-
     if (.method == "bfgs"){
         f <- function(x) - lnl(x, X = X, y = y, weights = wt)
         g <- function(x) - attr(lnl(x, X = X, y = y, weights = wt, gradient = TRUE), "gradient")
@@ -211,10 +199,9 @@ poisreg <- function(formula, data, weights, subset, na.action, offset, contrasts
     else .coefs <- newton(lnl, X = X, y = y, weights = wt, trace = 1, coefs = start, direction = "max")
 
     .linpred <- drop(X %*% .coefs[1:K])
-    .mu <- exp(.linpred)
+    .fitted <- exp(.linpred)
     .lnl_conv <- lnl(.coefs, X = X, y = y, weights = wt, gradient = TRUE,
                      hessian = TRUE, info = TRUE, sum = FALSE)
-    .fitted <- dpois(y, .mu)
     .logLik <- c(model = sum(as.numeric(.lnl_conv)),
                  saturated = .sat_logLik,
                  null = .null_logLik)
@@ -222,6 +209,11 @@ poisreg <- function(formula, data, weights, subset, na.action, offset, contrasts
     fun <- function(x) lnl(x, X = X, y = y, weights = wt, gradient = TRUE,
                      hessian = TRUE, info = TRUE, sum = TRUE)
     if (check_gradient) z <- check_gradient(fun, .coefs) else z <- NA
+
+    l_model <- as.numeric(.lnl_conv)
+    l_saturated <- ifelse(y > 0, y * (log(y) - 1) - lfactorial(y), 0)
+    l_null <- - yb + y * log(yb) -lfactorial(y)
+    values <- cbind(model = l_model, saturated = l_saturated, null = l_null)
 
     
     # Null model
@@ -251,7 +243,7 @@ poisreg <- function(formula, data, weights, subset, na.action, offset, contrasts
     result <- list(coefficients = .coefs,
                    model = mf,
                    terms = mt,
-                   value = as.numeric(.lnl_conv),
+                   value = values,
                    gradient = attr(.lnl_conv, "gradient"),
                    hessian = attr(.lnl_conv, "hessian"),
                    info = attr(.lnl_conv, "info"),
@@ -273,3 +265,17 @@ poisreg <- function(formula, data, weights, subset, na.action, offset, contrasts
 }
 
 
+logLik.poisreg <- function(object, ..., type = c("model", "null", "saturated"), sum = TRUE){
+    .type <- match.arg(type)
+    if (sum){
+        .val <- object$logLik[.type]
+        if (is.na(.val)) stop(paste("the ", .type, " log-likelihood is not available", sep = ""))
+        .nobs <- nobs(object)
+        .df <- switch(.type,
+                      model = npar(object),
+                      null = 1,
+                      saturated = nobs(object))
+        structure(.val, nobs = .nobs, df = .df, class = "logLik")
+    }
+    else object$value[, .type]
+}

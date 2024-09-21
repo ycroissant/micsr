@@ -88,14 +88,14 @@ lnl_tp <- function(param, X, y, wt, Z = NULL, scedas = c("exp", "pnorm"), sum = 
             }
         }
         if (heter){
-            grad <- wt * cbind((g_com_beta + g_spec_beta) * X,
-                               (g_com_sig  + g_spec_sig) * cbind(fh(gZ), sigo * gh(gZ) * Z)) / sig
+            grad <- cbind((g_com_beta + g_spec_beta) * X,
+            (g_com_sig  + g_spec_sig) * cbind(fh(gZ), sigo * gh(gZ) * Z)) / sig
         }
         else{
-            grad <- wt * cbind((g_com_beta + g_spec_beta) * X,
-                               (g_com_sig  + g_spec_sig) ) / sig
+            grad <- cbind((g_com_beta + g_spec_beta) * X,
+            (g_com_sig  + g_spec_sig) ) / sig
         }
-        if (sum) grad <- apply(grad, 2, sum)
+        if (sum) grad <- apply(wt * grad, 2, sum)
         attr(lnl, "gradient") <- grad
     }
     
@@ -253,9 +253,9 @@ lnl_tp_olsen <- function(param, X, y, wt, sum = TRUE, gradient = FALSE, hessian 
                 g_spec_sig <-  - Io * (mills(zb) * pnorm(zb) * right - mills(za) * pnorm(za) * left) / Dphi
             }
         }
-        grad <- wt * cbind((g_com_beta +  g_spec_beta) * X,
-                           g_com_sig + g_spec_sig)
-        if (sum) grad <- apply(grad, 2, sum)
+        grad <- cbind((g_com_beta +  g_spec_beta) * X,
+                      g_com_sig + g_spec_sig)
+        if (sum) grad <- apply(wt * grad, 2, sum)
         attr(lnl, "gradient") <- grad
     }
     

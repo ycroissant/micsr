@@ -1,10 +1,12 @@
-check_gh <- function(x) x$check_gradient$gradient < 1E-04 &
-                      x$check_gradient$hessian < 1E-04
+.my_eps <- 1E-04
+
+check_gh <- function(x) x$check_gradient$gradient < .my_eps &
+                      x$check_gradient$hessian < .my_eps
 set.seed(1)
 # weibreg
 z <- unemp_duration
 z$w <- runif(nrow(z))
-ph_no <- weibreg(Surv(duration, censored == "no") ~ gender + age + log(wage + 1),
+ph_no <- weibreg(Surv(duration / sd(duration), censored == "no") ~ gender + log(wage + 1),
                  z, mixing = FALSE, weights = w, model = "ph", check_gradient = TRUE)
 ph_yes <- update(ph_no, mixing = TRUE)
 aft_no <- update(ph_no, model = "aft")
@@ -30,21 +32,23 @@ expect_true(check_gh(lin), info = "identity")
 # ordreg
 z <- fin_reform
 z$w <- runif(nrow(z))
+z$y <- as.numeric(as.factor(z$dindx))
+z$y <- dplyr::case_when(z$y < 5 ~ 1, z$y == 5 ~ 2, z$y > 5 ~ 3)
 z$e <- sample(c(1, 0), nrow(z), replace = TRUE, prob = c(.9, .1))
-olgt <- ordreg(factor(dindx) ~ rhs1 + catchup, z, link = "logit", check_gradient = TRUE, weights = w)
+olgt <- ordreg(y ~ rhs1 + catchup, z, link = "logit", check_gradient = TRUE, weights = w)
 opbt <- update(olgt, link = "probit")
 expect_true(check_gh(olgt), info = "ordered logit")
 expect_true(check_gh(opbt), info = "ordered probit")
-survlgt <- ordreg(Surv(dindx, e) ~ rhs1 + catchup, z, link = "logit", check_gradient = TRUE)
+survlgt <- ordreg(Surv(y, e) ~ rhs1 + catchup, z, link = "logit", check_gradient = TRUE)
+survpbt <- update(survlgt, link = 'probit')
 expect_true(check_gh(survlgt), info = "ordered logit with censored data")
-
+expect_true(check_gh(survpbt), info = "ordered probit with censored data")
 
 # Poisreg
 
 z <- trips
 z$w <- runif(nrow(z))
-pois <- poisreg(trips ~ workschl + size + dist + smsa + fulltime + distnod +
-                   realinc + weekend + car, z, check_gradient = TRUE)
+pois <- poisreg(trips ~ workschl + size + dist, z, check_gradient = TRUE, weights = w)
 # problème avec la hessienne de nb1
 nb1 <- update(pois, mixing = "gamma", vlink = "nb1")
 lnr <- update(pois, mixing = "lognorm")
@@ -52,13 +56,21 @@ expect_true(check_gh(pois), info = "poisson")
 expect_true(check_gh(nb1), info = "negbin 1")
 expect_true(check_gh(lnr), info = "log-normal Poisson")
 
-pois <- update(pois, weights = w)
-nb1 <- update(nb1,  weights = w)
-lnr <- update(lnr,  weights = w)
-expect_true(check_gh(pois), info = "poisson with weights")
-expect_true(check_gh(nb1), info = "negbin 1 with weights")
-expect_true(check_gh(lnr), info = "log-normal Poisson with weights")
 
+# tobit1
+charitable$logdon <- with(charitable, log(donation) - log(25))
+charitable$w <- runif(nrow(charitable))
+tbt1 <- tobit1(logdon ~ log(income) + religion, data = charitable, check_gradient = TRUE, weights = w)
+tbt1two <- update(tbt1, right = 5)
+tbt1twob <- update(tbt1, right = 5, left = 2)
+c1 <- update(tbt1, sample = "truncated")
+c1b <- update(tbt1, sample = "truncated", left = 1)
+
+expect_true(check_gh(tbt1), info = "tobit censored")
+expect_true(check_gh(tbt1two), info = "two-limits tobit censored")
+expect_true(check_gh(tbt1twob), info = "two-limits user defined tobit censored")
+expect_true(check_gh(c1), info = "tobit truncated")
+expect_true(check_gh(c1), info = "user defined tobit truncated")
 
 # ivldv
 

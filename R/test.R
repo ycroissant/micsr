@@ -151,7 +151,6 @@ scoretest <- function(x, y, ...){
     UseMethod("scoretest")
 }
 
-
 #' @rdname scoretest
 #' @export
 scoretest.micsr <- function(x, y, ..., vcov = NULL){

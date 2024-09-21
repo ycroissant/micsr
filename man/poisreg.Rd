@@ -37,6 +37,10 @@ and \code{"lognorm"}}
 
 \item{vlink}{one of \code{"nb1"} and \code{"nb2"}}
 
+\item{check_gradient}{if \code{TRUE} the numeric gradient and hessian
+are computed and compared to the analytical gradient and
+hessian}
+
 \item{...}{further arguments}
 }
 \value{
