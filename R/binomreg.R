@@ -26,8 +26,9 @@
 #' @param newdata a new data frame for the `predict` method
 #' @return an object of class `c("binomreg", "micsr")`, see
 #'     `micsr::micsr` for further details
-#' @importFrom stats glm plogis qlogis
+#' @importFrom stats glm plogis qlogis dlogis
 #' @importFrom Formula Formula model.part
+#' @importFrom dplyr case_when
 #' @keywords models
 #' @examples
 #' pbt <- binomreg(mode ~ cost + ivtime + ovtime, data = mode_choice, link = 'probit')
@@ -41,6 +42,16 @@ binomreg <- function(formula, data, weights, subset, na.action, offset, contrast
     .method <- match.arg(method)
     .call <- match.call()
     .link <- match.arg(link)
+    .linkfun <- switch(.link,
+                       probit = function(mu) qnorm(mu),
+                       logit = function(mu) qlogis(mu))
+    .linkinv <- switch(.link,
+                       probit = function(mu) pnorm(mu),
+                       logit = function(mu) plogis(mu))
+    .mu.eta <- switch(.link,
+                      probit = function(mu) dnorm(mu),
+                      logit = function(mu) dlogis(mu))
+
     mf <- match.call(expand.dots = FALSE)
     .formula <- Formula(formula)
     if (length(.formula)[2] == 2){
@@ -63,7 +74,7 @@ binomreg <- function(formula, data, weights, subset, na.action, offset, contrast
     mt <- attr(mf, "terms")
     y <- model.response(mf)
     wt <- as.vector(model.weights(mf))
-    if (is.null(wt)) wt <- 1 else wt <- wt / mean(wt)
+    if (is.null(wt)) wt <- 1 else wt <- wt# / mean(wt)
     .offset <- model.offset(mf)
     X <- model.matrix(mt, mf, contrasts)
     if (compute_rank(X) < ncol(X)){
@@ -180,19 +191,24 @@ binomreg <- function(formula, data, weights, subset, na.action, offset, contrast
 
     .lnl_conv <- lnl(.coefs, X = X, y = y, weights = wt, gradient = TRUE,
                      hessian = TRUE, info = TRUE, sum = FALSE)
+
     fun <- function(x) lnl(x, X = X, y = y, weights = wt, gradient = TRUE,
                            hessian = TRUE, info = TRUE, sum = TRUE)
     if (check_gradient) z <- check_gradient(fun, .coefs) else z <- NA
 
+    l_model <- as.numeric(.lnl_conv)
+    l_saturated <- 0
+    l_null <- yb * log(yb) + (1 - yb) * log(1 - yb)
+    values <- cbind(model = l_model, saturated = l_saturated, null = l_null)
+    .logLik <- apply(values * wt, 2, sum)
+    
     if (.link == "logit") .fitted <- plogis(.linpred)
     if (.link == "probit") .fitted <- pnorm(.linpred)
     if (.link == "identity") .fitted <- .linpred
     .npar <- c(covariates = K)
     if (.link == "identity") .npar <- c(covariates = K, vcov = 1)
     attr(.npar, "default") <- "covariates"
-    .logLik <- c(model = sum(as.numeric(.lnl_conv)),
-                 saturated = .sat_logLik,
-                 null = .null_logLik)
+    
     # Null model
     null_coefs <- rep(0, ncol(X))
     names(null_coefs) <- colnames(X)
@@ -210,14 +226,26 @@ binomreg <- function(formula, data, weights, subset, na.action, offset, contrast
                                         solve(.vcov[- 1, - 1, drop = FALSE])))))
     .lr <- 2 * unname(.logLik["model"] - .logLik["null"])
     tests <- c(wald = .wald, score = .lm, lr = .lr)
+
+    gres <- (y - pnorm(.linpred)) * dnorm(.linpred) / (pnorm(.linpred) * (1 - pnorm(.linpred)))
+    .family <- structure(list(
+        link = .link,
+        linkfun = .linkfun,
+        linkinv = .linkinv,
+        mu.eta = .mu.eta,
+        variance = function(mu) mu * (1 - mu),
+        family = "binomial"),
+        class = "family")
+    
     result <- list(coefficients = .coefs,
                    model = mf,
                    terms = mt,
-                   value = as.numeric(.lnl_conv),
+                   value = values,
                    gradient = attr(.lnl_conv, "gradient"),
                    hessian = attr(.lnl_conv, "hessian"),
                    info = attr(.lnl_conv, "info"),
                    fitted.values = .fitted,
+                   residuals = gres,
                    linear.predictors = .linpred,
                    logLik = .logLik,
                    tests = tests,
@@ -230,21 +258,9 @@ binomreg <- function(formula, data, weights, subset, na.action, offset, contrast
                    offset = .offset,
                    contrasts = attr(X, "contrasts"),
                    xlevels = .getXlevels(mt, mf),
-                   check_gradient = z)
+                   check_gradient = z,
+                   family = .family)
     structure(result, class = c("binomreg", "micsr"))
-}
-
-#' @rdname binomreg
-#' @export
-residuals.binomreg <- function(object, ..., type = c("deviance", "pearson", "response")){
-    type <- match.arg(type)
-    y <- model.response(model.frame(object))
-    hy <- fitted(object)
-    sd_hy <- sqrt(hy * (1 - hy))
-    if (type == "response") resid <- y - hy
-    if (type == "pearson") resid <- (y - hy) / sd_hy
-    if (type == "deviance") resid <- (2 * y - 1) * sqrt(- 2  * object$value)
-    resid
 }
 
 #' @rdname binomreg
@@ -293,6 +309,8 @@ predict.binomreg <- function(object, ..., type = c("response", "link"), newdata 
     }
     result
 }
+
+
 
 # ajout dans le fichier type_dictionary.R
 # ajout du fichier methods_binomreg

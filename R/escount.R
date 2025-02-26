@@ -288,6 +288,9 @@ escount <- function(formula,
         grad_ssr <- function(param) attr(ssr(param, gradient = TRUE), "gradient")
         # Compute the minimum
         names(.start) <- c(colnames(X), "theta")
+#    if (is.null(.npar) | is.null(attr(.npar, "default"))) idx <- 1:length(object$coefficients)
+#    else{
+
         conv_nls <- optim(.start, obj_ssr, grad_ssr, method = "BFGS", control = list(maxit = 1000))
         .value <- conv_nls$value
         # Compute the linear predictors for the fitted coefficients
@@ -317,7 +320,7 @@ escount <- function(formula,
         # sig only
 #        rn <- statmod::gauss.quad(R, kind = "hermite")
         rn <- gaussian_quad(R, kind = "hermite")
-
+        
         sig <- abs(2 * htheta)
         objFun <- function(sig){
             le <- function(eps) l(eps, sig)
@@ -365,7 +368,8 @@ escount <- function(formula,
                        model = mf,
                        terms = mt,
                        value = .value,
-                       npar = c(covariates = K, vcov = 1),
+                       npar = structure(c(covariates = K, vcov = 1),
+                                        default = c("covariates", "vcov")),
                        df.residual = N - ncol(X),
                        xlevels = .getXlevels(mt, mf),
                        na.action = attr(mf, "na.action"),

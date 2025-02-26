@@ -61,6 +61,7 @@ matrix ($K + 1$), which is also the number of fitted
 coefficients.^[Actually the number of not `NA` coefficients.]
 
 ```{r }
+#| collapse: true
 mod0$rank
 length(mod0$coefficients)
 ```
@@ -76,6 +77,7 @@ latter the usefulness of this element. `assign` is a numeric vector
 indicating the relation between the variables and the coefficients:
 
 ```{r }
+#| collapse: true
 mod0$assign
 ```
 Once again, in our simple case, it is useless: the intercept is at
@@ -87,6 +89,7 @@ quasi homonymous names:
 
 
 ```{r }
+#| collapse: true
 coef(mod0)
 df.residual(mod0)
 resid(mod0) %>% head
@@ -104,6 +107,7 @@ matrix of the estimates, the residual standard error and the number of
 observations:
 
 ```{r }
+#| collapse: true
 vcov(mod0)
 sigma(mod0)
 nobs(mod0)
@@ -133,6 +137,7 @@ original data frame, but note that the first column contains the response
 which is `log(wage)` and not `wage`. A model frame has several attributes:
 
 ```{r }
+#| collapse: true
 mod0$model %>% attributes %>% names
 ```
 
@@ -152,6 +157,7 @@ object as the unique argument:
 
 ```{r }
 #| results: hide
+#| collapse: true
 model.matrix(mod0)
 ```
 
@@ -175,6 +181,7 @@ The model response is extracted using `model.response` with the model
 frame as unique argument:
 
 ```{r }
+#| collapse: true
 mod0 %>% model.frame %>% model.response %>% head
 ```
 
@@ -184,6 +191,7 @@ mod0 %>% model.frame %>% model.response %>% head
 the call to the function that resulted in the `mod0` object:
 
 ```{r }
+#| collapse: true
 mod0$call %>% class
 mod0$call
 ```
@@ -198,8 +206,8 @@ singles, migrants and temporary jobs), instead of rewriting the whole
 command:
 
 ```{r }
-mod1 <- lm(log(wage) ~ treated + age + child + female + single + migrant + temp,
-           data = random_group)
+mod1 <- lm(log(wage) ~ treated + age + child + female + single + migrant +
+               temp, data = random_group)
 ```
 
 we can update `mod0` with a new formula:
@@ -250,6 +258,7 @@ of `options()` which is a list containing options:
 
 
 ```{r }
+#| collapse: true
 options()$na.action
 ```
 
@@ -296,6 +305,7 @@ the number (so that the name of the first element of the vector, 61,
 is "61"). This object is also returned as an attribute of the model frame:
 
 ```{r }
+#| collapse: true
 mod2$model %>% attributes %>% names
 ```
 
@@ -307,6 +317,7 @@ the modalities are called **levels**. The modalities can be extracted
 using the `levels` function:
 
 ```{r }
+#| collapse: true
 random_group %>% pull(fsize) %>% levels
 random_group %>% pull(edu) %>% levels
 ```

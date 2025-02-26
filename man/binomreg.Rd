@@ -2,7 +2,6 @@
 % Please edit documentation in R/binomreg.R
 \name{binomreg}
 \alias{binomreg}
-\alias{residuals.binomreg}
 \alias{glance.binomreg}
 \alias{predict.binomreg}
 \title{Binomial regression}
@@ -22,8 +21,6 @@ binomreg(
   check_gradient = FALSE,
   ...
 )
-
-\method{residuals}{binomreg}(object, ..., type = c("deviance", "pearson", "response"))
 
 \method{glance}{binomreg}(x, ...)
 

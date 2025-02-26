@@ -1,7 +1,9 @@
+library(dplyr)
+library(survival)
 .my_eps <- 1E-04
 
 check_gh <- function(x) x$check_gradient$gradient < .my_eps &
-                      x$check_gradient$hessian < .my_eps
+                            x$check_gradient$hessian < .my_eps
 set.seed(1)
 # weibreg
 z <- unemp_duration
@@ -60,7 +62,9 @@ expect_true(check_gh(lnr), info = "log-normal Poisson")
 # tobit1
 charitable$logdon <- with(charitable, log(donation) - log(25))
 charitable$w <- runif(nrow(charitable))
-tbt1 <- tobit1(logdon ~ log(income) + religion, data = charitable, check_gradient = TRUE, weights = w)
+charitable$w <- charitable$w / mean(charitable$w)
+tbt1 <- tobit1(logdon ~ log(income) + religion, data = charitable,
+               check_gradient = TRUE, weights = w)
 tbt1two <- update(tbt1, right = 5)
 tbt1twob <- update(tbt1, right = 5, left = 2)
 c1 <- update(tbt1, sample = "truncated")

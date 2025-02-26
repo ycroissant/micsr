@@ -23,6 +23,8 @@
 #' @param type,omega,sandwich see `sandwich::sandwich`
 #' @param newdata a new data frame to compute the predictions
 #' @param k see `AIC`
+#' @param sum return either the sum of the contributions or the vector
+#'     of contribution
 #' @param ... further arguments
 #' @return
 #' 
@@ -133,26 +135,59 @@ coef.micsr <- function(object, ..., subset = NA, fixed = FALSE, grep  = NULL, in
 
 #' @rdname micsr
 #' @export
-vcov.micsr <- function(object, ..., vcov = c("info", "hessian", "opg"),
+vcov.micsr <- function(object, ..., vcov = NULL,
                        subset = NA, fixed = FALSE, grep = NULL, invert = TRUE){
+    .vcov_method <- vcov
     .subset <- subset
     is.na_subset <- (length(.subset) == 1) && is.na(.subset)
-    if (is.na_subset) .subset <- attr(object$npar, "default")
+    if (is.na_subset){
+        if (! is.null(attr(object$npar, "default"))){
+            .subset <- attr(object$npar, "default")
+        } else {
+            .subset <- names(object$npar)
+        }
+    }
     .est_method <- object$est_method
     if (.est_method == "ml"){
-        .vcov_method <- match.arg(vcov)
-        if (.vcov_method == "info" & is.null(object$info)) .vcov_method = "hessian"
-        if (.vcov_method == "hessian") .vcov <- solve(- object$hessian)
-        if (.vcov_method == "opg") .vcov <- solve(crossprod(object$gradient))
-        if (.vcov_method == "info") .vcov <- solve(object$info)
+        if (is.null(.vcov_method)){
+            if (! is.null(object$info)){
+                .vcov_method = "hessian"
+            } else {
+                if (! is.null(object$hessian)){
+                    .vcov_method = "hessian"
+                } else {
+                    .vcov_method = "opg"
+                }
+            }
+        } else {
+            if (! .vcov_method %in% c("info", "hessian", "opg")){
+                stop("irrelevant method")
+            }
+        }
+        if (.vcov_method == "info"){
+                if (is.null(object$info)){
+                    stop("no information matrix available")
+                } else {
+                    .vcov <- object$info
+                }
+        }
+        if (.vcov_method == "hessian"){
+            if (is.null(object$hessian)){
+                stop("no hessian matrix available")
+            } else {
+                .vcov <- - object$hessian
+            }
+        }
+        if (.vcov_method == "opg") .vcov <- crossprod(object$gradient)
+    } else {
+        .vcov <- object$vcov
     }
-    else .vcov <- object$vcov
     nms <- rownames(.vcov)
     .sel <- select_coef(object, subset = .subset, fixed = fixed, grep = grep)
     nms <- nms[.sel]
     .vcov <- .vcov[.sel, .sel, drop = FALSE]
     colnames(.vcov) <- rownames(.vcov) <- pretty_nms(nms, .subset)
-    .vcov
+    solve(.vcov)
 }
 
 #' @rdname micsr
@@ -249,17 +284,36 @@ print.summary.micsr <- function (x, digits = max(3, getOption("digits") - 2), wi
 
 #' @rdname micsr
 #' @export
-logLik.micsr <- function(object, ..., type = c("model", "null", "saturated")){
+logLik.micsr <- function(object, ..., type = c("model", "null", "saturated"), sum = TRUE){
     .type <- match.arg(type)
-    .val <- object$logLik[.type]
-    if (is.na(.val)) stop(paste("the ", .type, " log-likelihood is not available", sep = ""))
-    .nobs <- nobs(object)
-    .df <- switch(.type,
-                  model = npar(object),
-                  null = 1,
-                  saturated = nobs(object))
-    structure(.val, nobs = .nobs, df = .df, class = "logLik")
+    if (sum){
+        .val <- object$logLik[.type]
+        if (is.na(.val)) stop(paste("the ", .type, " log-likelihood is not available", sep = ""))
+        .nobs <- nobs(object)
+        .df <- switch(.type,
+                      model = npar(object),
+                      null = 1,
+                      saturated = nobs(object))
+        structure(.val, nobs = .nobs, df = .df, class = "logLik")
+    }
+    else object$value[, .type]
 }
+
+
+
+## logLik.micsr <- function(object, ..., type = c("model", "null", "saturated")){
+##     .type <- match.arg(type)
+##     .val <- object$logLik[.type]
+##     if (is.na(.val)) stop(paste("the ", .type, " log-likelihood is not available", sep = ""))
+##     .nobs <- nobs(object)
+##     .df <- switch(.type,
+##                   model = npar(object),
+##                   null = 1,
+##                   saturated = nobs(object))
+##     structure(.val, nobs = .nobs, df = .df, class = "logLik")
+## }
+
+
 
 #' @rdname micsr
 #' @export
@@ -455,4 +509,40 @@ glance.micsr <- function(x, ...){
 #        result <- data.frame(nobs = nobs(x), impliedsigma = x$sigma)
 #    }
     result
+}
+
+#' @rdname micsr
+#' @method residuals micsr
+#' @export
+residuals.micsr <- function(object, ..., type = c("deviance", "pearson", "response")){
+    type <- match.arg(type)
+    y <- model.response(model.frame(object))
+    hy <- fitted(object)
+    wt <- model.weights(model.frame(object))
+    if (is.null(wt)) wt <- rep(1, length(y))
+    if (inherits(object, "binomreg")) sd_hy <- sqrt(hy * (1 - hy))
+    if (inherits(object, "poisreg")) sd_hy <- sqrt(hy)
+    if (type == "response") resid <- y - hy
+    if (type == "pearson") resid <- (y - hy) / sd_hy * sqrt(wt)
+    if (type == "deviance"){
+        sgn <- ifelse(y > hy, 1, - 1)
+        resid <- sgn * sqrt(2) * sqrt(wt) * 
+            sqrt(logLik(object, type = "saturated", sum = FALSE) -
+                 logLik(object, type = "model", sum = FALSE))
+    }
+    resid
+}
+
+
+residuals.micsr <- function(object, ..., type = c("deviance", "pearson", "response")){
+    .type <- match.arg(type)
+    y <- model.response(model.frame(object))
+    mu <- fitted(object)
+    wt <- model.weights(model.frame(object))
+    if (is.null(wt)) wt <- rep(1, length(y))
+    if (.type == "response") .resid <- y - mu
+    if (.type == "pearson") .resid <- (y - mu) / sqrt(object$family$variance(mu)) * sqrt(wt)
+    if (.type == "deviance") .resid <- sqrt(2) * ifelse(y > mu, 1, -1) * sqrt(wt) * 
+                                 (object$value[, "saturated"] - object$value[, "model"])  ^ .5
+    .resid
 }

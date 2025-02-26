@@ -2,6 +2,7 @@
 % Please edit documentation in R/tobit1.R
 \name{tobit1}
 \alias{tobit1}
+\alias{fitted.tobit1}
 \title{Truncated response model}
 \usage{
 tobit1(
@@ -19,8 +20,11 @@ tobit1(
   sample = c("censored", "truncated"),
   method = c("ml", "lm", "twostep", "trimmed", "nls", "minchisq", "test"),
   trace = FALSE,
+  check_gradient = FALSE,
   ...
 )
+
+\method{fitted}{tobit1}(object, ...)
 }
 \arguments{
 \item{formula}{a symbolic description of the model; if two right
@@ -54,7 +58,13 @@ is a two-parts formula and \code{scedas} is \code{NULL})}
 \item{trace}{a boolean (the default if \code{FALSE}) if \code{TRUE} some
 information about the optimization process is printed}
 
+\item{check_gradient}{if \code{TRUE} the numeric gradient and hessian
+are computed and compared to the analytical gradient and
+hessian}
+
 \item{...}{further arguments}
+
+\item{object}{a \code{tobit1} object}
 }
 \value{
 An object of class \code{c("tobit1", "micsr")}, see

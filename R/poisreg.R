@@ -15,6 +15,8 @@
 #' @param check_gradient if `TRUE` the numeric gradient and hessian
 #'     are computed and compared to the analytical gradient and
 #'     hessian
+#' @param object a `poisreg` object
+#' @param type the type of residuals for the `residuals` method
 #' @param ... further arguments
 #' @return an object of class `c("poisreg", "micsr")`, see
 #'     `micsr::micsr` for further details.
@@ -45,7 +47,7 @@ poisreg <- function(formula, data, weights, subset, na.action, offset, contrasts
     mt <- attr(mf, "terms")
     X <- model.matrix(mt, mf, contrasts)
     wt <- as.vector(model.weights(mf))
-    if (is.null(wt)) wt <- 1 else wt <- wt / sum(wt) * length(wt)
+    if (is.null(wt)) wt <- 1 else wt <- wt #/ mean(wt)
     .offset <- model.offset(mf)
     y <- model.response(mf)
     yb <- mean(y)
@@ -202,9 +204,6 @@ poisreg <- function(formula, data, weights, subset, na.action, offset, contrasts
     .fitted <- exp(.linpred)
     .lnl_conv <- lnl(.coefs, X = X, y = y, weights = wt, gradient = TRUE,
                      hessian = TRUE, info = TRUE, sum = FALSE)
-    .logLik <- c(model = sum(as.numeric(.lnl_conv)),
-                 saturated = .sat_logLik,
-                 null = .null_logLik)
 
     fun <- function(x) lnl(x, X = X, y = y, weights = wt, gradient = TRUE,
                      hessian = TRUE, info = TRUE, sum = TRUE)
@@ -212,9 +211,19 @@ poisreg <- function(formula, data, weights, subset, na.action, offset, contrasts
 
     l_model <- as.numeric(.lnl_conv)
     l_saturated <- ifelse(y > 0, y * (log(y) - 1) - lfactorial(y), 0)
-    l_null <- - yb + y * log(yb) -lfactorial(y)
+    l_null <- - yb + y * log(yb) - lfactorial(y)
+    
+    if (.mixing == "gamma"){
+        if (.vlink == 'nb1') k <- 1 else k <- 2
+        sigma <- as.numeric(.coefs["sigma"])
+        l <- y
+        v <- l ^ (2 - k) / sigma
+        l_saturated <- lgamma(y + v) - lgamma(y + 1) - lgamma(v) + v * log(v) - v * log(v + l) +
+            ifelse(y > 0, y * log(l), 0) - y * log(v + l)
+    }
+    
     values <- cbind(model = l_model, saturated = l_saturated, null = l_null)
-
+    .logLik <- apply(values * wt, 2, sum)
     
     # Null model
     .coefs_0 <- .coefs
@@ -240,6 +249,36 @@ poisreg <- function(formula, data, weights, subset, na.action, offset, contrasts
     .lr <- 2 * unname(.logLik["model"] - .logLik["null"])
     .rsq <- c(w = .w / (.w + N), lr = 1 - exp(-.lr / N), lm = .lm / N)
     tests <- c(wald = .w, score = .lm, lr = .lr)
+
+    # families
+    if (.mixing == "gamma"){
+        env <- new.env(parent=.GlobalEnv)
+        .sigma <- .coefs["sigma"]
+        assign(".sigma", .sigma, envir=env)
+        if (.vlink == "nb2") .variance <- function(mu) (1 + .sigma * mu) * mu
+        if (.vlink == "nb1") .variance <- function(mu) (1 + .sigma)      * mu
+        environment(.variance) <- env
+    }
+    if (.mixing == "lognorm"){
+        env <- new.env(parent=.GlobalEnv)
+        .sigma <- .coefs["sigma"]
+        assign(".sigma", .sigma, envir=env)
+        .variance <- function(mu) (1 + (exp(.sigma ^ 2) - 1) * exp(0.5 * .sigma ^ 2) * mu) *
+                                      exp(0.5 * .sigma ^ 2) * mu
+        environment(.variance) <- env
+    }
+    if (.mixing == "none"){
+        .variance = function(mu) mu
+    }
+    .family <- structure(list(
+        vlink  = .vlink,
+        variance = .variance,
+        family = "Poisson",
+        link = "log",
+        mixing = .mixing
+    ),
+    class = "family")
+    
     result <- list(coefficients = .coefs,
                    model = mf,
                    terms = mt,
@@ -260,22 +299,22 @@ poisreg <- function(formula, data, weights, subset, na.action, offset, contrasts
                    offset = .offset,
                    contrasts = attr(X, "contrasts"),
                    xlevels = .getXlevels(mt, mf),
+                   family = .family,
                    check_gradient = z)
     structure(result, class = c("poisreg", "micsr"))
 }
 
-
-logLik.poisreg <- function(object, ..., type = c("model", "null", "saturated"), sum = TRUE){
+#' @rdname poisreg
+#' @export
+residuals.poisreg <- function(object, ..., type = c("deviance", "pearson", "response")){
     .type <- match.arg(type)
-    if (sum){
-        .val <- object$logLik[.type]
-        if (is.na(.val)) stop(paste("the ", .type, " log-likelihood is not available", sep = ""))
-        .nobs <- nobs(object)
-        .df <- switch(.type,
-                      model = npar(object),
-                      null = 1,
-                      saturated = nobs(object))
-        structure(.val, nobs = .nobs, df = .df, class = "logLik")
-    }
-    else object$value[, .type]
+    y <- model.response(model.frame(object))
+    mu <- fitted(object)
+    wt <- model.weights(model.frame(object))
+    if (is.null(wt)) wt <- rep(1, length(y))
+    if (.type == "response") .resid <- y - mu
+    if (.type == "pearson") .resid <- (y - mu) / sqrt(object$family$variance(mu)) * sqrt(wt)
+    if (.type == "deviance") .resid <- sqrt(2) * ifelse(y > mu, 1, -1) * sqrt(wt) * 
+                                 (object$value[, "saturated"] - object$value[, "model"])  ^ .5
+    .resid
 }

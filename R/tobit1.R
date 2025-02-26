@@ -28,6 +28,10 @@
 #'     is a two-parts formula and `scedas` is `NULL`)
 #' @param trace a boolean (the default if `FALSE`) if `TRUE` some
 #'     information about the optimization process is printed
+#' @param check_gradient if `TRUE` the numeric gradient and hessian
+#'     are computed and compared to the analytical gradient and
+#'     hessian
+#' @param object a `tobit1` object
 #' @param ... further arguments
 #' @importFrom tibble tibble
 #' @importFrom stats binomial coef dnorm glm lm model.matrix
@@ -104,7 +108,7 @@ tobit1 <- function(formula, data, subset, weights, na.action, offset, contrasts 
     y <- model.response(mf)
     N <- length(y)
     wt <- model.weights(mf)
-    if (is.null(wt)) wt <- rep(1, N) else wt <- wt / mean(wt)
+    if (is.null(wt)) wt <- rep(1, N) else wt <- wt #/ mean(wt)
     .offset <- model.offset(mf)
     # identify the untruncated observations
     P <- as.numeric(y > left & y < right)
@@ -144,6 +148,7 @@ tobit1 <- function(formula, data, subset, weights, na.action, offset, contrasts 
                        residuals = residuals(result),
                        df.residual = df.residual(result),
                        vcov = vcov(result),
+                       npar = structure(c(covariates = length(coefs)), default = "covariates"),
                        logLik = NA,
                        fomula = .formula,
                        model = model.frame(result),
@@ -189,6 +194,7 @@ tobit1 <- function(formula, data, subset, weights, na.action, offset, contrasts 
                        formula = .formula,
                        vcov = V,
                        logLik = NA,
+                       npar = structure(c(covariates = length(coefs)), default = "covariates"),
                        model = model.frame(result),
                        terms = terms(model.frame(result)),
                        call = .call,
@@ -252,6 +258,7 @@ tobit1 <- function(formula, data, subset, weights, na.action, offset, contrasts 
                        df.residual = .df.residual,
                        formula = .formula,
                        vcov = vcov_trim(coefs),
+                       npar = structure(c(covariates = length(coefs)), default = "covariates"),
                        logLik = NA,
                        model = mf,
                        terms = NA,
@@ -316,6 +323,7 @@ tobit1 <- function(formula, data, subset, weights, na.action, offset, contrasts 
                        formula = .formula,
                        df.residual = length(y) - length(coefs),
                        vcov = .vcov,
+                       npar = structure(c(covariates = length(coefs)), default = "covariates"),
                        logLik = NA,
                        model = mf,
                        terms = .terms,
@@ -355,8 +363,8 @@ tobit1 <- function(formula, data, subset, weights, na.action, offset, contrasts 
                                   scedas = .scedas, Z = Z,
                                   sum = TRUE, gradient = TRUE, hessian = TRUE,
                                   left = left, right = right, sample = .sample)
-
         if(check_gradient) z <- check_gradient(fun, coefs) else z <- NA
+
         .hessian <- attr(lnl_conv, "hessian")
         .info <- attr(lnl_conv, "info")
         .gradient <- attr(lnl_conv, "gradient")
@@ -397,25 +405,48 @@ tobit1 <- function(formula, data, subset, weights, na.action, offset, contrasts 
                     pr * alpha_conv * h_conv * yb
                 c(mu = .mu, sigma = .sig, lnl = .lnL)
             }
-            logLik_null <- coef0(y)[["lnl"]] * N
-            N0 <- sum(y == 0)
-            logLik_saturated <- - (N - N0) / 2 * log(2 * pi)
-            .logLik <- c(model = sum(as.numeric(lnl_conv)),
-                        saturated = logLik_saturated,
-                        null = logLik_null)
-        } else .logLik <- c(model = sum(as.numeric(lnl_conv)))
+            values <- cbind(model     = as.numeric(lnl_conv),
+                            saturated = (- 1 / 2 * log(2 * pi)) * (y > 0) + 0 * (y == 0),
+                            null      = coef0(y)["lnl"])
+            .logLik <- apply(values * wt, 2, sum)
+        } else {
+            values <- as.numeric(lnl_conv)
+            .logLik <- c(model = sum(as.numeric(lnl_conv)))
+        }
+
+        d <- ifelse(y > 0, 1, 0)
+
+        gres <- - (1 - d) * sigma * dnorm(h) / (1 - pnorm(h)) + d * (y - .linpred)
+        gres <- - (y == 0) * sigma * dnorm(h) / (1 - pnorm(h)) + (y > 0) * (y - .linpred)
+
+
+        env <- new.env(parent = .GlobalEnv)
+        .sigma <- coefs["sigma"]
+        assign(".sigma", .sigma, envir = env)
+        .variance <- function(mu) .sigma ^ 2 * (1 + mills(mu / .sigma, deriv = 1)) * pnorm(mu / .sigma)
+        .gres <- function(mu) - (y == 0) * .sigma * dnorm(mu / .sigma) / (1 - pnorm(mu / .sigma)) + (y > 0) * (y - mu)
+        environment(.variance) <- env
+        
+        .variance
+        .family <- structure(list(
+            link    = "identity",
+            linkfun = function(mu) mu,
+            linkinv = function(eta) eta,
+            mu.eta  = function(eta) 1,
+            variance = .variance),
+            class = "family")
         
         result <- list(coefficients = coefs,
                        model = mf,
                        terms = mt,
-                       value = as.numeric(lnl_conv),
+                       value = values,
                        gradient = .gradient,
                        hessian = .hessian,
                        info = .info,
                        fitted.values = .fitted,
                        linear.predictor = .linpred,
                        logLik = .logLik,
-                       residuals = y - .fitted$Epos,
+#                       residuals = y - .fitted$Epos,
                        df.residual = length(y) - length(coefs),
                        npar = npar,
                        est_method = "ml",
@@ -425,9 +456,16 @@ tobit1 <- function(formula, data, subset, weights, na.action, offset, contrasts 
                        offset = .offset,
                        contrasts = attr(X, "contrasts"),
                        xlevels = .getXlevels(mt, mf),
-                       check_gradient = z)
+                       check_gradient = z,
+                       family = .family,
+                       residuals = gres)
 #                       formula = .formula,
 #                       vcov = .vcov,
     }
     structure(result, class = c("tobit1", "micsr"))
 }
+
+
+#' @rdname tobit1
+#' @export
+fitted.tobit1 <- function(object, ...) object$fitted.values$Ppos * object$fitted.values$Ppos

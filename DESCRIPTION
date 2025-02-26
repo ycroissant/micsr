@@ -1,6 +1,6 @@
 Package: micsr
 Version: 0.1-2
-Date: 2024-09-17h
+Date: 2024-09-21
 Title: Microeconometrics with R
 Authors@R: person("Yves",
                   "Croissant",

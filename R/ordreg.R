@@ -50,7 +50,7 @@ ordreg <- function(formula, data, weights, subset, na.action, offset, contrasts 
     mt <- attr(mf, "terms")
     y <- model.response(mf)
     wt <- as.vector(model.weights(mf))
-    if (is.null(wt)) wt <- 1 else wt <- wt / mean(wt)
+    if (is.null(wt)) wt <- 1 else wt <- wt #/ mean(wt)
     .offset <- model.offset(mf)
     if (inherits(y, "Surv")){
         y <- as.matrix(model.response(mf))
@@ -155,29 +155,29 @@ ordreg <- function(formula, data, weights, subset, na.action, offset, contrasts 
     .lnl_conv <- lnl(.coefs, gradient = TRUE, hessian = TRUE, sum = FALSE,
                      X = X, y = y, e = e, weights = wt, information = TRUE)
 
+    
+    
     fun <- function(x) lnl(x, gradient = TRUE, hessian = TRUE, sum = TRUE,
                            X = X, y = y, e = e, weights = wt, information = TRUE)
-
     if(check_gradient) z <- check_gradient(fun, .coefs) else z <- NA
-    
+
     .null_intercept <- sup.coef
     fy <- prop.table(table(y))
-    logLik_null <- N * sum(fy * log(fy))
-    logLik_saturated <- 0
-    logLik_model <- sum(.lnl_conv)
+
+    lnl_model <- as.numeric(.lnl_conv)
+    lnl_null <- sum(fy * log(fy))
+    lnl_saturated <- 0
+    values <- cbind(model = lnl_model, saturated = lnl_saturated, null = lnl_null)
+    .logLik <- apply(values * wt, 2, sum)
+    
     .fitted.values <- cbind(0, F_link(outer(- .linpred, .coefs[K + (1L:(J - 1))], "+")), 1)
     .fitted.values <- .fitted.values[, - 1, drop = FALSE] -
         .fitted.values[, - (J + 1L), drop = FALSE]
     colnames(.fitted.values) <- nms_y
-    ## .probabilities <- .fitted.values
-    ## .fitted.values <- as.numeric(apply(Y * .fitted.values, 1, sum))
     .df.residual <- N - K - J - 1L
-    ## colnames(.probabilities) <- nms_y
-    ## .fitted.values <- .probabilities
     .npar <- c(covariates = K, threshold = J - 1L)
     attr(.npar, "default") <- "covariates"
     # Null model
-    .logLik <- c(model = logLik_model, null = logLik_null, saturated = logLik_saturated)
     null_coefs <- c(rep(0, ncol(X)), .null_intercept)
     lnl_null <- lnl(null_coefs, gradient = TRUE, hessian = TRUE,
                     information = TRUE, X = X, y = y, e = e, weights = wt)
@@ -185,17 +185,15 @@ ordreg <- function(formula, data, weights, subset, na.action, offset, contrasts 
     .null_info <- attr(lnl_null, "info")
     .lm <- drop(crossprod(.null_gradient, solve(.null_info, .null_gradient)))
     .model_info <- attr(.lnl_conv, "info")
-#    .w <- drop(crossprod(.coefs[- 1], t(crossprod(.coefs[-1], .model_info[- 1, - 1]))))
     .vcov <- solve(.model_info)
     .w <- drop(crossprod(.coefs[1:K], t(crossprod(.coefs[1:K],
                                                   solve(.vcov[1:K, 1:K, drop = FALSE])))))
     .lr <- 2 * unname(.logLik["model"] - .logLik["null"])
     tests <- c(wald = .w, score = .lm, lr = .lr)
-
     result <- list(coefficients = .coefs,
                    model = mf,
                    terms = mt,
-                   value = as.numeric(.lnl_conv),
+                   value = values,
                    gradient = attr(.lnl_conv, "gradient"),
                    hessian = attr(.lnl_conv, "hessian"),
                    fitted.values = .fitted.values,

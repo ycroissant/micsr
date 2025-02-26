@@ -2,6 +2,7 @@
 % Please edit documentation in R/poisreg.R
 \name{poisreg}
 \alias{poisreg}
+\alias{residuals.poisreg}
 \title{Poisson regression}
 \usage{
 poisreg(
@@ -19,6 +20,8 @@ poisreg(
   check_gradient = FALSE,
   ...
 )
+
+\method{residuals}{poisreg}(object, ..., type = c("deviance", "pearson", "response"))
 }
 \arguments{
 \item{formula}{a symbolic description of the model, (for the count
@@ -42,6 +45,10 @@ are computed and compared to the analytical gradient and
 hessian}
 
 \item{...}{further arguments}
+
+\item{object}{a \code{poisreg} object}
+
+\item{type}{the type of residuals for the \code{residuals} method}
 }
 \value{
 an object of class \code{c("poisreg", "micsr")}, see

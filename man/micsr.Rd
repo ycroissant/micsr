@@ -24,6 +24,7 @@
 \alias{llobs.mlogit}
 \alias{tidy.micsr}
 \alias{glance.micsr}
+\alias{residuals.micsr}
 \title{\code{micsr} class}
 \usage{
 llobs(x, ...)
@@ -33,7 +34,7 @@ llobs(x, ...)
 \method{vcov}{micsr}(
   object,
   ...,
-  vcov = c("info", "hessian", "opg"),
+  vcov = NULL,
   subset = NA,
   fixed = FALSE,
   grep = NULL,
@@ -61,7 +62,7 @@ llobs(x, ...)
   ...
 )
 
-\method{logLik}{micsr}(object, ..., type = c("model", "null", "saturated"))
+\method{logLik}{micsr}(object, ..., type = c("model", "null", "saturated"), sum = TRUE)
 
 \method{BIC}{micsr}(object, ..., type = c("model", "null"))
 
@@ -90,6 +91,8 @@ llobs(x, ...)
 \method{tidy}{micsr}(x, conf.int = FALSE, conf.level = 0.95, ...)
 
 \method{glance}{micsr}(x, ...)
+
+\method{residuals}{micsr}(object, ..., type = c("deviance", "pearson", "response"))
 }
 \arguments{
 \item{x, object}{an object which inherits the \code{micsr} class}
@@ -107,6 +110,9 @@ outer product of the gradient)}
 \item{digits, width}{see \code{print}}
 
 \item{type, omega, sandwich}{see \code{sandwich::sandwich}}
+
+\item{sum}{return either the sum of the contributions or the vector
+of contribution}
 
 \item{k}{see \code{AIC}}
 

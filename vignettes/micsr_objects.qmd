@@ -40,9 +40,9 @@ object:
 ```{r }
 bank_msq$npar
 ```
-Its a named list of integers containing the number of coefficients for
-each groups. It may have a `"default"` attribute which subset should
-be selected by default. The selection of a subset of coefficients is
+It's a named list of integers containing the number of coefficients for
+each groups. It may have a `"default"` attribute which indicates which
+subset should be selected by default. The selection of a subset of coefficients is
 performed by the `select_coef` function:
 
 ```{r }
@@ -97,7 +97,7 @@ The hessian is the $K\times K$ matrix of second-derivatives of the
 log-likelihood function with respect with the parameters vector. Its
 stored in the `hessian` object of a `micsr` object. In sandwich
 estimators of the covariance matrix, the "meat" is $N (- H) ^ {-1}$
-and is how the `meat` method for `micsr` objects is defined.
+and it is how the `meat` method for `micsr` objects is defined.
 
 The information matrix is either the variance of the gradient or the
 opposite of the expectation of the hessian. When the analytical

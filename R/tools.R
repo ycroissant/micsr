@@ -364,45 +364,84 @@ quad_form <- function(x, m = NULL, inv = TRUE, subset = NULL, vcov = NULL, ...){
 #' @return a numeric vector
 #' @export
 select_coef <- function(object, subset = NA, fixed = FALSE, grep = NULL, invert = FALSE){   
-    # ancillary  : instruments, heteroscedasticity
-    # covariates : 
-    # misc       : standard deviations / coefficients of correlation / cholesky matrix
-    # vcov       : - ancillary
-    # all        : all coefficients
     .grep <- grep
     .npar <- object$npar
     .names <- names(object$coefficients)
     .fixed <- attr(object$coefficients, "fixed")
     if (is.null(.fixed)) .fixed <- rep(FALSE, sum(.npar))
-    if (is.null(.npar) | is.null(attr(.npar, "default"))) idx <- 1:length(object$coefficients)
-    else{
-        if (length(subset) == 1){
-            if (is.na(subset)) .subset = attr(.npar, "default")
+    if (is.null(.npar)){
+        .npar <- structure(c(covariates = length(object$coefficients)),
+                           default = "covariates")
+    }
+    if (length(subset) == 1){
+        if (is.na(subset)) .subset = attr(.npar, "default")
+        else{
+            if (subset == "all") .subset <- names(.npar)
             else{
-                if (subset == "all") .subset <- names(.npar)
-                else{
-                    if (subset %in% names(.npar)) .subset <- subset
-                    else stop("irrelevant subset argument")
-                }
+                if (subset %in% names(.npar)) .subset <- subset
+                else stop("irrelevant subset argument")
             }
         }
-        else{
-            .subset <- subset
-            if (! all(.subset %in% names(.npar))) stop("irrelevant subset")
-        }
-        idx <- data.frame(subset = rep(names(.npar), times = .npar),
-                          idx = 1:sum(.npar),
-                          fixed = .fixed)
-        .sel <- .subset
-        idx <- subset(idx, subset %in% .sel)
-        if (! fixed) idx <- subset(idx, ! fixed)
-        idx <- idx$idx
-        names(idx) <- .names[idx]
+    } else {
+        .subset <- subset
+        if (! all(.subset %in% names(.npar))) stop("irrelevant subset")
     }
-    idx
+    idx <- data.frame(subset = rep(names(.npar), times = .npar),
+                      idx = 1:sum(.npar),
+                      fixed = .fixed)
+    .sel <- .subset
+    idx <- subset(idx, subset %in% .sel)
+    if (! fixed) idx <- subset(idx, ! fixed)
+    idx <- idx$idx
+    names(idx) <- .names[idx]
     if (! is.null(.grep)){
         z <- grep(.grep, names(idx), invert = invert)
         idx <- idx[z]
     }
     idx
 }
+
+
+## select_coef <- function(object, subset = NA, fixed = FALSE, grep = NULL, invert = FALSE){   
+##     # ancillary  : instruments, heteroscedasticity
+##     # covariates : 
+##     # misc       : standard deviations / coefficients of correlation / cholesky matrix
+##     # vcov       : - ancillary
+##     # all        : all coefficients
+##     .grep <- grep
+##     .npar <- object$npar
+##     .names <- names(object$coefficients)
+##     .fixed <- attr(object$coefficients, "fixed")
+##     if (is.null(.fixed)) .fixed <- rep(FALSE, sum(.npar))
+##     if (is.null(.npar) | is.null(attr(.npar, "default"))) idx <- 1:length(object$coefficients)
+##     else{
+##         if (length(subset) == 1){
+##             if (is.na(subset)) .subset = attr(.npar, "default")
+##             else{
+##                 if (subset == "all") .subset <- names(.npar)
+##                 else{
+##                     if (subset %in% names(.npar)) .subset <- subset
+##                     else stop("irrelevant subset argument")
+##                 }
+##             }
+##         }
+##         else{
+##             .subset <- subset
+##             if (! all(.subset %in% names(.npar))) stop("irrelevant subset")
+##         }
+##         idx <- data.frame(subset = rep(names(.npar), times = .npar),
+##                           idx = 1:sum(.npar),
+##                           fixed = .fixed)
+##         .sel <- .subset
+##         idx <- subset(idx, subset %in% .sel)
+##         if (! fixed) idx <- subset(idx, ! fixed)
+##         idx <- idx$idx
+##         names(idx) <- .names[idx]
+##     }
+##     idx
+##     if (! is.null(.grep)){
+##         z <- grep(.grep, names(idx), invert = invert)
+##         idx <- idx[z]
+##     }
+##     idx
+## }
