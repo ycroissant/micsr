@@ -6,6 +6,7 @@ check_gradient <- function(f, coefs){
     anal_hess <- attr(object, "hessian")
     num_grad <- numDeriv::grad(f, coefs)
     num_hess <- numDeriv::hessian(f, coefs)
+    dimnames(num_hess) <- dimnames(anal_hess)
     max_grad <- max(abs(anal_grad - num_grad))
 #    print(cbind(anal_grad, num_grad))
 #    print(num_hess[1:5, 1:5])
@@ -21,15 +22,6 @@ check_gradient <- function(f, coefs){
 ##         "maximum hessian  difference : ", x$hessian,  "\n")
 ## }
 
-
-mateub <- function(x, ...){
-    un <- match.call(expand.dots = TRUE)
-    deux <- match.call(expand.dots = FALSE)
-    print(un)
-    print(deux)
-    print(deux$...)
-    deux$...
-}
 
 #' Compute the inverse Mills ratio and its first two derivatives
 #'
@@ -274,15 +266,21 @@ compute_rank <- function(x){
 }
 
 
-maximize <- function(x, start, method = c("bfgs", "nr"), trace, ...){
+maximize <- function(x, start, method = c("bfgs", "nr", "newton"), trace = 0, maxit = 100, ...){
+    .method <- match.arg(method)
     if (method == "bfgs"){
         fun <- function(param) x(param, gradient = FALSE, hessian = FALSE, opposite = TRUE, ...)
         grad <- function(param) attr(x(param, gradient = TRUE, hessian = FALSE, opposite = TRUE, ...), "gradient")
-        result <- optim(start, fun, grad, method = "BFGS", control = list(trace = trace))$par
+        result <- optim(start, fun, grad, method = "BFGS", control = list(trace = trace, maxit = maxit))$par
     }
     if (method == "nr"){
-        result <- nlm(x, start, print.level = trace, gradient = TRUE, hessian = TRUE, sum = TRUE, opposite = TRUE, ...)$estimate
+        result <- nlm(x, start, print.level = trace, iterlim = maxit,
+                      gradient = TRUE, hessian = TRUE, sum = TRUE, opposite = TRUE, ...)$estimate
     }
+    if (method == "newton"){
+        result <- newton(x, coefs = start, direction = "max", maxit = maxit, trace = trace, ...)
+    }
+    names(result) <- names(start)
     result
 }
 

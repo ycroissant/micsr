@@ -19,7 +19,9 @@ tobit1(
   scedas = NULL,
   sample = c("censored", "truncated"),
   method = c("ml", "lm", "twostep", "trimmed", "nls", "minchisq", "test"),
-  trace = FALSE,
+  opt = c("bfgs", "nr", "newton"),
+  maxit = 100,
+  trace = 0,
   check_gradient = FALSE,
   ...
 )
@@ -55,8 +57,11 @@ estimator, \code{"minchisq"} and \code{"test"}. The last two are only
 relevant for instrumental variable estimation (when the formula
 is a two-parts formula and \code{scedas} is \code{NULL})}
 
-\item{trace}{a boolean (the default if \code{FALSE}) if \code{TRUE} some
-information about the optimization process is printed}
+\item{opt}{optimization method}
+
+\item{maxit}{maximum number of iterations}
+
+\item{trace}{printing of intermediate result}
 
 \item{check_gradient}{if \code{TRUE} the numeric gradient and hessian
 are computed and compared to the analytical gradient and

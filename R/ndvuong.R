@@ -18,6 +18,7 @@
 #' @param print.level the level of details to be printed
 #' @return an object of class `"htest"`.
 #' @importFrom Rdpack reprompt
+#' @importFrom CompQuadForm davies
 #' @importFrom stats pnorm
 #' @seealso the classical Vuong test is implemented in `pscl::vuong` and `nonnest2::vuongtest`.
 #' @references
@@ -165,7 +166,8 @@ ndvuong <- function(x, y, size = 0.05, pval = TRUE,
         # compute the variance test and quit"
         W <- eigen(crossprod(B, - solveA), only.values = TRUE)$values
         stat <- N * w2
-        pvalue <- mydavies(stat, W ^ 2)$Qq
+#        pvalue <- mydavies(stat, W ^ 2)$Qq
+        pvalue <- davies(stat, W ^ 2)$Qq
         results <- list(statistic = c(w2 = w2),
                         p.value = pvalue,
                         data.name = data.name,
@@ -179,7 +181,8 @@ ndvuong <- function(x, y, size = 0.05, pval = TRUE,
             # chi^2
             Tvuong <- 2 * LR * N
             W <- eigen(crossprod(B, - solveA), only.values = TRUE)$values
-            pval_vuong <- mydavies(Tvuong, W)$Qq
+#            pval_vuong <- mydavies(Tvuong, W)$Qq
+            pval_vuong <- davies(Tvuong, W)$Qq
             if (nd){
                 # for the non-degenarate version, just modify the
                 # numerator, and compute the one sided p-value
@@ -389,4 +392,3 @@ NULL
 
 
 
-# @importFrom CompQuadForm davies

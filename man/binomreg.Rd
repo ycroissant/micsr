@@ -16,8 +16,11 @@ binomreg(
   contrasts = NULL,
   link = c("identity", "probit", "logit"),
   method = c("ml", "twosteps", "minchisq", "test"),
-  robust = TRUE,
   start = NULL,
+  robust = TRUE,
+  opt = c("newton", "nr", "bfgs"),
+  maxit = 100,
+  trace = 0,
   check_gradient = FALSE,
   ...
 )
@@ -42,10 +45,16 @@ method for a regression without instrumental variables),
 \code{"twosteps"} for two-steps estimator, \code{"minchisq"} for minimum
 chi-squared estimator and \code{"test"} to get the exogeneity test,}
 
+\item{start}{a vector of starting values}
+
 \item{robust}{only when \code{method = "twosteps"}, should the robust
 covariance matrix be computed?}
 
-\item{start}{a vector of starting values}
+\item{opt}{optimization method}
+
+\item{maxit}{maximum number of iterations}
+
+\item{trace}{printing of intermediate result}
 
 \item{check_gradient}{if \code{TRUE} the numeric gradient and hessian
 are computed and compared to the analytical gradient and

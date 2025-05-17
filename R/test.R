@@ -129,11 +129,11 @@ ftest.ivreg <- function(x, ..., covariate = NULL){
 #' Score test, also knowned as Lagrange multiplier tests
 #'
 #' @name scoretest
-#' @param x the first model,
-#' @param y the second model
-#' @param vcov omit a character containing the effects that are
-#'     removed from the test
-#' @param ... further arguments
+#' @param object the first model,
+#' @param ... for the `micsr` method, it should be the formula for the
+#'     "large" model or an object from which a formula can be
+#'     extracted
+#' @param vcov an optional covariance matrix
 #' @return an object of class `"htest"`.
 #' @keywords htest
 #' @author Yves Croissant
@@ -145,21 +145,61 @@ ftest.ivreg <- function(x, ..., covariate = NULL){
 #' pbt_unconst <- binomreg(mode ~ cost + ivtime + ovtime, data = mode_choice, link = "probit")
 #' pbt_const <- binomreg(mode ~ gcost, data = mode_choice, link = "logit")
 #' scoretest(pbt_const , . ~ . + ivtime + ovtime)
-
 #' @export
-scoretest <- function(x, y, ...){
+scoretest <- function(object, ...){
     UseMethod("scoretest")
 }
 
 #' @rdname scoretest
 #' @export
-scoretest.micsr <- function(x, y, ..., vcov = NULL){
+scoretest.default <- function(object, ...){
+    new <- list(...)[[1]]
+    cls <- class(object)[1]
+    nmodels <- length(new)
+    if (! inherits(new, 'formula') | ! inherits(new, cls))
+        stop("the updating argument doesn't have a correct class")
+    if (inherits(new, cls)){
+        ncoefs <- names(coef(new))
+        new <- formula(formula(new))
+    }
+    else ncoefs <- names(coef(update(object, new, iterlim = 0)))
+    start <- numeric(length = length(ncoefs))
+    names(start) <- ncoefs
+    supcoef <- ! ncoefs %in% names(coef(object))
+    start[names(coef(object))] <- coef(object)
+    newmodel <- update(object, new, start= start, iterlim = 0)
+    data.name <- paste(deparse(formula(newmodel)))
+    alt.hyp <- "unconstrained model"
+    if (is.matrix(newmodel$gradient))
+        gradvect <- apply(newmodel$gradient, 2, sum) else gradvect <- newmodel$gradient
+    stat <- - sum(gradvect * solve(newmodel$hessian, gradvect))
+    names(stat) <- "chisq"
+    df <- c(df = length(coef(newmodel)) - length(coef(object)))
+    pval <- pchisq(stat, df = df, lower.tail = FALSE)
+    result <- list(statistic = stat,
+                   parameter = df,
+                   p.value = pval,
+                   data.name = data.name,
+                   method = "score test",
+                   alternative = alt.hyp
+                   )
+    class(result) <- 'htest'
+    result
+}
+
+#' @rdname scoretest
+#' @export
+scoretest.micsr <- function(object, ..., vcov = NULL){
+    x <- object
     if (is.null(vcov)){
         if (is.null(x$info)) .vcov <- "hessian" else .vcov <- "info"
     }
     else .vcov <- vcov
-    newform <- y
-    nX <- model.matrix(x, y)
+    objects <- list(object, ...)
+    if (length(objects) != 2) stop("Two models should be provided")
+    if(! inherits(objects[[2]], "formula")) objects[[2]] <- formula(objects[[2]])
+    newform <- objects[[2]]
+    nX <- model.matrix(x, newform)
     new_nms <- colnames(nX)
     old_nms <- names(coef(x))
     L <- length(new_nms) - length(old_nms)
@@ -168,7 +208,7 @@ scoretest.micsr <- function(x, y, ..., vcov = NULL){
     start <- coef(x)[new_nms]
     start[is.na(start)] <- 0
     names(start) <- new_nms
-    y <- update(x, formula = y, start = start)
+    y <- update(x, formula = newform, start = start, maxit = 0)
     .gradient <- apply(y$gradient, 2, sum)
     if (.vcov == "hessian") information <- - y$hessian
     if (.vcov == "opg") information <- crossprod(y$gradient)

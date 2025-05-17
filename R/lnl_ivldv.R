@@ -1,4 +1,6 @@
-lnliv_ldv <- function(param, X1, X2, W, y, sum = TRUE, gradient = FALSE, right, model){
+lnliv_ldv <- function(param, X1, X2, W, y, sum = TRUE, gradient = FALSE,
+                      opposite = FALSE, right, model){
+    .opposite <- ifelse(opposite, -1, +1)
     L <- ncol(X1) + ncol(W)
     G <- ncol(W)
     K <- ncol(X1) + ncol(X2)
@@ -27,7 +29,7 @@ lnliv_ldv <- function(param, X1, X2, W, y, sum = TRUE, gradient = FALSE, right, 
     if (model == "probit") lnl_f <- pnorm(q * lp / d, log.p = TRUE)
     if (model == "tobit") lnl_f <- (1 - pos) * pnorm(- lp / d, log.p = TRUE) +
                               pos * (- log(d) + dnorm( (y - lp) / d, log = TRUE))
-    lnl <- lnl_f + lnl_g
+    lnl <- .opposite * (lnl_f + lnl_g)
     if (sum) lnl <- sum(lnl)
     if (gradient){
         # get the vector of the columns of Wres (1, 2 2, 3 3 3, etc.)
@@ -67,7 +69,7 @@ lnliv_ldv <- function(param, X1, X2, W, y, sum = TRUE, gradient = FALSE, right, 
         colnames(gradObs) <- names(param)
         if (model == "tobit") gradObs <- cbind(gradObs, lnl_s)
         if (sum) gradObs <- apply(gradObs, 2, sum)
-        attr(lnl, "gradient") <- gradObs
+        attr(lnl, "gradient") <- .opposite * gradObs
     }
     lnl
 }

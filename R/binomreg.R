@@ -14,9 +14,12 @@
 #'     method for a regression without instrumental variables),
 #'     `"twosteps"` for two-steps estimator, `"minchisq"` for minimum
 #'     chi-squared estimator and `"test"` to get the exogeneity test,
+#' @param start a vector of starting values
 #' @param robust only when `method = "twosteps"`, should the robust
 #'     covariance matrix be computed?
-#' @param start a vector of starting values
+#' @param opt optimization method
+#' @param maxit maximum number of iterations
+#' @param trace printing of intermediate result
 #' @param object,x,type a `binomreg` object and the type of residuals
 #'     for the `residuals` method
 #' @param check_gradient if `TRUE` the numeric gradient and hessian
@@ -38,7 +41,12 @@
 binomreg <- function(formula, data, weights, subset, na.action, offset, contrasts = NULL,
                      link = c("identity", "probit", "logit"),
                      method = c("ml", "twosteps", "minchisq", "test"),
-                     robust = TRUE, start = NULL, check_gradient = FALSE, ...){
+                     start = NULL,
+                     robust = TRUE,
+                     opt = c("newton", "nr", "bfgs"),
+                     maxit = 100, trace = 0,
+                     check_gradient = FALSE, ...){
+    .opt <- match.arg(opt)
     .method <- match.arg(method)
     .call <- match.call()
     .link <- match.arg(link)
@@ -94,7 +102,8 @@ binomreg <- function(formula, data, weights, subset, na.action, offset, contrast
     if (.link == "identity"){
         .null_intercept <- yb
         lnl <- function(coefs, gradient = FALSE, hessian = FALSE, information = FALSE,
-                        sum = TRUE, X, y, weights){
+                        opposite = FALSE, sum = TRUE, X, y, weights){
+            sgn <- ifelse(opposite, - 1, + 1)
             K <- ncol(X)
             N <- length(y)
             beta <- coefs[1:K]
@@ -122,17 +131,18 @@ binomreg <- function(formula, data, weights, subset, na.action, offset, contrast
                 lnl <- sum(weights * lnl)
                 if (gradient) grad <- apply(weights * grad, 2, sum)
             }
-            if (gradient) attr(lnl, "gradient") <- grad
-            if (hessian) attr(lnl, "hessian") <- hess
+            if (gradient) attr(lnl, "gradient") <- grad * sgn
+            if (hessian) attr(lnl, "hessian") <- hess * sgn
             if (information) attr(lnl, "info") <- info
-            lnl
+            lnl * sgn
         }
     }
                 
     if (.link == "probit"){
         .null_intercept <- qnorm(yb)
         lnl <- function(coefs, gradient = FALSE, hessian = FALSE, information = FALSE,
-                        sum = TRUE, X, y, weights){
+                        opposite = FALSE, sum = TRUE, X, y, weights){
+            sgn <- ifelse(opposite, +1, -1)
             linpred <- drop(X %*% coefs)
             q <- 2 * y - 1
             lnl <- pnorm(q * linpred, log.p = TRUE)
@@ -143,17 +153,38 @@ binomreg <- function(formula, data, weights, subset, na.action, offset, contrast
                 lnl <- sum(lnl * weights)
                 if (gradient) grad <- apply(grad * weights, 2, sum)
             }
-            if (gradient) attr(lnl, "gradient") <- grad
-            if (hessian) attr(lnl, "hessian") <- hess
+            if (gradient) attr(lnl, "gradient") <- grad * sgn
+            if (hessian) attr(lnl, "hessian") <- hess * sgn
             if (information) attr(lnl, "info") <- info
-            lnl
+            lnl * sgn
         }
+
+        lnl <- function(coefs, gradient = FALSE, hessian = FALSE, information = FALSE,
+                        opposite = FALSE, sum = TRUE, X, y, weights){
+            sgn <- ifelse(opposite, - 1, + 1)
+            linpred <- drop(X %*% coefs)
+            q <- 2 * y - 1
+            lnl <- pnorm(q * linpred, log.p = TRUE)
+            if (gradient) grad <-  q * mills(q * linpred) * X
+            if (hessian) hess <- -   crossprod(sqrt(- weights *  mills(q * linpred, 1)) * X)
+            if (information) info <- crossprod(sqrt(weights * mills(linpred) * mills(- linpred)) * X)
+            if (sum){
+                lnl <- sum(lnl * weights)
+                if (gradient) grad <- apply(grad * weights, 2, sum)
+            }
+            if (gradient) attr(lnl, "gradient") <- grad * sgn
+            if (hessian) attr(lnl, "hessian") <- hess * sgn
+            if (information) attr(lnl, "info") <- info
+            lnl * sgn
+        }
+
     }
 
     if (.link == "logit"){
         .null_intercept <- qlogis(yb)
         lnl <- function(coefs, gradient = FALSE, hessian = FALSE, information = FALSE,
-                        sum = TRUE, X, y, weights){
+                        opposite = FALSE, sum = TRUE, X, y, weights){
+            sgn <- ifelse(opposite, - 1, + 1)
             linpred <- drop(X %*% coefs)
             q <- 2 * y - 1
             lnl <- plogis(q * linpred, log.p = TRUE)
@@ -164,34 +195,53 @@ binomreg <- function(formula, data, weights, subset, na.action, offset, contrast
                 lnl <- sum(lnl * weights)
                 if (gradient) grad <- apply(grad * weights, 2, sum)
             }
-            if (gradient) attr(lnl, "gradient") <- grad
-            if (hessian) attr(lnl, "hessian") <- hess
+            if (gradient) attr(lnl, "gradient") <- grad * sgn
+            if (hessian) attr(lnl, "hessian") <- hess * sgn
             if (information) attr(lnl, "info") <- info
-            lnl
+            lnl * sgn
         }
     }
+    ## if (is.null(start)){
+    ##     start <- rep(0, K)
+    ##     names(start) <- colnames(X)
+    ##     if (.link != "identity"){
+    ##         .coefs <- newton(lnl, X = X, y = y, weights = wt,
+    ##                          trace = 0, coefs = start, direction = "max")
+    ##     }
+    ##     else{
+    ##         .coefs <- drop(solve(crossprod(sqrt(wt) * X), crossprod(wt * X, y)))
+    ##         .sigma <- sqrt(mean(wt * (y - drop(X %*% .coefs) ^ 2)))
+    ##         .coefs <- c(.coefs, sigma = .sigma)
+    ##     }
+    ## }    
+    ## else .coefs <- start
+
     if (is.null(start)){
         start <- rep(0, K)
-        names(start) <- colnames(X)
+    }
+    names(start) <- colnames(X)
+    if (maxit > 0){
         if (.link != "identity"){
-            .coefs <- newton(lnl, X = X, y = y, weights = wt,
-                             trace = 0, coefs = start, direction = "max")
+##             .coefs <- newton(lnl, X = X, y = y, weights = wt,
+##                              trace = 1, coefs = start, direction = "max")
+## stop()
+            .coefs <- maximize(lnl, start = start, method = .opt, trace = trace, maxit = maxit,
+                               X = X, y = y, weights = wt, ...)
         }
         else{
             .coefs <- drop(solve(crossprod(sqrt(wt) * X), crossprod(wt * X, y)))
             .sigma <- sqrt(mean(wt * (y - drop(X %*% .coefs) ^ 2)))
             .coefs <- c(.coefs, sigma = .sigma)
         }
-    }    
+    }   
     else .coefs <- start
-
+    
     if (.link != "identity") .linpred <- drop(X %*% .coefs)
     else .linpred <- drop(X %*% .coefs[- (ncol(X) + 1)])
 
 
     .lnl_conv <- lnl(.coefs, X = X, y = y, weights = wt, gradient = TRUE,
                      hessian = TRUE, info = TRUE, sum = FALSE)
-
     fun <- function(x) lnl(x, X = X, y = y, weights = wt, gradient = TRUE,
                            hessian = TRUE, info = TRUE, sum = TRUE)
     if (check_gradient) z <- check_gradient(fun, .coefs) else z <- NA

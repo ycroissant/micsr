@@ -26,8 +26,9 @@
 #'     estimator, `"minchisq"` and `"test"`. The last two are only
 #'     relevant for instrumental variable estimation (when the formula
 #'     is a two-parts formula and `scedas` is `NULL`)
-#' @param trace a boolean (the default if `FALSE`) if `TRUE` some
-#'     information about the optimization process is printed
+#' @param opt optimization method
+#' @param maxit maximum number of iterations
+#' @param trace printing of intermediate result
 #' @param check_gradient if `TRUE` the numeric gradient and hessian
 #'     are computed and compared to the analytical gradient and
 #'     hessian
@@ -58,7 +59,9 @@ tobit1 <- function(formula, data, subset, weights, na.action, offset, contrasts 
                    sample = c("censored", "truncated"),
                    method = c("ml", "lm", "twostep", "trimmed",
                               "nls", "minchisq", "test"),
-                   trace = FALSE, check_gradient = FALSE,
+                   opt = c("bfgs", "nr", "newton"),                  
+                   maxit = 100, trace = 0,
+                   check_gradient = FALSE,
                    ...){
     .call <- match.call()
     .method <- match.arg(method)

@@ -9,7 +9,7 @@ set.seed(1)
 z <- unemp_duration
 z$w <- runif(nrow(z))
 ph_no <- weibreg(Surv(duration / sd(duration), censored == "no") ~ gender + log(wage + 1),
-                 z, mixing = FALSE, weights = w, model = "ph", check_gradient = TRUE)
+                 z, mixing = FALSE, weights = w, model = "ph", check_gradient = TRUE, opt = "nr")
 ph_yes <- update(ph_no, mixing = TRUE)
 aft_no <- update(ph_no, model = "aft")
 aft_yes <- update(aft_no, mixing = TRUE)

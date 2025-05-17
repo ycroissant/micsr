@@ -8,15 +8,16 @@
 #' @param data a data frame
 #' @param subset,weights,na.action,offset,contrasts see `lm`
 #' @param link one of `probit` and `logit`
-#' @param start a vector of starting values, in this case, no
-#'     estimation
-#' @param method optimization method
-#' @param object a `ordreg` object
-#' @param type one of `"outcome"` or `"probabilities"` for the
-#'     `fitted` method
+#' @param start a vector of starting values,
+#' @param opt optimization method
+#' @param maxit maximum number of iterations
+#' @param trace printing of intermediate result
 #' @param check_gradient if `TRUE` the numeric gradient and hessian
 #'     are computed and compared to the analytical gradient and
 #'     hessian
+#' @param object a `ordreg` object
+#' @param type one of `"outcome"` or `"probabilities"` for the
+#'     `fitted` method
 #' @param ... further arguments
 #' @return an object of class `micsr`, see `micsr::micsr` for further
 #'     details.
@@ -30,12 +31,15 @@
 #'       mutate(years = floor(duration / 365),
 #'              years = ifelse(years == 6, 5, years))
 #' mod2 <- ordreg(Surv(years, censored == "no") ~ gender + age + log(1 + wage), ud,
-#'                link = "cloglog", method = "bfgs")
+#'                link = "cloglog", opt = "bfgs")
 #' @export
 ordreg <- function(formula, data, weights, subset, na.action, offset, contrasts = NULL, 
                    link = c("probit", "logit", "cloglog"),
-                   method = c("bfgs", "nr"), start = NULL, check_gradient = FALSE, ...){
-    .method <- match.arg(method)
+                   start = NULL, 
+                   opt = c("bfgs", "nr", "newton"),
+                   maxit = 100, trace = 0, 
+                   check_gradient = FALSE, ...){
+    .opt <- match.arg(opt)
     .call <- match.call()
     .link <- match.arg(link)
     cl <- match.call(expand.dots = FALSE)
@@ -62,7 +66,7 @@ ordreg <- function(formula, data, weights, subset, na.action, offset, contrasts 
         if (! inherits(y, "factor")) y <- as.factor(y)
     }
     X <- model.matrix(mt, mf, contrasts)
-    X <- X[, - 1, drop = FALSE]
+    if (colnames(X)[1] == "(Intercept)") X <- X[, - 1, drop = FALSE]
     if (compute_rank(X) < ncol(X)){
         .rank <- compute_rank(X)
         .ncol <- ncol(X)
@@ -135,9 +139,8 @@ ordreg <- function(formula, data, weights, subset, na.action, offset, contrasts 
             H <- crossprod((2 * e - 1) * weights * M1 * e1 / Li,  M1) -
                 crossprod(e * weights * M2 * e2 / Li, M2) -
                 crossprod(sqrt(weights) * gradi)
-            H <- sgn * H
             colnames(H) <- rownames(H) <- names(param)
-            attr(lnl, "hessian") <- H
+            attr(lnl, "hessian") <- sgn * H
         }
         if (information){
             attr(lnl, "info") <- - H
@@ -146,11 +149,15 @@ ordreg <- function(formula, data, weights, subset, na.action, offset, contrasts 
     }
 
     sup.coef <- q_link(cumsum(prop.table(table(y))))[1: (J - 1)]
-    .start <- c(rep(0.1, K), sup.coef)
+    if (is.null(start)){
+        .start <- c(rep(0.1, K), sup.coef)
+    } else .start <- start
     nms <- c(colnames(X), nms_thr)
     names(.start) <- nms
-
-    .coefs <- maximize(lnl, start = .start, trace = 0, method = .method, X = X, y = y, e = e, weights = wt, ...)
+    if (maxit > 0){
+        .coefs <- maximize(lnl, start = .start, trace = trace, method = .opt, maxit = maxit,
+                           X = X, y = y, e = e, weights = wt, ...)
+    } else .coefs <- .start
     .linpred <- drop(X %*% .coefs[1:K])
     .lnl_conv <- lnl(.coefs, gradient = TRUE, hessian = TRUE, sum = FALSE,
                      X = X, y = y, e = e, weights = wt, information = TRUE)

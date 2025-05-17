@@ -123,7 +123,9 @@ escount <- function(formula,
         # gauss-hermite quadratures
         lnl <- function(param, gradient = FALSE, sum = FALSE, R = 16){
 #            rn <- statmod::gauss.quad(R, kind = "hermite")
-            rn <- gaussian_quad(R, "hermite")
+#            rn <- gaussian_quad(R, "hermite")
+            rn <- gauss_hermite(R)
+#            names(rn) <- c("nodes", "weights")
             alpha <- param[1:L]
             beta <- param[L + c(1:K)]
             beta <- param[1:K]
@@ -319,8 +321,9 @@ escount <- function(formula,
         # objFun compute the log-likelihood function as a function of
         # sig only
 #        rn <- statmod::gauss.quad(R, kind = "hermite")
-        rn <- gaussian_quad(R, kind = "hermite")
-        
+#        rn <- gaussian_quad(R, kind = "hermite")
+        rn <- gauss_hermite(R)
+#        names(rn) <- c("nodes", "weights")
         sig <- abs(2 * htheta)
         objFun <- function(sig){
             le <- function(eps) l(eps, sig)

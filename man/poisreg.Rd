@@ -2,6 +2,7 @@
 % Please edit documentation in R/poisreg.R
 \name{poisreg}
 \alias{poisreg}
+\alias{scoretest.poisreg}
 \alias{residuals.poisreg}
 \title{Poisson regression}
 \usage{
@@ -15,11 +16,15 @@ poisreg(
   contrasts = NULL,
   start = NULL,
   mixing = c("none", "gamma", "lognorm"),
-  method = c("bfgs", "newton"),
   vlink = c("nb1", "nb2"),
+  opt = c("bfgs", "nr", "newton"),
+  maxit = 100,
+  trace = 0,
   check_gradient = FALSE,
   ...
 )
+
+\method{scoretest}{poisreg}(object, ..., vcov = NULL)
 
 \method{residuals}{poisreg}(object, ..., type = c("deviance", "pearson", "response"))
 }
@@ -36,9 +41,13 @@ component and for the selection equation)}
 \item{mixing}{the mixing distribution, one of \code{"none"}, \code{"gamma"}
 and \code{"lognorm"}}
 
-\item{method}{the optimization method, one of \code{"newton"} and \code{"bfgs"}}
-
 \item{vlink}{one of \code{"nb1"} and \code{"nb2"}}
+
+\item{opt}{optimization method}
+
+\item{maxit}{maximum number of iterations}
+
+\item{trace}{printing of intermediate result}
 
 \item{check_gradient}{if \code{TRUE} the numeric gradient and hessian
 are computed and compared to the analytical gradient and
@@ -47,6 +56,9 @@ hessian}
 \item{...}{further arguments}
 
 \item{object}{a \code{poisreg} object}
+
+\item{vcov}{the covariance matrix estimator to use for the score
+test}
 
 \item{type}{the type of residuals for the \code{residuals} method}
 }

@@ -14,8 +14,10 @@ ordreg(
   offset,
   contrasts = NULL,
   link = c("probit", "logit", "cloglog"),
-  method = c("bfgs", "nr"),
   start = NULL,
+  opt = c("bfgs", "nr", "newton"),
+  maxit = 100,
+  trace = 0,
   check_gradient = FALSE,
   ...
 )
@@ -31,10 +33,13 @@ ordreg(
 
 \item{link}{one of \code{probit} and \code{logit}}
 
-\item{method}{optimization method}
+\item{start}{a vector of starting values,}
 
-\item{start}{a vector of starting values, in this case, no
-estimation}
+\item{opt}{optimization method}
+
+\item{maxit}{maximum number of iterations}
+
+\item{trace}{printing of intermediate result}
 
 \item{check_gradient}{if \code{TRUE} the numeric gradient and hessian
 are computed and compared to the analytical gradient and
@@ -62,6 +67,6 @@ ud <- unemp_duration \%>\%
       mutate(years = floor(duration / 365),
              years = ifelse(years == 6, 5, years))
 mod2 <- ordreg(Surv(years, censored == "no") ~ gender + age + log(1 + wage), ud,
-               link = "cloglog", method = "bfgs")
+               link = "cloglog", opt = "bfgs")
 }
 \keyword{models}

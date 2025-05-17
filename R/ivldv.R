@@ -225,7 +225,7 @@ ivldv <- function(formula,
         names(.coef)[1] <- colnames(.vcov)[1] <- rownames(.vcov)[1] <- "(Intercept)"
     }
     if (.est_method == "ml"){
-        nms_param <- list(covar = names_X, ancil = names_ZZ, vcov = c("sigma", "rho"))
+        nms_param <- list(covar = names_X, instr = names_ZZ, vcov = c("sigma", "rho"))
         # computation of the starting values
         nu <- step_2$linear.predictor
         # Compute the covariance matrix of the SUR estimator and takes its Cholesky decomposition
@@ -255,7 +255,7 @@ ivldv <- function(formula,
             colnames(PI2) <- names_X
             nms_pi2 <- as.character(outer(colnames(PI2), rownames(PI2), paste, sep = "_"))
             nms_pi3 <- as.character(t(outer(rownames(PI2), colnames(PI2), paste, sep = "_")))
-            nms_pi2 <- paste("ancil", nms_pi3, sep = "_")
+            nms_pi2 <- paste("instr", nms_pi3, sep = "_")
         }
         else nms_pi2 <- paste(colnames(W), names(PI2), sep = "_")
         .start <- c(beta, rho, pi2, chol)
@@ -272,14 +272,19 @@ ivldv <- function(formula,
         ##     comp_grad
         ## }
             
-        func_obs <- function(param)    lnliv_ldv(param, X1 = X1, X2 = X2, W = W, y = y, sum = FALSE, gradient = FALSE, right = right, model = model)
-        func <- function(param)    -      lnliv_ldv(param, X1 = X1, X2 = X2, W = W, y = y, sum = TRUE, gradient = FALSE, right = right, model = model)
-        gr <- function(param)      - attr(lnliv_ldv(param, X1 = X1, X2 = X2, W = W, y = y, sum = TRUE, gradient = TRUE, right = right, model = model), "gradient")
-        grObs <- function(param)    attr(lnliv_ldv(param, X1 = X1, X2 = X2, W = W, y = y, sum = FALSE, gradient = TRUE, right = right, model = model), "gradient")
+        func_obs <- function(param)    lnliv_ldv(param, X1 = X1, X2 = X2, W = W, y = y, sum = FALSE, gradient = FALSE,
+                                                 opposite = FALSE, right = right, model = model)
+        func <- function(param)          lnliv_ldv(param, X1 = X1, X2 = X2, W = W, y = y, sum = TRUE, gradient = FALSE,
+                                                   opposite = TRUE, right = right, model = model)
+        gr <- function(param)      attr(lnliv_ldv(param, X1 = X1, X2 = X2, W = W, y = y, sum = TRUE, gradient = TRUE,
+                                                  opposite = TRUE, right = right, model = model), "gradient")
+        grObs <- function(param)   attr(lnliv_ldv(param, X1 = X1, X2 = X2, W = W, y = y, sum = FALSE, gradient = TRUE,
+                                                  opposite = FALSE, right = right, model = model), "gradient")
 
         trace <- 0
         .optim <- optim(.start, func, gr, method = "BFGS",
                         hessian = TRUE, control = list(trace = trace, maxit = 1E04))
+        
         .logLik <- structure(- .optim$value, nobs = length(y), df = length(.optim$par),
                              class = "logLik")
         .llcount <- func_obs(.optim$par)
