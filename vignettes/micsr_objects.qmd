@@ -10,6 +10,134 @@ vignette: >
 **micsr** provides a special `micsr` class for fitted models, that is
 particularly convenient for models fitted by maximum likelihood.
 
+## Estimation
+
+With **micsr**, models are estimated using the `micsr::maximize`
+function which is an interface for three optimization routines, selected
+using the `opt` argument:
+
+- `"bfgs"` uses the `stats::optim` function with the `method` argument
+  set to `"BFGS"`,
+- `"nlm"` uses the `stats::nlm` function which uses the
+  Newton-Ralphson algorithm,
+- `"newton"` uses the `micsr::newton` function which is a fast
+  implementation of the Newton-Ralphson algorithm.
+  
+For simple log-likelihood function, `"newton"` is the fastest way to
+estimate the model, otherwise, `"bfgs"` is the safer. 
+
+The first argument is the function that returns the log-likelihood of
+the model and further argument of this function can be passed using
+the `...` argument of `maximize`:
+
+- `gradient`, `hessian` and `information` are boolean which enable to
+  compute the gradient, the hessian and the information matrix that
+  are returned as attributes of the result,
+- `sum` is a boolean: if `FALSE` the result is a vector containing the
+  individual contributions to the log-likelihood and the `gradient`
+  attribute is a matrix containing the individual contributions to
+  elements of the gradients,
+- `opposite` is a boolean: if `TRUE`, the opposite of the function,
+  the gradient and the hessian are returned; this is usefull if the
+  optimization function performs a minimization,
+- `y`, `X` and `weights` are the vector of response, the matrix of
+  covariates and a vector of weights.
+
+Several functions are provided to estimate models already available in
+core **R** (the **stats** package) and recommanded package.
+
+- `binomreg` can be used to estimate the binomial model as an
+alternative to `stats::glm` function. An `"identity"` is provided to
+estimate the linear probability model and two-part formulas can be
+provided to estimate the probit model with instrumental variables. In
+this case, several method of estimation are provided selected by the
+`method` argument: either `"ml"` for maximum-likelihood, `"twosteps"`
+for the two-step estimator and `"minchisq"` for the minimum $\chi^2$
+estimator,
+- `poisreg` estimates different flavors of count models. The basic use
+  of this function estimate the Poisson model as an alternative to the
+  `stats::glm` function with `family = poisson(link = 'log')`. Mixing
+  distribution can be introduced with the `mixing` argument which is
+  `"none"` by default but can be set to `"lognorm"` to get the
+  log-normal Poisson model and to `"gamma"` to get the NegBin model
+  (the `vlink` argument is either set to `"nb1"` or to `"nb2"` to get
+  the two flavors of the Negbin model, which can also be estimated
+  using the `MASS::glm.nb` function),
+- `weibreg` estimates the Weibull model that is normally estimated
+  using the `survival::survreg` function with the default `"weibull"`
+  `dist` argument. Using the `model` argument, one can use the
+  "accelerature failure time" (`"aft"`) or the "proportional hazard"
+  parametrization (`"ph"`). Moreover, the most used mixing survival
+  model is obtained by setting the `mixing` argument to `TRUE` (in
+  this case, the gamma mixing distribution is used).
+- `ordreg` estimates the ordered model, also called, for the logit
+  link the "proportional odds logistic regression). A link argument
+  enables to estimate the model with a probit, logit or cloglog
+  link. This model can be estimated using the `MASS::polr` function
+  but `ordreg` deals with censored responses.
+- `tobit1` estimates models for truncated responses, using either
+  censored or truncated samples (using the `sample` argument); in the
+  first case we get the so-called tobit or tobit1 model, in the second
+  case the truncated model. The `left` and `right` arguments can be
+  set to indicate the truncation points (the convenient default is 0
+  for the former and $+\infty$ for the latter). Several methods of
+  estimations are provided and selected using the `method` arguments:
+  `"ml"` for maximum likelihood, `"lm"` for the (biased) linear
+  estimator, `"twostep"` for the two-steps consistent estimator and
+  `"trimmed"` for the symetric trimmed estimator. If a two-part
+  formula is provided, by default, an instrumental variable is
+  performed, either using maximum likelihood or the minimum $\chi ^ 2$
+  estimator. If the `scedas` argument is not null, but set either to
+  `"exp"` or `"pnorm"`, the heterosckedastic tobit model is
+  estimated. 
+
+All these functions have in common with `stats::lm` their first
+arguments: `formula`, `data`, `subset`, `weights`, `na.action`,
+`offset` and `contrasts`. Supplementary arguments include `opt`,
+`maxit` and `trace` to select the optimization method with a given
+maximum number of iterations and level of printing, `start` to
+indicate a vector of starting values and `check_gradient` to check the
+correspondance between the analytical and the numerical gradients.
+
+The returned objects, of class `micsr` includes:
+
+- `coefficients`: the vector of coefficients,
+- `model`: the model frame,
+- `terms`: model terms,
+- `value`: a vector of individual contribution to the log-likelihood,
+- `gradient`: the matrix of individual contributions to the gradient,
+  also called the estimating function,
+- `hessian`: the hessian
+- `info`: the estimation of the information matrix
+- `fitted.values`: a vector of fitted values,
+- `linear.predictors`: a vector of linear predictors, i.e.,
+  $X\hat{\beta}$
+- `logLik`: a vector of length three containing the log-likelihood for
+  the proposed, the saturated and the null models,
+- `tests`: a vector of length three containing the three tests (the
+  Wald, the score and the likelihood ratio tests) that "all the
+  coefficients except the intercept are zero" (the equivalent of the
+  $F$ test for the linear model); these statistics can be used to
+  compute different flavors of the coefficient of determination,
+- `df.residual`: the number of fitted coefficients,
+- `npar`: a named numeric vector, the names being the name of the
+  group of coefficients and the value the number of parameter in the
+  group,
+- `est_method`: a character indicating the method of estimation, i.e.,
+  `ml` or `twostep`,
+- `call`, `na.action`, `weights`, `offset`, `contrasts` and `xlevels`
+(as in `lm` objects),
+- `family` a family object (as in `glm`),
+- `check_gradient`: if the `check_gradient` argument is `TRUE`, the
+  result is a list containing, for the gradient and the hessian, the
+  maximal absolute value of the difference between the analytical and
+  the numerical gradient and hessian; attribute `"gradient"` is a
+  matrix containing the numerical and the analytical gradient and
+  attributes `"anal_hess"` and `"num_hess"` contain the analytical and
+  the numerical hessians.
+
+
+
 ## Subsets of coefficients
 
 Often, especially for advanced models, the whole set of fitted
