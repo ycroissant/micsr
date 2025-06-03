@@ -1,5 +1,7 @@
 ---
 title: "lm function"
+date: today
+date-format: long
 bibliography: ../inst/REFERENCES.bib
 vignette: >
   %\VignetteIndexEntry{lm function}

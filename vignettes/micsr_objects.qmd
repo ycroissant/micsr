@@ -1,5 +1,7 @@
 ---
 title: "micsr objects"
+date: today
+date-format: long
 bibliography: ../inst/REFERENCES.bib
 vignette: >
   %\VignetteIndexEntry{micsr objects}
