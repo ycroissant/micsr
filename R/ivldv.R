@@ -37,11 +37,12 @@
 #' inst <- ~ sic3 + k_serv + inv + engsci + whitecol + skill + semskill + cropland + 
 #'     pasture + forest + coal + petro + minerals + scrconc + bcrconc + scrcomp +
 #'     bcrcomp + meps + kstock + puni + geog2 + tenure + klratio + bunion
-#' trade_protection <- dplyr::mutate(micsr::trade_protection,
-#'                                  y = ntb / (1 + ntb),
-#'                                  x1 = vshipped / imports / elast,
-#'                                  x2 = cap * x1,
-#'                                  x3 = labvar)
+#' trade_protection <- transform(trade_protection,
+#'                               y = ntb / (1 + ntb),
+#'                               x1 = vshipped / imports / elast)
+#' trade_protection <- transform(trade_protection,
+#'                               x2 = cap * x1,
+#'                               x3 = labvar)
 #' GH <- ivldv(Formula::as.Formula(y  ~  x1 + x2, inst), trade_protection,
 #'             method = "twosteps", model = "tobit") 
 #' Full <- ivldv(Formula::as.Formula(y ~ x1 + x2 + labvar, inst), trade_protection,

@@ -1,3 +1,6 @@
+## Marche pas si on fournit des valeurs initiales
+
+
 #' Truncated response model
 #'
 #' Estimation of models for which the response is truncated, either on
@@ -34,7 +37,6 @@
 #'     hessian
 #' @param object a `tobit1` object
 #' @param ... further arguments
-#' @importFrom tibble tibble
 #' @importFrom stats binomial coef dnorm glm lm model.matrix
 #'     model.response pnorm sigma df.residual fitted logLik
 #'     model.frame printCoefmat residuals terms vcov nobs
@@ -118,15 +120,17 @@ tobit1 <- function(formula, data, subset, weights, na.action, offset, contrasts 
     Plog <- as.logical(P)
     share_untr <- mean(Plog)
     
-    # check whether the sample is censored or truncated
+    # check whether the sample is censored or truncated (only when the
+    # model is estimated)
     is_cens_smpl <- any(P == 0)
-    if (.sample == "censored" & ! is_cens_smpl)
-        stop("the tobit model requires a censored sample")
-
-    if (.method != "twostep" & is_cens_smpl & .sample == "truncated"){
-        X <- X[Plog, ]
-        y <- y[Plog]
-        wt <- wt[Plog]
+    if (maxit > 0){
+        if (.sample == "censored" & ! is_cens_smpl)
+            stop("the tobit model requires a censored sample")
+        if (.method != "twostep" & is_cens_smpl & .sample == "truncated"){
+            X <- X[Plog, ]
+            y <- y[Plog]
+            wt <- wt[Plog]
+        }
     }
 
     # compute the starting values if they are not provided
@@ -138,6 +142,8 @@ tobit1 <- function(formula, data, subset, weights, na.action, offset, contrasts 
             init_lm$formula <- formula(.formula, rhs = 1)
         init_lm <- eval(init_lm, parent.frame())
         coefs_init <- c(coef(init_lm), sigma = sigma(init_lm))
+    } else {
+        coefs_init <- start
     }
     # lm estimator, biased
     if (.method == "lm"){
@@ -272,7 +278,8 @@ tobit1 <- function(formula, data, subset, weights, na.action, offset, contrasts 
     
     # non-linear least-squares
     if (.method == "nls"){
-        if (! zerotrunc | .sample != "truncated") stop("nls estimator only implemented for simple truncated model")
+        if (! zerotrunc | .sample != "truncated")
+            stop("nls estimator only implemented for simple truncated model")
         if (.sample == "truncated"){
             fun_nls <-  function(x, gradient = FALSE, hessian = FALSE){
                 beta <- x[1:ncol(X)]
@@ -339,7 +346,8 @@ tobit1 <- function(formula, data, subset, weights, na.action, offset, contrasts 
         coefs_init[1:K] <- coefs_init[1:K] / coefs_init[K + 1]
         coefs_init[K + 1] <- 1 / coefs_init[K + 1]
         coefs <- newton(lnl_tp_olsen, coefs_init, trace = trace, X = X, y = y, wt = wt,
-                        sum = FALSE, left = left, right = right, direction = "max", sample = .sample)
+                        sum = FALSE, left = left, right = right,
+                        direction = "max", sample = .sample, maxit = maxit)
         coefs[1:K] <- coefs[1:K] / coefs[K + 1]
         coefs[K + 1] <- 1 / coefs[K + 1]
         if (is.null(Z)){
@@ -361,7 +369,6 @@ tobit1 <- function(formula, data, subset, weights, na.action, offset, contrasts 
                                left = left, right = right, sample = .sample)
             npar <- structure(c(covariates = ncol(X), scedas = ncol(Z) + 1), default = c("covariates"))
         }
-
         fun <- function(x) lnl_tp(x, X = X, y = y, wt = wt,
                                   scedas = .scedas, Z = Z,
                                   sum = TRUE, gradient = TRUE, hessian = TRUE,
@@ -378,14 +385,15 @@ tobit1 <- function(formula, data, subset, weights, na.action, offset, contrasts 
         h <- .linpred / sigma
         Ppos <- pnorm(h)
         Epos <- .linpred + sigma * mills(h)
-        .fitted <- tibble::tibble(y = y, Ppos = Ppos, Epos = Epos, lp = .linpred)
-        .vcov <- solve(- .hessian)
-        dimnames(.vcov) <- list(names(coefs), names(coefs))
+        .fitted <- data.frame(y = y, Ppos = Ppos, Epos = Epos, lp = .linpred)
+        class(.fitted) <- c("tbl_df", "tbl", "data.frame")
+#        .vcov <- solve(- .hessian)
+#        dimnames(.vcov) <- list(names(coefs), names(coefs))
         .terms <-  terms(mf)
         attr(.terms, ".Environment") <- NULL
-        
+
         # tobit without covariates (mu and sigma), only for the standard tobit
-        if (left == 0 & is.infinite(right) & .sample == "censored"){
+        if (left == 0 & is.infinite(right) & .sample == "censored" & maxit > 0){
             coef0 <- function(x){
                 mu2 <- mean(x[x > 0] ^ 2)
                 yb <- mean(x[x > 0])
@@ -421,7 +429,6 @@ tobit1 <- function(formula, data, subset, weights, na.action, offset, contrasts 
 
         gres <- - (1 - d) * sigma * dnorm(h) / (1 - pnorm(h)) + d * (y - .linpred)
         gres <- - (y == 0) * sigma * dnorm(h) / (1 - pnorm(h)) + (y > 0) * (y - .linpred)
-
 
         env <- new.env(parent = .GlobalEnv)
         .sigma <- coefs["sigma"]
@@ -471,4 +478,5 @@ tobit1 <- function(formula, data, subset, weights, na.action, offset, contrasts 
 
 #' @rdname tobit1
 #' @export
-fitted.tobit1 <- function(object, ...) object$fitted.values$Ppos * object$fitted.values$Ppos
+fitted.tobit1 <- function(object, ...) object$fitted.values$Ppos * object$fitted.values$Epos
+#fitted.tobit1 <- function(object, ...) object$fitted.values$lp

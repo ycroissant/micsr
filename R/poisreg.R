@@ -279,16 +279,28 @@ poisreg <- function(formula, data, weights, subset, na.action, offset, contrasts
     .g_0 <- attr(.lnl_0, "gradient")
     .info_0 <- attr(.lnl_0, "info")
     if (is.null(.info_0)) .info_0 <- - attr(.lnl_0, "hessian")
-    .V_0 <- solve(.info_0)
+    if (is_definite_positive(.info_0)) .V_0 <- solve(.info_0) else .V_0 <- NA
 
     # The three statistics
-    .lm <- drop(crossprod(.g_0, solve(.info_0, .g_0)))
+    if (is_definite_positive(.info_0)){
+        .lm <- drop(crossprod(.g_0, solve(.info_0, .g_0)))
+    } else {
+        .lm <- NA
+    }
     .info_model <- attr(.lnl_conv, "info")
     if (is.null(.info_model)) .info_model <- - attr(.lnl_conv, "hessian")
-    .vcov <- solve(.info_model)[- .index_0, - .index_0, drop = FALSE]
-    .w <- drop(crossprod(.coefs[- .index_0],
-                         t(crossprod(.coefs[-  .index_0],
-                                     solve(.vcov)))))
+    if (is_definite_positive(.info_model)){
+        .vcov <- solve(.info_model)[- .index_0, - .index_0, drop = FALSE]
+    } else {
+        .vcov <- NA
+    }
+    if (length(.vcov) == 1 && is.na(.vcov)){
+        .w <- NA
+    } else {
+        .w <- drop(crossprod(.coefs[- .index_0],
+                             t(crossprod(.coefs[-  .index_0],
+                                         solve(.vcov)))))
+    }
     .lr <- 2 * unname(.logLik["model"] - .logLik["null"])
     .rsq <- c(w = .w / (.w + N), lr = 1 - exp(-.lr / N), lm = .lm / N)
     tests <- c(wald = .w, score = .lm, lr = .lr)

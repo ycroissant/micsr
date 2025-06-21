@@ -69,30 +69,42 @@ endogenous switching model for count data,
 Mealli and Nannicini (2008), matching.
 
 - vignettes:
-  - charitable: Estimating the Tobit-1 model with the charitable
+  - `charitable`: Estimating the Tobit-1 model with the charitable
 data set
-  - escount: Endogenous switching or sample selection models for
+  - `escount`: Endogenous switching or sample selection models for
 count data
-  - expreg: Exponentional conditional mean models with endogeneity
-  - ndvvuong: Implementation of Shi's non-degeranate Vuong test
+  - `expreg`: Exponentional conditional mean models with endogeneity
+  - `ndvvuong`: Implementation of Shi's non-degeranate Vuong test
+  - `lm_function`: A extended description of the `lm` function
+  - `micsr_objects`: A description of `micsr`
 
 
 
 We tried to keep the sets of package on which **micsr** depends on as
 small as possible. **micsr** depends on **Formula**, **generics**,
-**Rdpack**, **knitr**, **sandwich** and on a subset of the
-**tidyverse** metapackage (**ggplot2**, **dplyr**, **purrr**,
-**tidyselect**, **magrittr**, **tibble**, **rlang**). We borrowed the
+**Rdpack** and **sandwich**. We borrowed the
 gaussian quadrature function from the **statmod** package (Smyth and
 al., 2023), and the distribution function of quadratic forms in normal
 variables from the **CompQuadForm** package (Duchesne and Lafaye,
 2010).
 
+<!-- , **knitr**, **sandwich** and on a subset of the -->
+<!-- **tidyverse** metapackage (**ggplot2**, **dplyr**, **purrr**, -->
+<!-- **tidyselect**, **magrittr**, **tibble**, **rlang**) -->
+
 
 
 ## Installation
 
-The `micsr` is not yet on CRAN. To install it, first install the `pak` package and enter:
+The `micsr` is on CRAN. To install it:
+
+
+```{r }
+install.packages("micsr")
+```
+
+The development version is on github and can be installed using the
+**pak** package:
 
 ```
 pak::pkg_install("ycroissant/micsr")

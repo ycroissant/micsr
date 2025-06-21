@@ -11,7 +11,7 @@
 #' @name micsr
 #' @param x,object an object which inherits the `micsr` class
 #' @param formula a formula
-#' @param subset,grep,fixed,invert invert see `micsr::select_coef
+#' @param subset,grep,fixed,invert,coef invert see `micsr::select_coef
 #' @param vcov the method used to compute the covariance matrix of the
 #'     estimators (only for the ML estimator), one of `hessian` (the
 #'     opposite of the inverse of the hessian), `info` (the inverse of
@@ -21,7 +21,13 @@
 #' @param conf.int,conf.level see `broom:tidy.lm`
 #' @param lhs,rhs see `Formula::model.frame.Formula`
 #' @param type,omega,sandwich see `sandwich::sandwich`
+#' @param covariates a set of covariates for the `effects` method,
+#' @param se whether the standard errors sould be computed for
+#'     predictions and slopes
+#' @param shape the shape of the predictions for `mlogit` objects
 #' @param newdata a new data frame to compute the predictions
+#' #' @param se a boolean indicating whether the standard errors should
+#'     be computed
 #' @param k see `AIC`
 #' @param sum return either the sum of the contributions or the vector
 #'     of contribution
@@ -72,13 +78,13 @@ NULL
 #' @export
 survival::Surv
 
-#' @importFrom dplyr mutate
-#' @export
-dplyr::mutate
+## #' @importFrom dplyr mutate
+## #' @export
+## dplyr::mutate
 
-#' @importFrom magrittr %>%
-#' @export
-magrittr::`%>%`
+## #' @importFrom magrittr %>%
+## #' @export
+## magrittr::`%>%`
 
 #' @importFrom generics glance
 #' @export
@@ -123,30 +129,20 @@ pretty_nms <- function(x, subset = NA){
 
 #' @rdname micsr
 #' @export
-coef.micsr <- function(object, ..., subset = NA, fixed = FALSE, grep  = NULL, invert = TRUE){
-    .subset <- subset
-    is.na_subset <- (length(.subset) == 1) && is.na(.subset)
-    if (is.na_subset) .subset <- attr(object$npar, "default")
-    .sel <- select_coef(object, .subset, fixed = fixed, grep = grep)
+coef.micsr <- function(object, ..., subset = NA, fixed = FALSE,
+                       grep  = NULL, invert = FALSE, coef = NULL){
+    .sel <- select_coef(object, subset = subset, fixed = fixed, grep = grep,
+                        coef = coef, invert = invert)
     .coef <- object$coefficients[.sel]
-    names(.coef) <- pretty_nms(names(.coef), .subset)
+    names(.coef) <- pretty_nms(names(.coef), subset)
     .coef
 }
 
 #' @rdname micsr
 #' @export
-vcov.micsr <- function(object, ..., vcov = NULL,
-                       subset = NA, fixed = FALSE, grep = NULL, invert = TRUE){
+vcov.micsr <- function(object, ..., vcov = NULL, subset = NA, fixed = FALSE,
+                       grep = NULL, invert = FALSE, coef = NULL){
     .vcov_method <- vcov
-    .subset <- subset
-    is.na_subset <- (length(.subset) == 1) && is.na(.subset)
-    if (is.na_subset){
-        if (! is.null(attr(object$npar, "default"))){
-            .subset <- attr(object$npar, "default")
-        } else {
-            .subset <- names(object$npar)
-        }
-    }
     .est_method <- object$est_method
     if (.est_method == "ml"){
         if (is.null(.vcov_method)){
@@ -183,10 +179,11 @@ vcov.micsr <- function(object, ..., vcov = NULL,
         .vcov <- object$vcov
     }
     nms <- rownames(.vcov)
-    .sel <- select_coef(object, subset = .subset, fixed = fixed, grep = grep)
+    .sel <- select_coef(object, subset = subset, fixed = fixed,
+                        grep = grep, coef = coef, invert = invert)
     nms <- nms[.sel]
     .vcov <- .vcov[.sel, .sel, drop = FALSE]
-    colnames(.vcov) <- rownames(.vcov) <- pretty_nms(nms, .subset)
+    colnames(.vcov) <- rownames(.vcov) <- pretty_nms(nms, subset)
     solve(.vcov)
 }
 
@@ -194,15 +191,15 @@ vcov.micsr <- function(object, ..., vcov = NULL,
 #' @export
 summary.micsr <- function(object, ...,
                           vcov = c("hessian", "info", "opg"),
-                          subset = NA, fixed = FALSE, grep = NULL, invert = TRUE){
-    .subset <- subset
-    is.na_subset <- (length(.subset) == 1) && is.na(.subset)
-    if (is.na_subset) .subset <- attr(object$npar, "default")
+                          subset = NA, fixed = FALSE, grep = NULL, invert = FALSE, coef = NULL){
+
     .est_method <- object$est_method
     .vcov_method <- match.arg(vcov)
-    .vcov <- vcov(object, subset = .subset, vcov = .vcov_method, fixed = fixed, grep = grep)
+    .vcov <- vcov(object, subset = subset, vcov = .vcov_method,
+                  fixed = fixed, grep = grep, coef = coef, invert = invert)
     std.err <- sqrt(diag(.vcov))
-    b <- coef(object, subset = .subset, fixed = fixed, grep = grep)
+    b <- coef(object, subset = subset, fixed = fixed,
+              grep = grep, coef = coef, invert = invert)
     z <- b / std.err
     p <- 2 * pnorm(abs(z), lower.tail = FALSE)
     object$coefficients <- cbind(b, std.err, z, p)
@@ -355,36 +352,36 @@ deviance.micsr <- function(object, ..., type = c("model", "null")){
 
 # !!!!! uniquement pour escount
 
-#' @rdname micsr
-#' @export
-predict.micsr <- function(object, ..., newdata = NULL){
-    .est_method <- object$est_method
-    if (is.null(newdata)) fitted(object)
-    else{
-#        .formula <- Formula(formula(paste(deparse(object$call$formula), collapse = "")))
-        .formula <- Formula(formula(object$terms))
-        mf <- model.frame(.formula, newdata, dot = "previous")
-        X <- model.matrix(.formula, mf, rhs = 1)
-        Z <- model.matrix(.formula, mf, rhs = 2)
-        d <- model.part(.formula, newdata, lhs = 2, drop = TRUE)
-        q <- 2 * d - 1
-        K <- ncol(X)
-        L <- ncol(Z)
-        if (.est_method == "ml"){
-            beta <- coef(object, subset = "covariates")
-            alpha <- coef(object, subset = "instruments")
-            theta <- unname(prod(coef(object, subset = "vcov")))
-        }
-        else{
-            beta <- object$coefficients[1:K]
-            theta <- object$coefficients[K + 1]
-            alpha <- coef(object$first)
-        }
-        aZ <- drop(Z %*% alpha)
-        bX <- drop(X %*% beta)
-        exp(bX + pnorm(q * (theta + aZ), log.p = TRUE) - pnorm(q * aZ, log.p = TRUE))
-    }
-}
+## #' @rdname micsr
+## #' @export
+## predict.micsr <- function(object, ..., newdata = NULL){
+##     .est_method <- object$est_method
+##     if (is.null(newdata)) fitted(object)
+##     else{
+## #        .formula <- Formula(formula(paste(deparse(object$call$formula), collapse = "")))
+##         .formula <- Formula(formula(object$terms))
+##         mf <- model.frame(.formula, newdata, dot = "previous")
+##         X <- model.matrix(.formula, mf, rhs = 1)
+##         Z <- model.matrix(.formula, mf, rhs = 2)
+##         d <- model.part(.formula, newdata, lhs = 2, drop = TRUE)
+##         q <- 2 * d - 1
+##         K <- ncol(X)
+##         L <- ncol(Z)
+##         if (.est_method == "ml"){
+##             beta <- coef(object, subset = "covariates")
+##             alpha <- coef(object, subset = "instruments")
+##             theta <- unname(prod(coef(object, subset = "vcov")))
+##         }
+##         else{
+##             beta <- object$coefficients[1:K]
+##             theta <- object$coefficients[K + 1]
+##             alpha <- coef(object$first)
+##         }
+##         aZ <- drop(Z %*% alpha)
+##         bX <- drop(X %*% beta)
+##         exp(bX + pnorm(q * (theta + aZ), log.p = TRUE) - pnorm(q * aZ, log.p = TRUE))
+##     }
+## }
 
 ## #' @rdname micsr
 ## #' @export
@@ -546,3 +543,5 @@ residuals.micsr <- function(object, ..., type = c("deviance", "pearson", "respon
                                  (object$value[, "saturated"] - object$value[, "model"])  ^ .5
     .resid
 }
+
+    

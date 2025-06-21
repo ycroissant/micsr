@@ -23,8 +23,7 @@ some of the elements of `lm`.
 #| echo: false
 #| message: false
 library(micsr)
-library(dplyr)
-random_group <- random_group %>% mutate(wage = exp(lnwh))
+random_group <- transform(random_group, wage = exp(lnwh))
 ```
 For illustration, we use the `random_group` data set that analyze the effect of a
 training on wage. The response is hourly wage `wage` and
@@ -34,7 +33,7 @@ individuals and positive values for untreated individuals. We first
 create this dummy, called `treated`:
 
 ```{r }
-random_group <- random_group %>% mutate(treated = ifelse(group < 0, 1, 0))
+random_group <- transform(random_group, treated = ifelse(group < 0, 1, 0))
 ```
 
 ## A basic model
@@ -94,8 +93,8 @@ quasi homonymous names:
 #| collapse: true
 coef(mod0)
 df.residual(mod0)
-resid(mod0) %>% head
-fitted(mod0) %>% head
+resid(mod0) |> head()
+fitted(mod0) |> head()
 ```
 
 ```{r }
@@ -124,14 +123,14 @@ The element `"model"` of the `lm` object is the model frame. It's a
 special data frame:
 
 ```{r }
-mod0$model %>% head(3)
+head(mod0$model, 3)
 ```
 Instead of using the `$` operator, the `model.frame` function can be
 used to extract the model frame:
 
 ```{r }
-#| results: hide
-mod0 %>% model.frame
+#| results: false
+model.frame(mod0)
 ```
 
 For this basic model, it looks like a subset of columns of the
@@ -140,7 +139,7 @@ which is `log(wage)` and not `wage`. A model frame has several attributes:
 
 ```{r }
 #| collapse: true
-mod0$model %>% attributes %>% names
+names(attributes(mod0$model))
 ```
 
 The only interesting attribute is `"terms"`, the two other
@@ -152,7 +151,7 @@ and the vector of response $y$. To extract the model matrix, we use
 frame:
 
 ```{r }
-model.matrix(terms(mod0), model.frame(mod0)) %>% head(3)
+model.matrix(terms(mod0), model.frame(mod0)) |> head(3)
 ```
 More simply, the same model matrix can be extracted using the fitted
 object as the unique argument:
@@ -174,7 +173,7 @@ matrix, which is for **R** a vector with an attribute indicating the
 dimension, ie the number of rows and of columns.
 
 ```{r }
-model.matrix(mod0) %>% dim
+dim(model.matrix(mod0))
 ```
 
 Being a vector, a matrix contains only elements of the same mode, for
@@ -184,7 +183,7 @@ frame as unique argument:
 
 ```{r }
 #| collapse: true
-mod0 %>% model.frame %>% model.response %>% head
+mod0 |> model.frame() |> model.response() |> head()
 ```
 
 ## Call and update
@@ -194,7 +193,7 @@ the call to the function that resulted in the `mod0` object:
 
 ```{r }
 #| collapse: true
-mod0$call %>% class
+class(mod0$call)
 mod0$call
 ```
 Note that all the arguments are named, as we didn't named the first
@@ -216,7 +215,7 @@ we can update `mod0` with a new formula:
 
 
 ```{r }
-mod1 <- mod0 %>% update(log(wage) ~ treated + age + child +
+mod1 <- mod0 |> update(log(wage) ~ treated + age + child +
                             female + single + migrant + temp)
 ```
 or even more simply, we can use dots in the formula, which means "as
@@ -224,7 +223,7 @@ before" and enables to add or to remove variables from the initial
 formula:
 
 ```{r }
-mod1 <- mod0 %>% update(. ~ . + female + single + migrant + temp)
+mod1 <- update(mod0, . ~ . + female + single + migrant + temp)
 ```
 
 We have seen previously that the default `update` function has a `...`
@@ -273,7 +272,7 @@ model with `na.action` set to `"na.fail"`:
 
 ```{r }
 #| results: false
-mod1 %>% update(na.action = "na.fail")
+mod1 |> update(na.action = "na.fail")
 ```
 
 we get exactly the same results has there are no missing values for
@@ -284,20 +283,20 @@ an error message:
 
 ```{r }
 #| eval: false
-mod1 %>% update(. ~ . + ten, na.action = "na.fail")
+mod1 |> update(. ~ . + ten, na.action = "na.fail")
 ```
 Using the default `"na.omit"` value, we get:
 
 
 ```{r }
-mod2 <- mod1 %>% update(. ~ . + ten)
+mod2 <- mod1 |> update(. ~ . + ten)
 names(mod2)
 ```
 
 and there is now a 13^th^ element named `na.action`:
 
 ```{r }
-mod2$na.action %>% unname
+unname(mod2$na.action)
 ```
 This is an object of class `"omit"` containing a vector of integers
 indicating the positions of the lines that have been removed because
@@ -308,7 +307,7 @@ is "61"). This object is also returned as an attribute of the model frame:
 
 ```{r }
 #| collapse: true
-mod2$model %>% attributes %>% names
+mod2$model |> attributes() |> names()
 ```
 
 # Factors
@@ -320,8 +319,8 @@ using the `levels` function:
 
 ```{r }
 #| collapse: true
-random_group %>% pull(fsize) %>% levels
-random_group %>% pull(edu) %>% levels
+levels(random_group$fsize)
+levels(random_group$edu)
 ```
 
 We introduce these two factors in the regression and we also introduce
@@ -347,7 +346,7 @@ position of the coefficients and the position of the covariate in the
 formula:
 
 ```{r }
-mod3 %>% coef %>% names
+names(coef(mod3))
 ```
 for example, the 3^rd^ and 4^th^ values of `"assign"` are 2, which is the
 position of the `"age"` covariate, with now two coefficients. The
@@ -376,14 +375,14 @@ factor but the first. Other values are possible and can be set
 individually for every factor using the `contrasts` argument of `lm`:
 
 ```{r }
-mod4 <- mod3 %>% update(contrasts = list(edu = "contr.sum",
-                                         fsize = "contr.helmert"))
+mod4 <- update(mod3, contrasts = list(edu = "contr.sum",
+                                      fsize = "contr.helmert"))
 mod4$contrasts
 ```
 The model frame now looks like:
 
 ```{r }
-mod4$model %>% head(3)
+head(mod4$model, 3)
 ```
 The `age` column has been replaced by a $N \times 2$ matrix containing
 the two terms of the polynomial. The two factors are in their own
@@ -391,8 +390,8 @@ column.
 The model matrix $X$ is now:
 
 ```{r }
-mod3 %>% model.matrix %>% head(3)
-mod4 %>% model.matrix %>% head(3)
+head(model.matrix(mod3), 3)
+head(model.matrix(mod4), 3)
 ```
 The fundamental difference between the model frame (a list) and the
 model matrix (a vector with a dimension) is even clearer than in the
@@ -413,14 +412,14 @@ column of the data frame that contains the weights. For the
 is `samplew`:
 
 ```{r }
-mod4 <- mod3 %>% update(weights = samplew)
+mod4 <- update(mod3, weights = samplew)
 ```
 
 The `lm` object now has a 15^th^ element called `"weights"` which
 contains the vector of weights of length $N$. The model frame is now:
 
 ```{r }
-model.frame(mod4) %>% head(3)
+model.frame(mod4) |> head(3)
 ```
 
 Note the last column called `"(weights)"` that contains the
@@ -428,7 +427,7 @@ weights. The weights can be extracted from the model frame using
 `model.weights`:
 
 ```{r }
-mod4 %>% model.frame %>% model.weights %>% head(3)
+model.weights(model.frame(mod4)) |> head(3)
 ```
 
 An **offset** is a variable added to the regression equation, but with no
@@ -450,7 +449,7 @@ equivalent ways to introduce an offset: in the formula, using
 `offset(v)` or by setting the `offset` argument of `lm` to `v`:
 
 ```{r }
-random_group <- random_group %>% mutate(v = 3/4 + 1/4 * as.numeric(edu))
+random_group <- transform(random_group, v = 3/4 + 1/4 * as.numeric(edu))
 mod5 <- update(mod4, . ~ . + offset(v) - edu)
 mod6 <- update(mod4, . ~ . - edu, offset = v)
 ```
@@ -459,7 +458,7 @@ element called `"offset"`. The offset can be extract from the model
 frame using `model.offset`:
 
 ```{r }
-mod5 %>% model.frame %>% model.offset %>% head
+model.offset(model.frame(mod5)) |> head(3)
 ```
 
 ## The internal
@@ -530,7 +529,7 @@ the model frame:
 
 ```{r }
 mf <- eval(mf)
-mf %>% head(3)
+head(mf, 3)
 names(attributes(mf))
 ```
 We then extract the terms, and the different components of the model:

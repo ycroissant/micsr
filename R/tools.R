@@ -8,20 +8,11 @@ check_gradient <- function(f, coefs){
     num_hess <- numDeriv::hessian(f, coefs)
     dimnames(num_hess) <- dimnames(anal_hess)
     max_grad <- max(abs(anal_grad - num_grad))
-#    print(cbind(anal_grad, num_grad))
-#    print(num_hess[1:5, 1:5])
-#    print(anal_hess[1:5, 1:5])
     if (any(is.na(num_hess))) message("some NA in the numerical hessian")
     max_hess <- max(abs(anal_hess[! is.na(num_hess)] - num_hess[! is.na(num_hess)]) / sd(anal_hess))
     structure(list(gradient = max_grad, hessian = max_hess), class = "check_gradient",
               gradient = cbind(num_grad, anal_grad), anal_hess = anal_hess, num_hess = num_hess)
 }
-
-## print.check_gradient <- function(x, ...){
-##     cat("maximum gradient difference : ", x$gradient, "\n",
-##         "maximum hessian  difference : ", x$hessian,  "\n")
-## }
-
 
 #' Compute the inverse Mills ratio and its first two derivatives
 #'
@@ -63,6 +54,7 @@ d2mills <- function(x) mills(x) * ( (x + mills(x)) * (x + 2 * mills(x)) - 1)
 #'     function.
 #' @export
 newton <- function(fun, coefs, trace = 0, direction = c("min", "max"), tol = sqrt(.Machine$double.eps), maxit = 500, ...){
+    if (maxit == 0) return(coefs)
     if (trace){
         cat("Initial values of the coefficients:\n")
     }
@@ -135,90 +127,46 @@ stder.default <- function(x, vcov = NULL, subset = NA, fixed = FALSE, grep = NUL
     std
 }
 
-#' Transform a factor in a set of dummy variables
-#'
-#' The normal way to store cathegorical variables in R is to use
-#' factors, each modality being a level of this factor. Sometimes
-#' however, is is more convenient to use a set of dummy variables.
-#'
-#' @name dummy
-#' @param x a data frame
-#' @param ...  series of the data frame, should be factors
-#' @param keep a boolean, if `TRUE`, the original series is kept in
-#'     the data frame,
-#' @param prefix an optional prefix for the names of the computed
-#'     dummies,
-#' @param ref a boolean, if `TRUE`, a dummy is created for all the
-#'     levels, including the reference level
-#' @return a data frame
-#' @importFrom tidyselect eval_select
-#' @importFrom rlang expr
-#' @keywords misc
-#' @examples
-#' charitable %>% dummy(religion, education)
-#' @export
-dummy <- function (x, ..., keep = FALSE, prefix = NULL, ref = FALSE) {
-#    error_call <- dplyr:::dplyr_error_call()
-    loc <- eval_select(expr(c(...)), data = x)
-    for (y in names(loc)){
-        if (inherits(x[[y]], "factor")){
-            levs <- x %>% pull({{ y }}) %>% levels
-            if (! ref) levs <- levs[- 1]
-            for (i in rev(levs)){
-                if (! is.null(prefix)) nmi <- paste(prefix, i, sep = "") else nmi <- i
-                x <- x %>% mutate({{ nmi }} := ifelse({{ y }} == i, 1, 0), .after = {{ y }})
-            }
-            if (! keep) x <- x %>% dplyr::select(- {{ y }})
-            x
-        }
-    }
-    x
-}
-## z <- scan("~/YvesPro2/treatment_effect/spacial/ERTU:KOCH:07/sp_solow/data-ek/data91.txt") %>% matrix(nrow = 91, byrow = TRUE) %>% .[, 1:2]
-## pts <- st_multipoint(z) %>% st_sfc %>% st_cast(to = "POINT") %>% st_set_crs(st_crs(sps))
-
-## b <- sps %>% na.omit %>% arrange(iso3) %>% add_column(pts = pts)
-
-
-## dist <- st_distance(b$pts, b$point) %>% diag %>% units::set_units(km)
-## b <- b %>% add_column(dist)
-
-
-## dd <- scan("~/YvesPro2/Ecdat2/in/databrut/sp_solow/data-ek/data91.txt") %>%
-##     matrix(ncol = 7, byrow = TRUE) %>%
-##     as_tibble %>%
-##     set_names(c("long", "lat", "lny60", "lny95", "gy", "lns", "lnngd")) %>%
-##     bind_cols(read_csv("~/YvesPro2/Ecdat2/in/databrut/sp_solow/countries.txt")) %>% 
-##     mutate(gdp60 = exp(lny60), gdp95 = exp(lny95), saving = exp(lns), labgwth = exp(lnngd) - 0.05) %>%
-##     select(- (lny60:lnngd)) %>%
-##     relocate(gdp60:labgwth, .before = 4) %>%
-##     as_tibble %>%
-##     mutate(code = ifelse(code == "ZAR", "COD", code)) %>%
-##     relocate(code, name, .before = 1)
-## long <- dd$long
-## lat <- dd$lat
-## longlat <- matrix(c(dd$long, dd$lat), nrow = 91) %>% st_multipoint %>% st_sfc(crs = 4326) %>% st_cast("POINT")
-## dd <- st_sf(dd, longlat)
-## dd <- dd %>%
-##     mutate(lns = log(saving), lnngd = log(labgwth + 0.05),
-##                     growth = (log(gdp95) - log(gdp60)) / 35)
-
-## cts <- countries(include = "Hong Kong") %>% st_set_geometry("point") %>% select(iso3)
-## dd <- dd %>% left_join(as_tibble(cts), join_by(code == iso3))# %>% st_set_geometry("point")
-## sl <- lm(log(gdp95) ~ lns + lnngd, dd)
-## d <- dnearneigh(dd, 0, Inf)
-## W1 <- nb2listwdist(d, dd, type = "idw", 
-##                    style = "W", zero.policy = TRUE, alpha = 2)
-## W2 <- nb2listwdist(d, dd, type = "exp", 
-##                    style = "W", zero.policy = TRUE, alpha = 2)
-## moran.test(resid(sl), W1)
-## lm.morantest(sl, W1)
-## lm.morantest(sl, W2)
-
-
-## sp_solow3 <- sp_solow2 %>% mutate(lns = lns + lnngd)
-## un <- loglm(gdp95 ~ lns + lnngd, sp_solow2)
-## deux <- loglm(gdp95 ~ lns, sp_solow3)
+## #' Transform a factor in a set of dummy variables
+## #'
+## #' The normal way to store cathegorical variables in R is to use
+## #' factors, each modality being a level of this factor. Sometimes
+## #' however, is is more convenient to use a set of dummy variables.
+## #'
+## #' @name dummy
+## #' @param x a data frame
+## #' @param ...  series of the data frame, should be factors
+## #' @param keep a boolean, if `TRUE`, the original series is kept in
+## #'     the data frame,
+## #' @param prefix an optional prefix for the names of the computed
+## #'     dummies,
+## #' @param ref a boolean, if `TRUE`, a dummy is created for all the
+## #'     levels, including the reference level
+## #' @return a data frame
+## #' @importFrom dplyr pull
+## #' @importFrom tidyselect eval_select
+## #' @importFrom rlang expr
+## #' @keywords misc
+## #' @examples
+## #' charitable %>% dummy(religion, education)
+## #' @export
+## dummy <- function (x, ..., keep = FALSE, prefix = NULL, ref = FALSE) {
+## #    error_call <- dplyr:::dplyr_error_call()
+##     loc <- eval_select(expr(c(...)), data = x)
+##     for (y in names(loc)){
+##         if (inherits(x[[y]], "factor")){
+##             levs <- x %>% pull({{ y }}) %>% levels
+##             if (! ref) levs <- levs[- 1]
+##             for (i in rev(levs)){
+##                 if (! is.null(prefix)) nmi <- paste(prefix, i, sep = "") else nmi <- i
+##                 x <- x %>% mutate({{ nmi }} := ifelse({{ y }} == i, 1, 0), .after = {{ y }})
+##             }
+##             if (! keep) x <- x %>% dplyr::select(- {{ y }})
+##             x
+##         }
+##     }
+##     x
+## }
 
 #' Number of parameters of a fitted model
 #'
@@ -258,7 +206,6 @@ npar.micsr <- function(x, subset = NULL){
     }
     sum(as.numeric(result))
 }
-
 
 compute_rank <- function(x){
     abs_eigen_value <- abs(eigen(crossprod(x), only.values = TRUE)$values)
@@ -359,10 +306,14 @@ quad_form <- function(x, m = NULL, inv = TRUE, subset = NULL, vcov = NULL, ...){
 #' @param grep a regular expression
 #' @param invert should the coefficients that **don't** match the
 #'     pattern should be selected ?
+#' @param coef a vector of coefficients
 #' @return a numeric vector
 #' @export
-select_coef <- function(object, subset = NA, fixed = FALSE, grep = NULL, invert = FALSE){   
+select_coef <- function(object, subset = NA, fixed = FALSE,
+                        grep = NULL, invert = FALSE, coef = NULL){
+    # ajouter subset = NULL de manière à ce que tous les coefficients soient sélectionnés
     .grep <- grep
+    .coef <- coef
     .npar <- object$npar
     .names <- names(object$coefficients)
     .fixed <- attr(object$coefficients, "fixed")
@@ -371,6 +322,9 @@ select_coef <- function(object, subset = NA, fixed = FALSE, grep = NULL, invert 
         .npar <- structure(c(covariates = length(object$coefficients)),
                            default = "covariates")
     }
+
+    # subset
+    if (is.null(subset)) .subset <- names(.npar)
     if (length(subset) == 1){
         if (is.na(subset)) .subset = attr(.npar, "default")
         else{
@@ -392,54 +346,25 @@ select_coef <- function(object, subset = NA, fixed = FALSE, grep = NULL, invert 
     if (! fixed) idx <- subset(idx, ! fixed)
     idx <- idx$idx
     names(idx) <- .names[idx]
-    if (! is.null(.grep)){
-        z <- grep(.grep, names(idx), invert = invert)
+
+    # coef
+    if (! is.null(.coef) | ! is.null(.grep)){
+        z1 <- z2 <- numeric(0)
+        if (! is.null(.coef)){
+            if (! any(.coef %in% names(idx))) stop("unknown coefficient")
+            z1 <- match(.coef, names(idx))
+        }
+        if (! is.null(.grep)){
+            z2 <- grep(.grep, names(idx), invert = invert)
+        }
+        z <- unique(c(z1, z2))
         idx <- idx[z]
     }
     idx
 }
 
 
-## select_coef <- function(object, subset = NA, fixed = FALSE, grep = NULL, invert = FALSE){   
-##     # ancillary  : instruments, heteroscedasticity
-##     # covariates : 
-##     # misc       : standard deviations / coefficients of correlation / cholesky matrix
-##     # vcov       : - ancillary
-##     # all        : all coefficients
-##     .grep <- grep
-##     .npar <- object$npar
-##     .names <- names(object$coefficients)
-##     .fixed <- attr(object$coefficients, "fixed")
-##     if (is.null(.fixed)) .fixed <- rep(FALSE, sum(.npar))
-##     if (is.null(.npar) | is.null(attr(.npar, "default"))) idx <- 1:length(object$coefficients)
-##     else{
-##         if (length(subset) == 1){
-##             if (is.na(subset)) .subset = attr(.npar, "default")
-##             else{
-##                 if (subset == "all") .subset <- names(.npar)
-##                 else{
-##                     if (subset %in% names(.npar)) .subset <- subset
-##                     else stop("irrelevant subset argument")
-##                 }
-##             }
-##         }
-##         else{
-##             .subset <- subset
-##             if (! all(.subset %in% names(.npar))) stop("irrelevant subset")
-##         }
-##         idx <- data.frame(subset = rep(names(.npar), times = .npar),
-##                           idx = 1:sum(.npar),
-##                           fixed = .fixed)
-##         .sel <- .subset
-##         idx <- subset(idx, subset %in% .sel)
-##         if (! fixed) idx <- subset(idx, ! fixed)
-##         idx <- idx$idx
-##         names(idx) <- .names[idx]
-##     }
-##     idx
-##     if (! is.null(.grep)){
-##         z <- grep(.grep, names(idx), invert = invert)
-##         idx <- idx[z]
-##     }
-##     idx
-## }
+# coef:          un vecteur de coefficients
+# subset:        un vecteur de noms de sous-ensembles de coefficients
+# grep / invert: une expression rationelle et un booleun pour inverser
+

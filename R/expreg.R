@@ -23,9 +23,9 @@
 #' @references \insertRef{MULL:97}{micsr}
 #' @author Yves Croissant
 #' @examples
-#' cigmales <- dplyr::mutate(cigmales,
-#'                           age2 = age ^ 2, educ2 = educ ^ 2, educage = educ * age,
-#'                           age3 = age ^ 3, educ3 = educ ^ 3)
+#' cigmales <- cigmales |>
+#'             transform(age2 = age ^ 2, educ2 = educ ^ 2, educage = educ * age,
+#'                       age3 = age ^ 3, educ3 = educ ^ 3)
 #' expreg(cigarettes ~ habit + price + restaurant + income + age + age2 + educ + educ2 +
 #'                      famsize + race | . - habit + reslgth + lagprice + age3 + educ3 + educage,
 #'                      data = cigmales)

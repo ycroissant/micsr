@@ -27,18 +27,9 @@
 #' @param smpl the sample to use, either the whole sample (`smpl =
 #'     "total"`) or the sample with common support (`smpl = "cs"`)
 #' @param digits number of digits for the `print` methods
-#' @param format one of `"rst"` `"pipe"` and `"simple"`, this argument
-#'     is passed to `knitr::kable`
 #' @param ... further arguments
 #' @keywords models
-#' @importFrom dplyr pull filter bind_rows arrange case_when top_n
-#'     right_join transmute
-#' @importFrom tibble add_column add_row
-#' @importFrom tidyr pivot_wider
-#' @importFrom purrr map
-#' @importFrom rlang .data
-#' @importFrom knitr kable
-#' @importFrom stats na.omit quantile var
+#' @importFrom stats na.omit quantile var aggregate reshape t.test
 #' @references \insertRef{DEHE:WAHB:02}{micsr}
 #'
 #' \insertRef{BECK:ICHI:02}{micsr}
@@ -57,9 +48,11 @@
 #' outcome and `.cls` for the stratas
 #' - `pscore`: the glm model fitted to compute the propensity scores
 #' @examples
-#' data_tuscany <- dplyr::mutate(dplyr::filter(twa, region == "Tuscany"),
-#'   dist2 = dist ^ 2, livselfemp = I((city == "livorno") * (occup == "selfemp")),
-#'   perm = ifelse(outcome == "perm", 1, 0))
+#' data_tuscany <- twa |>
+#'                 subset(region == "Tuscany") |>
+#'                 transform(dist2 = dist ^ 2,
+#'                 livselfemp = I((city == "livorno") * (occup == "selfemp")),
+#'                 perm = ifelse(outcome == "perm", 1, 0))
 #' formula_tuscany <- perm + group ~ city + sex + marital + age +
 #'    loc + children + educ + pvoto + training +
 #'    empstat + occup + sector + wage + hour + feduc + femp + fbluecol +
@@ -86,15 +79,13 @@ pscore <- function(formula, data, maxiter = 4, tol = 0.005, link = c("logit", "p
     pscore <- glm(formula(.formula, lhs = 2), data = .model, family = binomial(link = .link))
     na_rows <- attr(model.frame(pscore), "na.action")
     if (! is.null(na_rows)) .model <- .model[- na_rows, ]
-    .model <- .model %>% add_column(pscore = fitted(pscore))
-    com_sup <- .model %>% group_by(.data$.gp) %>%
-        summarise(min = min(pscore), max = max(pscore))
-    com_sup <- .model %>% filter(.data$.gp == "treated") %>%
-        summarise(min = min(pscore), max = max(pscore))
-    min_sup <- com_sup %>% pull("min")
-    max_sup <- com_sup %>% pull("max")
-    .model <- .model %>% mutate(.cs = (pscore <= max_sup & pscore >= min_sup))
-    scores <- .model %>% filter(.data$.cs) %>% pull("pscore")
+    .model$pscore <- fitted(pscore)
+    min_sup <- min(subset(.model, .model$.gp == "treated")$pscore)
+    max_sup <- max(subset(.model, .model$.gp == "treated")$pscore)
+
+    mateub <- transform(.model, pscore = pscore + 2)
+    .model <- .model |> transform(.cs = (pscore <= max_sup & pscore >= min_sup))
+    scores <- subset(.model, .model$.cs)$pscore
     bks <- c(0.01, 0.05, 0.10, 0.25, 0.5, 0.75, 0.9, 0.95, 0.99)
     qtles <- quantile(scores, bks)
     .go_on <- TRUE
@@ -102,24 +93,29 @@ pscore <- function(formula, data, maxiter = 4, tol = 0.005, link = c("logit", "p
     bks <- c(seq(0, 1, 0.2))
     while(.go_on){
         .iter <- .iter + 1
-        da <- .model %>% filter(.data$.cs) %>%
-            mutate(cls = cut(scores, bks, right = FALSE))
-        freq <- da %>% group_by(.data$.gp, .data$cls) %>%
-            summarise(n = n(), .groups = "drop",
-                      mean = mean(.data$.resp), var = var(.data$.resp)) %>%
-            pivot_wider(names_from = .data$.gp,
-                        values_from = c(.data$n, .data$mean, .data$var)) %>%
-            mutate(cls = as.character(.data$cls)) %>%
-            arrange(.data$cls)
+        da <- subset(.model, .model$.cs) |>
+            transform(cls = cut(scores, bks, right = FALSE))
+        z <- aggregate(.resp ~ .gp + cls, data = da,
+                       FUN = function(x) c(n = length(x), mean = mean(x), var = var(x)),
+                       simplify = TRUE)
+        z <- cbind(z[, 1:2], n = z[[3]][, 1], mean = z[[3]][, 2], var = z[[3]][, 3])
+        z <- reshape(z, direction = "wide", timevar = ".gp",
+                     v.names = c("n", "mean", "var"), idvar = "cls",
+                     sep = "_")
+        z$cls <- as.character(z$cls)
+        freq <- z[order(z$cls), c("cls", "n_control", "n_treated", "mean_control",
+                               "mean_treated", "var_control", "var_treated")]
         no_cs <- is.na(freq$n_control) | is.na(freq$n_treated)
-        r <- map(freq$cls[! no_cs], ~ t.test(pscore ~ .gp, var.equal = TRUE,
-                                             data = subset(da, cls == .x)))
-        r <- map(r, ~ c(.x$estimate, .x$p.value))
+        r <- lapply(freq$cls[! no_cs],
+                    function(x) t.test(pscore ~ .gp, var.equal = TRUE,
+                                       data = subset(da, da$cls == x)))
+        r <- lapply(r, function(x) c(x$estimate, x$p.value))
         r <- Reduce("rbind", r)
         dimnames(r) <- list(freq$cls[! no_cs], c("ps_control", "ps_treated", "p.val"))
-        r <- r %>% as_tibble(rownames = "cls") %>%
-            right_join(freq, by = "cls") %>%
-            arrange(.data$cls)
+        r <- cbind(cls = rownames(r), as.data.frame(r))
+        rownames(r) <- NULL
+        r <- merge(r, freq, by = "cls")
+        r <- r[order(r$cls), ]
         if (any(na.omit(r$p.val) < .tol) & .iter <= .maxiter){
             pb <- which(r$p.val < .tol)
             sup_bks <- (bks[pb + 1] + bks[pb]) / 2
@@ -127,32 +123,39 @@ pscore <- function(formula, data, maxiter = 4, tol = 0.005, link = c("logit", "p
         }
         else .go_on <- FALSE
     }
-    .model <- .model %>%
-        mutate(.cls = cut(pscore, bks, right = FALSE))
+   .model <- transform(.model, .cls = cut(pscore, bks, right = FALSE))
     strata <- r
-    X <- model.matrix(.formula, data = model.frame(.formula, filter(.model, .data$.cs))) %>%
-        as_tibble %>%
-        bind_cols(select(da, "pscore", "cls", ".gp"))
+    X <- model.matrix(.formula, data = model.frame(.formula, subset(.model, .model$.cs))) |>
+        as.data.frame()
+    X <- cbind(X, da[, c("pscore", "cls", ".gp")])
 
     xnms <- names(X)[- na.omit(match(c("(Intercept)", "cls", "pscore", ".gp"), names(X)))]
-    cov_balance <- tibble(name = character(0), classe = character(0), pvalue = numeric(0))
+    cov_balance <- data.frame(name = character(0), classe = character(0), pvalue = numeric(0))
     unchecked_cov <- c()
     for (aname in xnms){
         X$covariate <- X[[aname]]
-        r <- try(map(strata$cls[! no_cs], ~ t.test(covariate ~ .gp, var.equal = TRUE,
-                                                   data = subset(X, cls == .x))), silent = TRUE)
-        if (length(r[[1]]) > 1){
-            r <- map(r, ~ c(.x$estimate, .x$p.value))
-            r <- Reduce("rbind", r)
-            dimnames(r) <- list(strata$cls[! no_cs], c("control", "treated", "p.val"))
-            r <- r %>% as_tibble %>%
-                add_column(cls = strata$cls[! no_cs], .before = 1) %>%
-                top_n(1, - .data$p.val)
-            cov_balance <- cov_balance %>%
-                add_row(name = aname, classe = r$cls, pvalue = r$p.val)
+        r2 <- try(lapply(strata$cls[! no_cs],
+                        function(x) t.test(covariate ~ .gp, var.equal = TRUE,
+                                           data = subset(X, X$cls == x))), silent = TRUE)
+        if (length(r2[[1]]) > 1){
+            r2 <- lapply(r2, function(x) c(x$estimate, x$p.value))
+            r2 <- Reduce("rbind", r2)
+            dimnames(r2) <- list(strata$cls[! no_cs], c("control", "treated", "p.val"))
+            r2 <- cbind(cls = strata$cls[! no_cs], as.data.frame(r2))
+            rownames(r2) <- NULL
+            r2 <- r2[order(r2$p.val), ]
+            r2 <- r2[1, ]
+            if (! is.na(r2$p.val)){
+                cov_balance <- rbind(cov_balance,
+                                     list(name = aname, classe = r2$cls, pvalue = r2$p.val))
+            }
+        } else {
+            unchecked_cov <- c(unchecked_cov, aname)
         }
-        else unchecked_cov <- c(unchecked_cov, aname)
+
+
     }
+    class(strata) <- class(cov_balance) <- class(.model) <- c("tbl_df", "tbl", "data.frame")
     structure(list(strata = strata, cov_balance = cov_balance,
                    unchecked_cov = unchecked_cov, model = .model,
                    pscore = pscore),
@@ -166,34 +169,33 @@ summary.pscore <- function(object, ...){
     strata <- object$strata
     .model <- object$model
     no_cs <- is.na(strata$n_control) | is.na(strata$n_treated)
-    rg_cs <- rg(object, smpl = "cs")#.model %>% filter(.cs) %>% pull(pscore) %>% range
-    rg_tot <- rg(object, smpl = "total")#.model %>% pull(pscore) %>% range
-    nobs_tot <- nobs(object, smpl = "total")#.model %>% pull(.gp) %>% table %>% as.numeric
-    nobs_cs <- nobs(object, smpl = "cs")#.model %>% filter(.cs) %>% pull(.gp) %>% table %>% as.numeric    
+    rg_cs <- rg(object, smpl = "cs")#.model |> filter(.cs) |> pull(pscore) |> range
+    rg_tot <- rg(object, smpl = "total")#.model |> pull(pscore) |> range
+    nobs_tot <- nobs(object, smpl = "total")#.model |> pull(.gp) |> table |> as.numeric
+    nobs_cs <- nobs(object, smpl = "cs")#.model |> filter(.cs) |> pull(.gp) |> table |> as.numeric    
     if (any(no_cs)){
         strata_save <- strata
         .model_save <- .model
         cls_no_cs <- strata$cls[no_cs]
-        strata <- strata %>% filter(! .data$cls %in% cls_no_cs)
-        .model <- .model %>% filter(! .data$.cls %in% cls_no_cs)
+        strata <- subset(strata, ! strata$.cls %in% cls_no_cs)
+        .model <- subset(.model, ! strata$.cls %in% cls_no_cs)
     }
-    ATET <- strata  %>% 
-        summarise(sum(.data$n_treated / sum(.data$n_treated) *
-                      (.data$mean_treated - .data$mean_control))) %>% pull
-    Nt <- strata %>% summarise(sum(.data$n_treated)) %>% pull
-    g <- strata %>% transmute(.data$n_treated / .data$n_control) %>% pull
-    f <- strata %>% transmute(.data$n_treated / sum(.data$n_treated)) %>% pull
-    Vg <- .model %>% group_by(.data$.gp) %>% summarise(V = var(.data$.resp)) %>% pull
+
+    ATET <- with(strata, sum(n_treated / sum(n_treated) *
+                             (mean_treated - mean_control)))
+    Nt <- sum(strata$n_treated)
+    g <- strata$n_treated / strata$n_control
+    f <- strata$n_treated / sum(strata$n_treated)
+    Vg <- as.numeric(tapply(.model$.resp, .model$.gp, var))
     Vc <- Vg[1]
     Vt <- Vg[2]
-    Vb <- .model %>% group_by(.data$.cls) %>% summarise(V = var(.data$.resp)) %>% pull
-    Vgp <- .model %>%
-        group_by(.data$.gp, .data$.cls) %>%
-        summarise(V = var(.data$.resp), .groups = "drop") %>%
-        pivot_wider(names_from = .data$.gp, values_from = V)
-    Vtb <- Vgp %>% pull("treated")
-    Vcb <- Vgp %>% pull("control")
-    V <- .model  %>% pull(".resp") %>% var
+    Vb <- tapply(.model$.resp, .model$.cls, var)
+    Vgp <- aggregate(.resp ~ .gp + .cls, data = .model, FUN = var)
+    Vgp <- reshape(Vgp, direction = "wide", timevar = ".gp", idvar = ".cls", v.names = ".resp")
+    names(Vgp)[c(2:3)] <- c("control", "treated")
+    Vtb <- Vgp$treated
+    Vcb <- Vgp$control
+    V <- var(.model$.resp)
     sd_both   <- sqrt(V * (1 + sum(f * g)) / Nt)
     sd_group  <- sqrt( (Vt + Vc * sum(f * g)) / Nt)
     sd_strata <- sqrt( sum(f * Vb * (1 + g)) / Nt)
@@ -204,10 +206,10 @@ summary.pscore <- function(object, ...){
         strata <- strata_save
         .model <- .model_save
     }
-    strata <- strata %>%
-        select(strata = "cls", "n_treated", "n_control",
-               "ps_treated", "ps_control", p.value = "p.val",
-               "mean_treated", "mean_control")
+    strata <- strata[, c("cls", "n_treated", "n_control",
+               "ps_treated", "ps_control", "p.val",
+               "mean_treated", "mean_control")]
+    names(strata)[c(1, 6)] <- c("strata", "p.value")
     structure(list(strata = strata, pscore = object$pscore,
                    cov_balance = object$cov_balance,
                    cov_unchecked = object$cov_unchecked,
@@ -235,7 +237,6 @@ print.pscore <- function(x, ..., digits = getOption("digits"),
 #' @export
 print.summary.pscore <- function(x, ...,
                                  digits = getOption("digits"),
-                                 format = c("rst", "pipe", "simple"),
                                  step = c("all", "strata", "covariates", "atet")){
     .step <- match.arg(step)
     .format <- match.arg(format)
@@ -254,10 +255,11 @@ print.summary.pscore <- function(x, ...,
         cat("(p-value for the t-test of equal means)\n")
     }
     if (.step %in% c("all", "strata"))
-        x$strata %>% select(1:6) %>%
-            knitr::kable(digits = c(0, 0, 0, 3, 3, 3, 1, 1), format = .format) %>%
-            print()
-    if (.step == "all"){
+        ## x$strata[, 1:6] |>
+        ##     knitr::kable(digits = c(0, 0, 0, 3, 3, 3, 1, 1), format = .format) |>
+        ##     print()
+        print(x$strata[, 1:6], n = Inf, digits = digits)
+        if (.step == "all"){
         cat("\n")
         cat("----------------------------------------------------\n")
         cat("second-step: checking the balance for the covariates\n")
@@ -265,7 +267,8 @@ print.summary.pscore <- function(x, ...,
     }
     if (.step %in% c("all", "covariates")){
         cat("(for every covariate, strata with the lowest p-value)\n")
-        x$cov_balance %>% knitr::kable(digits = digits, format = .format) %>% print()
+#        x$cov_balance |> knitr::kable(digits = digits, format = .format) |> print()
+        print(x$cov_balance, n = Inf, digits = digits)
         if (! is.null(x$unchecked_cov)){
             cat("\nBalance checking impossible for:", paste(x$unchecked_cov, collapse = ", "), "\n")
         }
@@ -290,9 +293,9 @@ print.summary.pscore <- function(x, ...,
 #' @export
 nobs.pscore <- function(object, ..., smpl = c("total", "cs")){
     .smpl <- match.arg(smpl)
-    if (.smpl == "total") result <- object$model %>% pull(".gp") %>% table %>% as.numeric
-    if (.smpl == "cs") result <- object$model %>% filter(.data$.cs) %>%
-                           pull(".gp") %>% table %>% as.numeric
+    if (.smpl == "total") result <- object$model$.gp |> table() |> as.numeric()
+    if (.smpl == "cs") result <- subset(object$model, object$model$.cs)$.gp |>
+                                                         table() |> as.numeric()
     result
 }
 
@@ -314,8 +317,8 @@ rg <- function(object, ...) UseMethod("rg")
 #' @export
 rg.pscore <- function(object, ..., smpl = c("total", "cs")){
     .smpl <- match.arg(smpl)
-    if (.smpl == "total") result <- object$model %>% pull("pscore") %>% range
-    if (.smpl == "cs") result <- object$model %>% filter(.data$.cs) %>% pull("pscore") %>% range
+    if (.smpl == "total") result <- range(object$model$pscore)
+    if (.smpl == "cs") result <- range(subset(object$model, object$model$.cs)$pscore)
     result
 }
 
@@ -335,13 +338,13 @@ stdev <- function(object, ...) UseMethod("stdev")
 #' @rdname pscore
 #' @export
 mean.pscore <- function(x, ..., var_equal = c("none", "strat", "group", "both")){
-    summary(x)$atet["atet"] %>% unname
+    summary(x)$atet["atet"] |> unname()
 }
 
 #' @rdname pscore
 #' @export
 mean.summary.pscore <- function(x, ...){
-    x$atet["atet"] %>% unname
+    x$atet["atet"] |> unname()
 }
 
 #' @rdname pscore
@@ -349,22 +352,21 @@ mean.summary.pscore <- function(x, ...){
 stdev.pscore <- function(object, ..., var_equal = c("none", "strata", "group", "both")){
     var_equal <- match.arg(var_equal)
     object <- summary(object)$atet
-    case_when(var_equal == "none" ~ unname(object["sd_none"]),
-              var_equal == "both" ~ unname(object["sd_both"]),
-              var_equal == "strata" ~ unname(object["sd_strata"]),
-              var_equal == "group" ~ unname(object["sd_group"]))
+    switch(var_equal,
+           none   = unname(object["sd_none"]),
+           both   = unname(object["sd_both"]),
+           strata = unname(object["sd_strata"]),
+           group  = unname(object["sd_group"]))
 }
-
 
 #' @rdname pscore
 #' @export
 stdev.summary.pscore <- function(object, ..., var_equal = c("none", "strata", "group", "both")){
     var_equal <- match.arg(var_equal)
     object <- object$atet
-    case_when(var_equal == "none" ~ unname(object["sd_none"]),
-              var_equal == "both" ~ unname(object["sd_both"]),
-              var_equal == "strata" ~ unname(object["sd_strata"]),
-              var_equal == "group" ~ unname(object["sd_group"]))
+    switch(var_equal,
+           none   = unname(object["sd_none"]),
+           both   = unname(object["sd_both"]),
+           strata = unname(object["sd_strata"]),
+           group  = unname(object["sd_group"]))
 }
-
-

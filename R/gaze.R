@@ -17,34 +17,62 @@
 #' @return returns invisibly its first argument
 #' @keywords misc
 #' @examples
-#' t.test(extra ~ group, sleep) %>% gaze
-#' lm(dist ~ poly(speed, 2), cars) %>% gaze
-#' lm(dist ~ poly(speed, 2), cars) %>% gaze(coef = "poly(speed, 2)2")
+#' t.test(extra ~ group, sleep) |> gaze()
+#' lm(dist ~ poly(speed, 2), cars) |> gaze()
+#' lm(dist ~ poly(speed, 2), cars) |> gaze(coef = "poly(speed, 2)2")
 #' @export
 gaze <- function(x, ...) UseMethod("gaze")
 
 #' @rdname gaze
 #' @export
-gaze.lm <- function(x, ..., coef = NULL,
-                       digits = max(3L, getOption("digits") - 3L), 
-                       signif.stars = FALSE){
-  .coef <- coef
-  if (is.null(coef)){
-    if (names(coef(x)[1]) == "(Intercept)") .coef <- 2:length(coef(x))
-    else .coef <- 1:length(coef(x))
-  }
-  .x <- coef(summary(x))[.coef, , drop = FALSE]
-  printCoefmat(.x, digits = digits, signif.stars = signif.stars, 
-               na.print = "NA", ...)
-  invisible(x)
+gaze.lm <- function(x, ..., 
+                    digits = max(3L, getOption("digits") - 3L), 
+                    signif.stars = FALSE, coef = NULL){
+    .coef <- coef
+    if (is.null(.coef)){
+        if (names(coef(x)[1]) == "(Intercept)") .coef <- 2:length(coef(x))
+        else .coef <- 1:length(coef(x))
+    }
+    .x <- coef(summary(x))[.coef, , drop = FALSE]
+    printCoefmat(.x, digits = digits, signif.stars = signif.stars, 
+                 na.print = "NA", ...)
+    invisible(x)
 }
+
+
+## gaze.lm <- function(x, ..., coef = NULL,
+##                        digits = max(3L, getOption("digits") - 3L), 
+##                        signif.stars = FALSE){
+##   .coef <- coef
+##   if (is.null(coef)){
+##     if (names(coef(x)[1]) == "(Intercept)") .coef <- 2:length(coef(x))
+##     else .coef <- 1:length(coef(x))
+##   }
+##   .x <- coef(summary(x))[.coef, , drop = FALSE]
+##   printCoefmat(.x, digits = digits, signif.stars = signif.stars, 
+##                na.print = "NA", ...)
+##   invisible(x)
+## }
 
 #' @rdname gaze
 #' @export
-gaze.micsr <- function(x, ..., coef = NULL,
-                        digits = max(3L, getOption("digits") - 3L), 
-                        signif.stars = FALSE){
-  gaze.lm(x, ..., coef = coef, digits = digits, signif.stars = signif.stars)
+gaze.micsr <- function(x, ..., 
+                       digits = max(3L, getOption("digits") - 3L), 
+                       signif.stars = FALSE){
+    mc <- match.call()
+    m <- match(c("x","subset", "fixed", "grep", "invert", "coef"), names(mc), 0L)
+    mc <- mc[c(1L, m)]
+    mc[[1]] <- as.name("summary")
+    names(mc)[names(mc) == "x"] <- "object"
+    .summary <- eval(mc, parent.frame())
+    .x <- coef(.summary)
+    printCoefmat(.x, digits = digits, signif.stars = signif.stars, 
+                 na.print = "NA", ...)
+    if (x$est_method == "ml"){
+        cat("\n")
+        print(logLik(x))
+    }
+    invisible(x)
 }
 
 #' @rdname gaze
@@ -258,3 +286,5 @@ gaze.RStestlist <- function(x, ..., digits = 3){
     invisible(x)
 }
         
+
+

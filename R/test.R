@@ -139,9 +139,8 @@ ftest.ivreg <- function(x, ..., covariate = NULL){
 #' @author Yves Croissant
 #' @importFrom stats pchisq
 #' @examples
-#' mode_choice <- mode_choice %>%
-#'    mutate(cost = cost * 8.42,
-#'           gcost = (ivtime + ovtime) * 8 + cost)
+#' mode_choice <- transform(mode_choice, cost = cost * 8.42)
+#' mode_choice <- transform(mode_choice, gcost = (ivtime + ovtime) * 8 + cost)
 #' pbt_unconst <- binomreg(mode ~ cost + ivtime + ovtime, data = mode_choice, link = "probit")
 #' pbt_const <- binomreg(mode ~ gcost, data = mode_choice, link = "logit")
 #' scoretest(pbt_const , . ~ . + ivtime + ovtime)
@@ -239,10 +238,10 @@ scoretest.micsr <- function(object, ..., vcov = NULL){
 #' @return an object of class `"htest"`.
 #' @keywords htest
 #' @examples
-#' cigmales <- cigmales %>%
-#'        mutate(age2 = age ^ 2, educ2 = educ ^ 2,
-#'               age3 = age ^ 3, educ3 = educ ^ 3,
-#'               educage = educ * age)
+#' cigmales <- cigmales |>
+#'        transform(age2 = age ^ 2, educ2 = educ ^ 2,
+#'                  age3 = age ^ 3, educ3 = educ ^ 3,
+#'                  educage = educ * age)
 #' gmm_cig <- expreg(cigarettes ~ habit + price + restaurant + income + age + age2 +
 #'                  educ + educ2 + famsize + race | . - habit + age3 + educ3 +
 #'                  educage + lagprice + reslgth, data = cigmales,

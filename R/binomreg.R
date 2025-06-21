@@ -20,18 +20,15 @@
 #' @param opt optimization method
 #' @param maxit maximum number of iterations
 #' @param trace printing of intermediate result
-#' @param object,x,type a `binomreg` object and the type of residuals
-#'     for the `residuals` method
+#' @param x a `binomreg` object
 #' @param check_gradient if `TRUE` the numeric gradient and hessian
 #'     are computed and compared to the analytical gradient and
 #'     hessian
 #' @param ... further arguments
-#' @param newdata a new data frame for the `predict` method
 #' @return an object of class `c("binomreg", "micsr")`, see
 #'     `micsr::micsr` for further details
 #' @importFrom stats glm plogis qlogis dlogis
 #' @importFrom Formula Formula model.part
-#' @importFrom dplyr case_when
 #' @keywords models
 #' @examples
 #' pbt <- binomreg(mode ~ cost + ivtime + ovtime, data = mode_choice, link = 'probit')
@@ -85,7 +82,7 @@ binomreg <- function(formula, data, weights, subset, na.action, offset, contrast
     if (is.null(wt)) wt <- 1 else wt <- wt# / mean(wt)
     .offset <- model.offset(mf)
     X <- model.matrix(mt, mf, contrasts)
-    if (compute_rank(X) < ncol(X)){
+    if ((compute_rank(X) < ncol(X)) & maxit > 0){
         .rank <- compute_rank(X)
         .ncol <- ncol(X)
         stop(paste("the rank of X = ", .rank, " < the number of columns = ", .ncol, sep = ""))
@@ -270,10 +267,15 @@ binomreg <- function(formula, data, weights, subset, na.action, offset, contrast
     .null_info <- attr(lnl_null, "info")
     .lm <- drop(crossprod(.null_gradient, solve(.null_info, .null_gradient)))
     .model_info <- attr(.lnl_conv, "info")
-    .vcov <- solve(.model_info)
-    .wald <- drop(crossprod(.coefs[- 1],
-                            t(crossprod(.coefs[-1],
-                                        solve(.vcov[- 1, - 1, drop = FALSE])))))
+    if (is_definite_positive(.model_info)){
+        .vcov <- solve(.model_info)
+        .wald <- drop(crossprod(.coefs[- 1],
+                                t(crossprod(.coefs[-1],
+                                            solve(.vcov[- 1, - 1, drop = FALSE])))))
+    } else {
+        .vcov <- NA
+        .wald <- NA
+    }
     .lr <- 2 * unname(.logLik["model"] - .logLik["null"])
     tests <- c(wald = .wald, score = .lm, lr = .lr)
 
@@ -336,33 +338,34 @@ glance.binomreg <- function(x, ...){
     result
 }
 
-#' @rdname binomreg
-#' @export
-predict.binomreg <- function(object, ..., type = c("response", "link"), newdata = NULL){
-    .type <- match.arg(type)
-    .link <- object$call$link
-    if (is.null(newdata)){
-        if (.type == "response") result <- object$fitted
-        if (.type == "link") result <- object$linear.predictors
-    }
-    else{
-        .formula <- Formula(object$formula)
-        mf <- model.frame(.formula, newdata, dot = "previous")
-        X <- model.matrix(.formula, mf, rhs = 1)
-        y <- model.part(.formula, newdata, lhs = 1, drop = TRUE)
-        result <- drop(X %*% coef(object))
-        cum_fun <- switch(.link,
-                          "logit" = plogis,
-                          "probit" = pnorm,
-                          "lm" = function(x) x)
-        if (.type == "response") result <- cum_fun(result)
-    }
-    result
-}
+## #' @rdname binomreg
+## #' @export
+## predict.binomreg <- function(object, ..., type = c("response", "link"), newdata = NULL){
+##     .type <- match.arg(type)
+##     .link <- object$call$link
+##     if (is.null(newdata)){
+##         if (.type == "response") result <- object$fitted
+##         if (.type == "link") result <- object$linear.predictors
+##     }
+##     else{
+##         .formula <- Formula(object$formula)
+##         mf <- model.frame(.formula, newdata, dot = "previous")
+##         X <- model.matrix(.formula, mf, rhs = 1)
+##         y <- model.part(.formula, newdata, lhs = 1, drop = TRUE)
+##         result <- drop(X %*% coef(object))
+##         cum_fun <- switch(.link,
+##                           "logit" = plogis,
+##                           "probit" = pnorm,
+##                           "lm" = function(x) x)
+##         if (.type == "response") result <- cum_fun(result)
+##     }
+##     result
+## }
 
 
 
 # ajout dans le fichier type_dictionary.R
 # ajout du fichier methods_binomreg
 # sanity_model.R ajouter dans la liste des modèles supportés
+
 

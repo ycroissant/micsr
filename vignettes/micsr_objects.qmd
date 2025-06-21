@@ -177,8 +177,8 @@ performed by the `select_coef` function:
 
 ```{r }
 #| collapse: true
-bank_msq %>% select_coef
-bank_msq %>% select_coef(subset = c("resid", "chol"))
+select_coef(bank_msq)
+select_coef(bank_msq, subset = c("resid", "chol"))
 ```
 
 `select_coef` is called inside the `coef` and the `vcov` methods for
@@ -186,9 +186,9 @@ bank_msq %>% select_coef(subset = c("resid", "chol"))
 
 ```{r }
 #| collapse: true
-bank_msq %>% coef
-bank_msq %>% coef(subset = c("resid", "chol"))
-bank_msq %>% vcov(subset = c("resid"))
+coef(bank_msq)
+coef(bank_msq, subset = c("resid", "chol"))
+vcov(bank_msq, subset = c("resid"))
 ```
 Another way to select a subset of coefficients is to provide a regular
 expression for the `grep` argument. For example, to get all the
@@ -196,7 +196,7 @@ coefficients that contains `"Intercept"`:
 
 ```{r }
 #| collapse: true
-bank_msq %>% vcov(subset = c("all"), grep = "Intercept")
+vcov(bank_msq, subset = c("all"), grep = "Intercept")
 ```
 
 The `npar` function extracts the number of the whole set of
@@ -262,7 +262,7 @@ using `micsr::stder`
 
 ```{r }
 #| collapse: true
-vcov(bank_msq, subset = "resid") %>% diag %>% sqrt
+sqrt(diag(vcov(bank_msq, subset = "resid")))
 stder(bank_msq, subset = "resid")
 ```
 

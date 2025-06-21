@@ -17,7 +17,7 @@
 #' @examples
 #' # Cobb-Douglas production function for the apple data set
 #' # First compute the total production
-#' apples <- apples %>% mutate(prod = apples + otherprod)
+#' apples <- apples |> transform(prod = apples + otherprod)
 #' # unconstrained linear model
 #' cd <- lm(log(prod) ~ log(capital) + log(labor) +
 #'          log(materials), apples)

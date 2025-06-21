@@ -38,7 +38,6 @@ tools and data sets:
 \item miscellanous tools
 \itemize{
 \item \code{gaze}: print a short summary of an object,
-\item \code{dummy}: generate a set of dummy variables from a factor,
 \item \code{newton}: Newton-Raphson optimization method, using the analytical gradient and hessian,
 \item \code{mills}: compute the inverse mills ratio and its first two derivatives,
 \item \code{stder}: extract the standard errors of a fitted model,

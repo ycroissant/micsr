@@ -28,9 +28,8 @@ an object of class \code{"htest"}.
 Score test, also knowned as Lagrange multiplier tests
 }
 \examples{
-mode_choice <- mode_choice \%>\%
-   mutate(cost = cost * 8.42,
-          gcost = (ivtime + ovtime) * 8 + cost)
+mode_choice <- transform(mode_choice, cost = cost * 8.42)
+mode_choice <- transform(mode_choice, gcost = (ivtime + ovtime) * 8 + cost)
 pbt_unconst <- binomreg(mode ~ cost + ivtime + ovtime, data = mode_choice, link = "probit")
 pbt_const <- binomreg(mode ~ gcost, data = mode_choice, link = "logit")
 scoretest(pbt_const , . ~ . + ivtime + ovtime)

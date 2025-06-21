@@ -3,7 +3,6 @@
 \name{binomreg}
 \alias{binomreg}
 \alias{glance.binomreg}
-\alias{predict.binomreg}
 \title{Binomial regression}
 \usage{
 binomreg(
@@ -26,8 +25,6 @@ binomreg(
 )
 
 \method{glance}{binomreg}(x, ...)
-
-\method{predict}{binomreg}(object, ..., type = c("response", "link"), newdata = NULL)
 }
 \arguments{
 \item{formula}{a symbolic description of the model}
@@ -62,10 +59,7 @@ hessian}
 
 \item{...}{further arguments}
 
-\item{object, x, type}{a \code{binomreg} object and the type of residuals
-for the \code{residuals} method}
-
-\item{newdata}{a new data frame for the \code{predict} method}
+\item{x}{a \code{binomreg} object}
 }
 \value{
 an object of class \code{c("binomreg", "micsr")}, see

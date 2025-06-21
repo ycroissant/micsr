@@ -4,8 +4,6 @@
 \name{reexports}
 \alias{reexports}
 \alias{Surv}
-\alias{mutate}
-\alias{\%>\%}
 \alias{glance}
 \alias{tidy}
 \alias{bread}
@@ -20,13 +18,9 @@ These objects are imported from other packages. Follow the links
 below to see their documentation.
 
 \describe{
-  \item{dplyr}{\code{\link[dplyr]{mutate}}}
-
   \item{Formula}{\code{\link[Formula:model.frame.Formula]{model.part}}}
 
   \item{generics}{\code{\link[generics]{glance}}, \code{\link[generics]{tidy}}}
-
-  \item{magrittr}{\code{\link[magrittr:pipe]{\%>\%}}}
 
   \item{sandwich}{\code{\link[sandwich]{bread}}, \code{\link[sandwich]{bread}}, \code{\link[sandwich]{estfun}}, \code{\link[sandwich]{estfun}}, \code{\link[sandwich]{meat}}, \code{\link[sandwich]{vcovHC}}}
 

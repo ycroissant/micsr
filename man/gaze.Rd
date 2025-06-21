@@ -19,18 +19,12 @@ gaze(x, ...)
 \method{gaze}{lm}(
   x,
   ...,
-  coef = NULL,
   digits = max(3L, getOption("digits") - 3L),
-  signif.stars = FALSE
+  signif.stars = FALSE,
+  coef = NULL
 )
 
-\method{gaze}{micsr}(
-  x,
-  ...,
-  coef = NULL,
-  digits = max(3L, getOption("digits") - 3L),
-  signif.stars = FALSE
-)
+\method{gaze}{micsr}(x, ..., digits = max(3L, getOption("digits") - 3L), signif.stars = FALSE)
 
 \method{gaze}{ivreg}(
   x,
@@ -65,13 +59,13 @@ gaze(x, ...)
 
 \item{...}{further arguments for the different methods,}
 
-\item{coef}{the coefficients to be printed}
-
 \item{digits}{the number of digits for the \code{lm} and the \code{ivreg}
 methods}
 
 \item{signif.stars}{a boolean indicating whether the stars should
 be printed}
+
+\item{coef}{the coefficients to be printed}
 
 \item{first_stage}{a boolean for the \code{rdrobust::rdrobust} method,
 if \code{TRUE} the results of the first stage estimation are printed}
@@ -86,8 +80,8 @@ like a book or an article written using quarto. \code{gaze} is a generic
 function which prints a short output
 }
 \examples{
-t.test(extra ~ group, sleep) \%>\% gaze
-lm(dist ~ poly(speed, 2), cars) \%>\% gaze
-lm(dist ~ poly(speed, 2), cars) \%>\% gaze(coef = "poly(speed, 2)2")
+t.test(extra ~ group, sleep) |> gaze()
+lm(dist ~ poly(speed, 2), cars) |> gaze()
+lm(dist ~ poly(speed, 2), cars) |> gaze(coef = "poly(speed, 2)2")
 }
 \keyword{misc}

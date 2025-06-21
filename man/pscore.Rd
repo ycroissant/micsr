@@ -32,7 +32,6 @@ pscore(formula, data, maxiter = 4, tol = 0.005, link = c("logit", "probit"))
   x,
   ...,
   digits = getOption("digits"),
-  format = c("rst", "pipe", "simple"),
   step = c("all", "strata", "covariates", "atet")
 )
 
@@ -84,9 +83,6 @@ be computed at the class/group level (\code{var_equal = "none"}), at
 the class level (\code{var_equal = "group"}), at the group level
 (\code{var_equal = "strata"}) or globally (\code{var_equal = "both"})}
 
-\item{format}{one of \code{"rst"} \code{"pipe"} and \code{"simple"}, this argument
-is passed to \code{knitr::kable}}
-
 \item{step}{for the \code{print.summary} method, the step of the test to
 be printed: one of \code{"all"} (the default), \code{strata},
 \code{covariates} and \code{atet}}
@@ -116,9 +112,11 @@ balancing hypothesis using strata and enable the estimation of the
 treatment effect using stratification methods
 }
 \examples{
-data_tuscany <- dplyr::mutate(dplyr::filter(twa, region == "Tuscany"),
-  dist2 = dist ^ 2, livselfemp = I((city == "livorno") * (occup == "selfemp")),
-  perm = ifelse(outcome == "perm", 1, 0))
+data_tuscany <- twa |>
+                subset(region == "Tuscany") |>
+                transform(dist2 = dist ^ 2,
+                livselfemp = I((city == "livorno") * (occup == "selfemp")),
+                perm = ifelse(outcome == "perm", 1, 0))
 formula_tuscany <- perm + group ~ city + sex + marital + age +
    loc + children + educ + pvoto + training +
    empstat + occup + sector + wage + hour + feduc + femp + fbluecol +

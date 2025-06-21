@@ -31,7 +31,7 @@
 #' - miscellanous tools
 #'
 #'   - `gaze`: print a short summary of an object,
-#'   - `dummy`: generate a set of dummy variables from a factor,
+## #'   - `dummy`: generate a set of dummy variables from a factor,
 #'   - `newton`: Newton-Raphson optimization method, using the analytical gradient and hessian,
 #'   - `mills`: compute the inverse mills ratio and its first two derivatives,
 #'   - `stder`: extract the standard errors of a fitted model,

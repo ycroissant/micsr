@@ -177,8 +177,15 @@ lnl_tp <- function(param, X, y, wt, Z = NULL, scedas = c("exp", "pnorm"), sum = 
             I_bb <- crossprod(wt * (E_h_com_beta_beta + h_spec_beta_beta) * X, X)
             I_bs <- apply(wt * (E_h_com_beta_sig + h_spec_beta_sig) * X, 2, sum)
             I_ss <- sum(wt * (E_h_com_sig_sig + h_spec_sig_sig))
-            attr(lnl, "info") <- solve(- rbind(cbind(I_bb, I_bs),
-                                               c(I_bs, I_ss)) / sig ^ 2)
+
+            Im1 <- - rbind(cbind(I_bb, I_bs), c(I_bs, I_ss)) / sig ^ 2
+            if (! is_definite_positive(Im1)){
+                attr(lnl, "info") <- NA
+            } else {
+                attr(lnl, "info") <- solve(Im1)
+            }
+            ## attr(lnl, "info") <- solve(- rbind(cbind(I_bb, I_bs),
+            ##                                    c(I_bs, I_ss)) / sig ^ 2)
         }
     }
     lnl
