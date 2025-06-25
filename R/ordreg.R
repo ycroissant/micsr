@@ -55,7 +55,7 @@ ordreg <- function(formula, data, weights, subset, na.action, offset, contrasts 
     wt <- as.vector(model.weights(mf))
     if (is.null(wt)) wt <- 1 else wt <- wt #/ mean(wt)
     .offset <- model.offset(mf)
-    if (inherits(y, "Surv")){       
+    if (inherits(y, "Surv")){
         y <- as.matrix(model.response(mf))
         e <- as.logical(y[, 2])
         y <- as.factor(y[, 1])
@@ -64,32 +64,24 @@ ordreg <- function(formula, data, weights, subset, na.action, offset, contrasts 
         e <- rep(1, length(y))
         if (! inherits(y, "factor")) y <- as.factor(y)
     }
+
     X <- model.matrix(mt, mf, contrasts)
     if (colnames(X)[1] == "(Intercept)") X <- X[, - 1, drop = FALSE]
-    if ( (compute_rank(X) < ncol(X)) & maxit > 0){
+    if (compute_rank(X) < ncol(X)){
         .rank <- compute_rank(X)
         .ncol <- ncol(X)
         stop(paste("the rank of X = ", .rank, " < the number of columns = ", .ncol, sep = ""))
     }
-#    J <- length(unique(y))
-    if (is.factor(y)){
-        J <- length(levels(y))
-        nms_y <- levels(y)
-        Y <- model.matrix(~ y - 1)
-        y <- as.integer(y) # pour que Surv fonctionne
-    } else {
-        y <- as.integer(y)
-        J <- length(unique(y))
-        nms_y <- unique(y)
-        Y <- model.matrix(~ factor(y) - 1)
-    }
+    J <- length(unique(y))
+    nms_y <- levels(y)
     nms_thr <- paste(nms_y[- J], nms_y[ - 1], sep = "|")
-# Pourquoi ?    y <- as.integer(y)
-#    Y <- model.matrix(~ factor(y) - 1)
+    y <- as.integer(y)
+    Y <- model.matrix(~ factor(y) - 1)
     K <- ncol(X)
     N <- length(y)
     # the observations for the last class should be coded as
     # uncensored
+
     e[y == J] <- TRUE
     .df.residual <- N - K
     if (.link == "probit"){
@@ -115,23 +107,17 @@ ordreg <- function(formula, data, weights, subset, na.action, offset, contrasts 
                     information = FALSE, X = X, y = y, e = e, weights,
                     opposite = FALSE){
         sgn <- ifelse(opposite, - 1, 1)
-        #J <- length(unique(y))
-        if (is.factor(y)){
-            J <- length(levels(y))
-        } else {
-            J <- length(unique(y))
-        }
+        J <- length(unique(y))
         K <- ncol(X)
         beta <- param[1L:K]
         mu <- c(-100, param[(K + 1L):(K + J - 1L)], 100)
         bX <- as.numeric(crossprod(t(X), beta))
-        y <- as.integer(y)
         z1 <- mu[y + 1] - bX               ; z2 <- mu[y] - bX
         F1 <- F_link(z1)                   ; F2 <- F_link(z2)
         Li <- (2 * e - 1) * F1 - e * F2 + (1 - e)
         lnl <- sgn * log(Li)
         if (sum) lnl <- sum(lnl * weights)
-        if (gradient | hessian){            
+        if (gradient | hessian){
             W <- matrix(0, nrow(X), J)
             W1 <- (col(W) == (y + 1))[, - 1, drop = FALSE]
             W2 <- (col(W) == y)[, - 1, drop = FALSE]
@@ -162,11 +148,12 @@ ordreg <- function(formula, data, weights, subset, na.action, offset, contrasts 
         }
         lnl
     }
+
     sup.coef <- q_link(cumsum(prop.table(table(y))))[1: (J - 1)]
     if (is.null(start)){
         .start <- c(rep(0.1, K), sup.coef)
     } else .start <- start
-    if (length(nms_thr)) nms <- c(colnames(X), nms_thr) else nms <- names(.start)
+    nms <- c(colnames(X), nms_thr)
     names(.start) <- nms
     if (maxit > 0){
         .coefs <- maximize(lnl, start = .start, trace = trace, method = .opt, maxit = maxit,
@@ -175,6 +162,9 @@ ordreg <- function(formula, data, weights, subset, na.action, offset, contrasts 
     .linpred <- drop(X %*% .coefs[1:K])
     .lnl_conv <- lnl(.coefs, gradient = TRUE, hessian = TRUE, sum = FALSE,
                      X = X, y = y, e = e, weights = wt, information = TRUE)
+
+    
+    
     fun <- function(x) lnl(x, gradient = TRUE, hessian = TRUE, sum = TRUE,
                            X = X, y = y, e = e, weights = wt, information = TRUE)
     if(check_gradient) z <- check_gradient(fun, .coefs) else z <- NA
@@ -187,6 +177,7 @@ ordreg <- function(formula, data, weights, subset, na.action, offset, contrasts 
     lnl_saturated <- 0
     values <- cbind(model = lnl_model, saturated = lnl_saturated, null = lnl_null)
     .logLik <- apply(values * wt, 2, sum)
+    
     .fitted.values <- cbind(0, F_link(outer(- .linpred, .coefs[K + (1L:(J - 1))], "+")), 1)
     .fitted.values <- .fitted.values[, - 1, drop = FALSE] -
         .fitted.values[, - (J + 1L), drop = FALSE]
@@ -200,23 +191,11 @@ ordreg <- function(formula, data, weights, subset, na.action, offset, contrasts 
                     information = TRUE, X = X, y = y, e = e, weights = wt)
     .null_gradient <- attr(lnl_null, "gradient")
     .null_info <- attr(lnl_null, "info")
-
-    if (is_definite_positive(.null_info)){
-        .lm <- drop(crossprod(.null_gradient, solve(.null_info, .null_gradient)))
-    } else {
-        .lm <- NA
-    }
+    .lm <- drop(crossprod(.null_gradient, solve(.null_info, .null_gradient)))
     .model_info <- attr(.lnl_conv, "info")
-
-    if (is_definite_positive(.model_info)){
-        .vcov <- solve(.model_info)
-        .w <- drop(crossprod(.coefs[1:K],
-                             t(crossprod(.coefs[1:K],
-                                         solve(.vcov[1:K, 1:K, drop = FALSE])))))
-    } else {
-        .vcov <- NA
-        .w <- NA
-    }
+    .vcov <- solve(.model_info)
+    .w <- drop(crossprod(.coefs[1:K], t(crossprod(.coefs[1:K],
+                                                  solve(.vcov[1:K, 1:K, drop = FALSE])))))
     .lr <- 2 * unname(.logLik["model"] - .logLik["null"])
     tests <- c(wald = .w, score = .lm, lr = .lr)
     result <- list(coefficients = .coefs,
@@ -252,8 +231,7 @@ fitted.ordreg <- function(object, ..., type = c("outcome", "probabilities")){
     else{
         y = model.response(model.frame(object))
         if (inherits(y, "Surv")) y <- y[, 1]
-#        Y <- model.matrix(~ factor(y) - 1, data.frame(y = y))
-        Y <- model.matrix(~ y - 1, data.frame(y = y))
+        Y <- model.matrix(~ factor(y) - 1, data.frame(y = y))
         as.numeric(apply(Y * .probs, 1, sum))
     }
 }

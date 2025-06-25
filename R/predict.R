@@ -39,8 +39,16 @@ get_response <- function(x){
     if (! inherits(.form, "Formula")) .form <- Formula(.form)
     z <- formula(.form, lhs = 1, rhs = 0)
     deparse(z[[2]])
+#    z[[2]]
 }
-    
+
+get_response <- function(x){
+    .form <- formula(x)
+    if (! inherits(.form, "Formula")) .form <- Formula(.form)
+    z <- formula(.form, lhs = 1, rhs = 0)
+    names(get_all_vars(z, get_data(x)))
+}
+
 
 get_covariates <- function(x, rhs = 1){
     .form <- formula(x)
@@ -197,6 +205,7 @@ std.er <- function(model, covar, type, level = NULL, newdata, alt = NULL){
 #' @method effects micsr
 #' @export
 effects.micsr <- function(object, ..., newdata = NULL, covariates = NULL, se = TRUE){
+    if (inherits(object, "ordreg")) stop("slopes are not implemented for ordreg models")
     is_tibble <- inherits(model.frame(object), "tbl_df")
     is_tibble <- TRUE
     slps <- data.frame()
@@ -224,10 +233,10 @@ effects.micsr <- function(object, ..., newdata = NULL, covariates = NULL, se = T
             if (inherits(object, "mlogit")){
                 nm_id <- idx_name(model.frame(object), 1, 1)
                 nm_alt <- idx_name(model.frame(object), 2, 1)
-                newdata <- mean(dfidx(get_data(object)))
-                newdata <- cbind(id = 1, alt = factor(alts), newdata)
+                newdata <- cbind(id = 1, alt = factor(alts), mean(get_data(object)))
                 names(newdata)[1:2] <- c(nm_id, nm_alt)
-#                newdata[[get_response(object)]] <- c(F, T)
+                newdata[[get_response(object)]] <- rep(TRUE, nrow(newdata))
+                newdata <- dfidx(newdata)
             } else {
                 newdata <- mean(object)
             }
@@ -235,7 +244,11 @@ effects.micsr <- function(object, ..., newdata = NULL, covariates = NULL, se = T
                 z <- levels(factor(get_data(object)[[get_response(object)]]))
                 newdata[[get_response(object)]] <- factor(z[1], levels = z)
             } else {
-                newdata[[get_response(object)]] <- 1
+                if (inherits(object, "weibreg")){
+                    newdata[get_response(object)] <- c(1, 1)
+                } else {
+                    newdata[get_response(object)] <- 1
+                }
             }
         }
     }
