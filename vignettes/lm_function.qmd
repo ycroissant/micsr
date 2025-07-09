@@ -9,28 +9,31 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-OLS is by far the most important estimation method used in
+**OLS** is by far the most important estimation method used in
 econometrics. It is implemented in **R** by the `lm` function. A deep
 understanding of the way this function is implemented, its arguments,
-its results and how to use them is particularly useful as
-other estimation functions (for example `glm` for generalized linear
-models) have a lot in common with `lm`. Moreover, if one is willing to
+its results and how to use them is particularly useful as other
+estimation functions (for example `glm` for generalized linear models)
+have a lot in common with `lm`. Moreover, if one is willing to
 implement its own estimation function, it is advisable to use at least
 some of the elements of `lm`.
 
+For illustration, we use the `random_group` data set of the **micsr**
+package that analyzes the effect of a
+training on wage. 
 
 ```{r }
-#| echo: false
+#| echo: true
 #| message: false
 library(micsr)
-random_group <- transform(random_group, wage = exp(lnwh))
+random_group |> head()
 ```
-For illustration, we use the `random_group` data set that analyze the effect of a
-training on wage. The response is hourly wage `wage` and
+
+The response is hourly wage `wage` and
 the main covariate is a dummy for training. The `group` variable
-contains integer from -2 to 3, with negative values for treated
+contains integers from -2 to 3, with negative values for treated
 individuals and positive values for untreated individuals. We first
-create this dummy, called `treated`:
+create a dummy for treatment, called `treated`:
 
 ```{r }
 random_group <- transform(random_group, treated = ifelse(group < 0, 1, 0))
@@ -86,7 +89,7 @@ position 0, the first covariate at position 1 and so on.
 All the elements of the model can be extracted using the `$` operator,
 for example `mod0$coefficients` for the coefficients. A safer method
 to extract elements of the model is to use generic functions with
-quasi homonymous names:
+homonym names:
 
 
 ```{r }
@@ -163,14 +166,14 @@ model.matrix(mod0)
 ```
 
 The model matrix looks like the model frame, except that the response
-has been removed and a column of ones (called `(Intercept)`) has been
+has been removed and a column of ones (called `"(Intercept)"`) has been
 added. Actually there is a fundamental difference between the model
 frame and the model matrix, even in this very simple example. A model
 frame is a data frame, which is a list of vectors of the same
 length. Because all the vectors have the same length, it has a tabular
 representation and therefore looks like a matrix. A model matrix is a
 matrix, which is for **R** a vector with an attribute indicating the
-dimension, ie the number of rows and of columns.
+dimension, ie., the number of rows and of columns.
 
 ```{r }
 dim(model.matrix(mod0))
@@ -196,7 +199,7 @@ the call to the function that resulted in the `mod0` object:
 class(mod0$call)
 mod0$call
 ```
-Note that all the arguments are named, as we didn't named the first
+Note that all the arguments are named, although we didn't name the first
 argument (`formula`) while calling `"lm"`. The call is very useful as
 it enables to update the model. The default `update` function is:
 `update(object, formula., ..., evaluate = TRUE)`. Its first argument is
@@ -266,7 +269,7 @@ options()$na.action
 `na.omit` means remove from the model frame all the lines for which
 there is at least a missing value. There are a couple of other
 possible values, one of them being `na.fail` which stops the
-estimation and returns an error. `lm` has a `na.action` argument when
+estimation and returns an error. `lm` has a `na.action` argument where
 the desired action can be indicated. For example, if we update the
 model with `na.action` set to `"na.fail"`:
 
@@ -275,7 +278,7 @@ model with `na.action` set to `"na.fail"`:
 mod1 |> update(na.action = "na.fail")
 ```
 
-we get exactly the same results has there are no missing values for
+we get exactly the same results as there are no missing values for
 the subset of variables we used. Now consider adding the `ten`
 covariate which is the tenure in month and has some missing
 values. Setting as previously `na.action = "na.fail"`, we'll then get
@@ -369,8 +372,8 @@ mod3$contrasts
 ```
 
 It's a named list indicating how the contrasts are computed from the
-factors. The default value is `"contr.treatment"` and consist as we
-seen previously to create $J-1$ dummies for all the levels of the
+factors. The default value is `"contr.treatment"` and consist, as we
+seen previously, to create $J-1$ dummies for all the levels of the
 factor but the first. Other values are possible and can be set
 individually for every factor using the `contrasts` argument of `lm`:
 
@@ -496,7 +499,7 @@ cl <- mf
 We saved a copy of the result as we'll need it latter on.
 The next lines of `lm` work on the call (the `mf` object returned by
 our `mylm` function). The call being a list, the idea is first to keep
-only the arguments in the call that are usefull to compute the model
+only the arguments in the call that are useful to compute the model
 frame. This is done using the `match` function on the names of the
 call:
 
@@ -570,7 +573,7 @@ z$terms <- mt
 z$model <- mf
 ```
 `na.action` is an attribute of the model frame, `contrasts` an
-attribute of the model matrix and the `xlevels` is obtained using the
+attribute of the model matrix and `xlevels` is obtained using the
 `.getXlevels` function with the terms and the model frame as arguments.
 We then get our `lm` object that contains the fitted model:
 

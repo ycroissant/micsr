@@ -1,26 +1,22 @@
 ---
 title: "Implementation of Shi's non-degeranate Vuong test"
-author: Yves Croissant
-header-includes:
-  - \usepackage{xcolor}
-output: 
-  rmarkdown::html_vignette:
-toc: false
+date: today
+date-format: long
 bibliography: ../inst/REFERENCES.bib
 vignette: >
   %\VignetteIndexEntry{Implementation of Shi's non-degeranate Vuong test}
-  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEngine{quarto::pdf}
   %\VignetteEncoding{UTF-8}
 ---
 
 # The original Vuong test
 
-@VUON:89 proposed a test for non-nested model. He considers two
+@VUON:89 proposed a test for non-nested model. He considered two
 competing models, $F_\beta = \left\{f(y|z; \beta); \beta \in
-\beta\right\}$ and $G_\gamma = \left\{g(y|z; \gamma); \gamma \in
-\Gamma\right\}$. Denoting $h(y | z)$ the true conditional density.
-The distance of $F_\beta$ from the true model is measured by the
-minimum KLIC:
+\Beta\right\}$ and $G_\gamma = \left\{g(y|z; \gamma); \gamma \in
+\Gamma\right\}$. Denoting $h(y | z)$ the true conditional density, the
+distance of $F_\beta$ from the true model is measured by the minimum
+KLIC:
 
 $$
 D_f = \mbox{E}^0\left[\ln h(y\mid z)\right] - \mbox{E}^0\left[\ln f(y\mid z;
@@ -29,17 +25,19 @@ $$
 
 where $\mbox{E}^0$ is the expected value using the true joint
 distribution of $(y, X)$ and $\beta_*$ is the pseudo-true value of
-$\beta$^[$\beta_*$ is called the pseudo-true value because $f$ may
-be an uncorrect model.]. As the true model is unobserved, denoting
+$\beta$.^[$\beta_*$ is called the pseudo-true value because $f$ may
+be an incorrect model.] As the true model is unobserved, denoting
 $\theta^\top = (\beta ^ \top, \gamma ^ \top)$, we consider the
 difference of the KLIC distance to the true model of model $G_\gamma$
 and model $F_\beta$:
 
 
-$$ \Lambda(\theta) = D_g - D_f = \mbox{E}^0\left[\ln f(y\mid z;
+$$
+\Lambda(\theta) = D_g - D_f = \mbox{E}^0\left[\ln f(y\mid z;
 \beta_*)\right]- \mbox{E}^0\left[\ln g(y\mid z; \gamma_*)\right] =
 \mbox{E}^0\left[\ln \frac{f(y\mid z; \beta_*)}{g(y\mid z;
-\gamma_*)}\right] $$
+\gamma_*)}\right] 
+$$
 
 The null hypothesis is that the distance of the two models to the true
 models are equal or, equivalently, that: $\Lambda=0$. The alternative
@@ -61,9 +59,8 @@ $$
 which is the likelihood ratio divided by the sample size. Note that
 the statistic of the standard likelihood ratio test, suitable for
 nested models is $2 \left(\ln L^f(\hat{\beta}) - \ln
-L^g(\hat{\gamma})\right)$, which is $2 N \hat{\Lambda}_N$.
-
-The variance of $\Lambda$ is:
+L^g(\hat{\gamma})\right)$, which is $2 N \hat{\Lambda}_N$.  The
+variance of $\Lambda$ is:
 
 $$
 \omega^2_* = \mbox{V}^o \left[\ln \frac{f(y \mid x; \beta_*)}{g(y
@@ -81,11 +78,11 @@ $$
 Three different cases should be considered:
 
 - when the two models are nested, $\omega^2_*$ is necessarily 0,
-- when the two models are overlapping (which means than the models
-  coincides for some values of the parameters), $\omega^2_*$ *may be*
+- when the two models are overlapping (which means than the two models
+  coincide for some values of the parameters), $\omega^2_*$ *may be*
   equal to 0 or not,
-- when the two models are stricly non-nested, $\omega^2_*$ is
-  necessarely strictly positive.
+- when the two models are strictly non-nested, $\omega^2_*$ is
+  necessarily strictly positive.
 
 The distribution of the statistic depends on whether $\omega^2_*$ is
 zero or positive.  If $\omega^2_*$ is positive, the statistic is
@@ -96,7 +93,7 @@ strictly non-nested models.
 
 On the contrary, if $\omega^2_* = 0$, the distribution is much more
 complicated. We need to define two matrices: $A$ contains the expected
-values of the second derivates of $\Lambda$:
+values of the second derivatives of $\Lambda$:
 
 $$
 A(\theta_*) = \mbox{E}^0\left[\frac{\partial^2 \Lambda}{\partial \theta
@@ -177,13 +174,13 @@ likelihood ratio test, because it doesn't assume, under the null, that
 the larger model is correctly specified.
 
 Note that, if the larger model is correctly specified, the information
-matrix equality implies that $B_f(\theta_*)-A_f(\theta_*)$. In this
+matrix equality implies that $B_f(\theta_*) = -A_f(\theta_*)$. In this
 case, the two matrices on the diagonal of $W$ reduce to $-I_{K_f}$ and
 $I_{K_g}$, the trace of $W$ to $K_g - K_f$ and the distribution of the
 statistic under the null reduce to a $\chi^2$ with $K_g - K_f$ degrees
 of freedom.
 
-The $W$ matrice can be consistently estimate by computing the first
+The $W$ matrix can be consistently estimated by computing the first
 and the second derivatives of the likelihood functions of the two
 models for $\hat{\theta}$. For example, 
 
@@ -213,8 +210,8 @@ For the overlapping case, the test should be performed in two steps:
 # The non-degenerate Vuong test
 
 @SHI:15 proposed a non-degenerate version of the @VUON:89 test. She
-shows that the Vuong test has size distortion, leading to subsequent
-overrejection. The cause of this problem is that the distribution of
+showed that the Vuong test has size distortion, leading to subsequent
+over-rejection. The cause of this problem is that the distribution of
 $\hat{\Lambda}$ is discontinuous in the $\omega^2$ parameter (namely a
 normal distribution if $\omega^2 > 0$ and a distribution related to a
 weight $\chi^2$ distribution if $\omega^2 = 0$). Especially in small
@@ -269,11 +266,11 @@ Based on this result, @SHI:15 showed:
 - that the expected value of the numerator is $-\mbox{trace}(V) / 2$,
   the classical Vuong statistic is therefore biased and this bias can
   be severe in small samples and when the degree of parametrization of
-  the two models are very different^[As the trace of V is the same as
+  the two models are very different,^[As the trace of V is the same as
   the trace of $A ^ {-1} B$, when the information matrix identity
   holds, it is equal to $-K_f + K_g$. The bias of the numerator is
   therefore caused by the difference in the degree of parametrization
-  of the two models.],
+  of the two models.]
 - that the denominator, being random, can take values close to zero
   with a significant probability, which can generate fat tails in the
   distribution of the statistic.
@@ -309,21 +306,21 @@ and @SHI:15 indicates that $\rho_*$ should be in this case a vector
 where all the elements are zero except for the one that coincides with
 the highest absolute value of $V$ which is set to 1.
 
-The Shi test is then computed as follow:
+The test is then computed as follow:
 
-@. start with a given size for the test, say $\alpha = 0.05$,
-@. for a given value of $c$, choose $\sigma$ which maximize the
-simulated critical value for $c$ and $\alpha$,
-@. adjust $c$ so that this critical value equals the normal critical
-value, up to a small disperency (say 0.1); for example, if the size
-is 5%, the target is $v_{1 - \alpha / 2} = 1.96 + 0.1 = 2.06$,
-@. compute $\hat{T}_N^{\mbox{mod}}$ for the given values of $c$ and $\sigma$
-; if $\hat{T}_N^{\mbox{mod}} > v_{1 - \alpha / 2}$, reject the null
-hypothesis at the $\alpha$ level,
-@. to get a p-value, if $\hat{T}_N^{\mbox{mod}} > v_{1 - \alpha / 2}$
-increase $\alpha$ and repeat the previous steps until a new value of
-$\alpha$ is obtained so that $\hat{T}_N^{\mbox{mod}} = v_{1 - \alpha^*
-/ 2}$, $\alpha^*$ being the p-value of the test.
+@. start with a given size for the test, say $\alpha = 0.05$, @. for a
+given value of $c$, choose $\sigma$ which maximize the simulated
+critical value for $c$ and $\alpha$, @. adjust $c$ so that this
+critical value equals the normal critical value, up to a small
+discrepancy (say 0.1); for example, if the size is 5%, the target is
+$v_{1 - \alpha / 2} = 1.96 + 0.1 = 2.06$, @. compute
+$\hat{T}_N^{\mbox{mod}}$ for the given values of $c$ and $\sigma$ ; if
+$\hat{T}_N^{\mbox{mod}} > v_{1 - \alpha / 2}$, reject the null
+hypothesis at the $\alpha$ level, @. to get a p-value, if
+$\hat{T}_N^{\mbox{mod}} > v_{1 - \alpha / 2}$ increase $\alpha$ and
+repeat the previous steps until a new value of $\alpha$ is obtained so
+that $\hat{T}_N^{\mbox{mod}} = v_{1 - \alpha^* / 2}$, $\alpha^*$ being
+the p-value of the test.
 
 
 # Simulations
@@ -343,12 +340,13 @@ and $\epsilon \sim N(0, 1 - a ^ 2)$. $z^f_k \sim N(0, a / \sqrt{K_f})$
 and $z^g_k \sim N(0, a / \sqrt{K_g})$, so that the explained variance
 explained by the two competing models is the same (equal to $a ^ 2$)
 and the null hypothesis of the Vuong test is true. The `vuong_sim`
-unables to simulate values of the Vuong test. As in @SHI:15, we use a
+enables to simulate values of the Vuong test. As in @SHI:15, we use a
 very different degree of parametrization for the two models, with $K_f
 = 15$ and $K_G = 1$.
 
 
-```{r }
+```{r}
+#| collapse: true
 library(micsr)
 Vuong <- vuong_sim(N = 100, R = 1000, Kf = 15, Kg = 1, a = 0.5)
 head(Vuong)
@@ -359,15 +357,21 @@ We can see that the the mean of the statistic for the 1000 replications is
 far away from 0, which means that the numerator of the Vuong statistic
 is seriously biased. `r round(mean(abs(Vuong) > 1.96) * 100, 1)`% of the
 values of the statistic are greater than the critical value so that
-the Vuong test will lead in such context a noticeable
-overrejection. The empirical pdf is shown in the following figure,
+the Vuong test will lead in such context to a noticeable
+over-rejection. The empirical pdf is shown in @fig-vuong,
 along with the normal pdf.
 
 
-```{r }
-library("ggplot2")
-ggplot(data = data.frame(Vuong = Vuong)) + geom_density(aes(x = Vuong)) +
-    geom_function(fun = dnorm, linetype = "dotted")
+```{r}
+#| label: fig-vuong
+#| fig-cap: "Empirical distribution if the Vuong statistic"
+#| echo: false
+#| message: false
+if (requireNamespace("ggplot2")){
+    library(ggplot2)
+    ggplot(data = data.frame(Vuong = Vuong)) + geom_density(aes(x = Vuong)) +
+        geom_function(fun = dnorm, linetype = "dotted")
+}
 ```
 
 # Implementation of the non-degenarate Vuong test
@@ -399,28 +403,27 @@ is available.
 The first application is the example used in @SHI:15 and is used to
 compare our **R** program with Shi's **stata**'s
 program. @COAT:CONL:04 used several models of electoral participation,
-using data concerning referenda about alcool sales regulation in
-Texas. Three models are estimated: the prefered group-utilitarian
+using data concerning referenda about alcohol sales regulation in
+Texas. Three models are estimated: the preferred group-utilitarian
 model, a "simple, but plausible, alternative: the intensity model" and
 a reduced form model estimated by the seemingly unrelated residuals
-method. They are provided in the `ndvuong` package as `turnout`, a
-list of three fitted models^[The estimation is rather complicated
+method. They are provided in the **micsr** package as `turnout`, a
+list of three fitted models.^[The estimation is rather complicated
 because some linear constraints are used to compute the maximum
 likelihood estimator in @COAT:CONL:04's **stata** script. This is the
 reason why we provide only the results of the estimations, performed
-using the `maxLik` package.]. The results of the Shi test are given
-below. We first compute the Shi statistic for an error level of 5%. We
-therefore set the `size` argument to 0.05 (this is actually the default
-value) and the `pval` argument to FALSE.
+using the `maxLik` package.] The results of test are given below. We
+first compute the statistic for an error level of 5%. We therefore set
+the `size` argument to 0.05 (this is actually the default value) and
+the `pval` argument to FALSE.
 
 ```{r }
-library("micsr")
 test <- ndvuong(turnout$group, turnout$intens, size = 0.05, pval = FALSE)
 test
 ```
-The Shi statistic is `r round(unname(test$statistic), 3)`, which is
+The statistic is `r round(unname(test$statistic), 3)`, which is
 smaller that the critical value 
-`r round(unname(test$parameters["crit-value"]), 3)`. Therefore, based on the Shi test, we
+`r round(unname(test$parameters["crit-value"]), 3)`. Therefore, based on the test, we
 can't reject the hypothesis that the two competing models are equivalent
 at the 5% level. The value of the constant $c$ is also reported, as
 is the sum of the eigen values of the $V$ matrix (`sum e.v.`). 
@@ -435,7 +438,8 @@ To get only the classical Vuong test, the `nd` argument can be set to
 `FALSE`:
 
 ```{r }
-ndvuong(turnout$group, turnout$intens, nd = FALSE)
+#| collapse: true
+ndvuong(turnout$group, turnout$intens, nd = FALSE) |> gaze()
 ```
 
 To get the p-value of the non-degenerate Vuong test, the `pval`
@@ -446,7 +450,7 @@ test <- ndvuong(turnout$group, turnout$intens, pval = TRUE)
 test
 ```
 The results indicate that the p-value is `r round(test$p.value, 3)`,
-which confirms that the Shi test concludes that the two model are equivalent
+which confirms that the non-degenerate Vuong test concludes that the two model are equivalent
 at the 5% level.
 
 <!-- ## The demand for medical care (stricly non-nested models) -->
@@ -534,20 +538,22 @@ at the 5% level.
   
 ## Transport mode choice (nested models)
 
-The third example concerns transport mode choice in Canada. The
-dataset, provided by the `mlogit` package is called `ModeCanada` and
-has been used extensively in the transport demand litterature
-[see in particular @BHAT:95; @KOPP:WEN:00; and @WEN:KOPP:01]. The
-following example is from @CROI:20. The raw data set is first
-transformed to make it suitable for the estimation of discrete choice
-models. The sample is restricted to the individuals for which 4
-transport modes are available (bus, air, train and car). 
+The second example concerns transport mode choice in Canada. The
+data set, provided by the `mlogit` package is called `ModeCanada` and
+has been used extensively in the transport demand literature [see in
+particular @BHAT:95; @KOPP:WEN:00; and @WEN:KOPP:01]. The following
+example is from @CROI:20. The raw data set is first transformed to
+make it suitable for the estimation of discrete choice models. The
+sample is restricted to the individuals for which 4 transport modes
+are available (bus, air, train and car).
 
-```{r }
-library("mlogit")
-data("ModeCanada")
-MC <- mlogit.data(ModeCanada, subset = noalt == 4, chid.var = "case",
-                  alt.var = "alt", drop.index = TRUE)
+```{r}
+#| message: false
+if (requireNamespace("mlogit")){
+    library(mlogit)
+    data("ModeCanada", package = "mlogit")
+    MC <- dfidx(ModeCanada, subset = noalt == 4)
+}
 ```
 
 We first estimate the simplest discrete choice model, which is the
@@ -555,9 +561,11 @@ multinomial logit model. The bus share being negligible, the choice
 set is restricted to the three other modes and the reference mode is
 set to `car`.
 
-```{r }
-ml <- mlogit(choice ~ freq + cost + ivt + ovt | urban + income, MC, 
-             reflevel = 'car', alt.subset = c("car", "train", "air"))
+```{r}
+if (requireNamespace("mlogit")){
+    ml <- mlogit(choice ~ freq + cost + ivt + ovt | urban + income, MC, 
+                 reflevel = 'car', alt.subset = c("car", "train", "air"))
+}
 ```
 This model relies on the hypothesis that the unobserved component  of the 
 utility functions for the different modes are independent and
@@ -567,12 +575,13 @@ supplementary scale parameter to be estimated. As the overall scale of
 utility is not identified, the scale parameter of the reference
 alternative (car) is set to one. 
 
-
-```{r }
-hl <- mlogit(choice ~ freq + cost + ivt + ovt | urban + income, MC, 
-             reflevel = 'car', alt.subset = c("car", "train", "air"),
-             heterosc = TRUE)
-coef(summary(hl))
+```{r}
+if (requireNamespace("mlogit")){
+    hl <- mlogit(choice ~ freq + cost + ivt + ovt | urban + income, MC, 
+                 reflevel = 'car', alt.subset = c("car", "train", "air"),
+                 heterosc = TRUE)
+    coef(summary(hl))
+}
 ```
 The two supplementary coefficients are `sp.train` and `sp.air`. The
 student statistics reported are irrelevant because they test the hypothesis
@@ -592,67 +601,92 @@ the constrained model (`ml`) and the update that should be used in
 order to get the unconstrained model (`heterosc = TRUE`). Finally, the
 likelihood ratio test is performed using `lmtest::lrtest`.
 
-```{r }
-lmtest::waldtest(hl, heterosc = FALSE)
-scoretest(ml, heterosc = TRUE)
-lmtest::lrtest(hl, ml)
+```{r}
+if (requireNamespace("lmtest")){
+    lmtest::waldtest(hl, heterosc = FALSE) |> gaze()
+    scoretest(ml, heterosc = TRUE) |> gaze()
+    lmtest::lrtest(hl, ml) |> gaze()
+}
 ```
 
 The three statistics are $\chi ^2$ with two degrees of freedom under
-the null hypothesis of homoscedascticity. The three tests reject the
+the null hypothesis of homoskedascticity. The three tests reject the
 null hypothesis at the 5% level, and even at the 1% level for the Wald
-and the score test.  These three tests relies on the hypothesis that,
+and for the score test.  These three tests rely on the hypothesis that,
 under the null, the constrained model is the true model. We can get
 rid of this hypothesis using a Vuong test. Note the use of the
 `nested` argument that is set to `TRUE`:
 
-```{r }
+```{r}
 ndvuong(hl, ml, nested = TRUE)
 ```
 
-The homoscedasticity hypothesis is still rejected at the 5% level for
+The homoskedasticity hypothesis is still rejected at the 5% level for
 the classical Vuong test (the p-value is 0.048), but it is not using
 the non-degenerate Vuong test (p-value of 0.211).
 
 ## Transport mode choice (overlapping models)
 
-We consider finally another dataset from **mlogit** called
+We consider finally another data set from **mlogit** called
 `RiskyTransport`, that has been used by @LEON:MIGU:17 and concerns the
 choice of one mode (among water-taxi, ferry, hovercraft and
 helicopter) for trips from Sierra Leone's international airport to
 downtown Freetown.
 
-```{r }
-library("mlogit")
-data("RiskyTransport")
-RT <- mlogit.data(RiskyTransport, shape = "long", choice = "choice",
-                  chid.var = "chid", alt.var = "mode", id.var = "id")
+```{r}
+if (requireNamespace("mlogit")){
+    library(mlogit)
+    data("RiskyTransport", package = "mlogit")
+    RT <- dfidx(RiskyTransport, idx = c(id = "chid", "mode"),
+                choice = "choice")
+}
 ```
 
 We estimate models with only one covariate, the generalized cost of
-the mode. We estimate three models: the basic multinomial logit model,
-the heteroscedastic model and a nested model where alternatives are
+the mode. We estimate four models: the basic multinomial logit model,
+the heteroskedastic model, a nested model where alternatives are
 grouped in two nests according to the fact that they are fast or slow
-modes.
+modes and a mixed logit model where the distribution of the cost
+parameter is assumed (as in the original article) to follow a
+triangular distribution bounded on 0.
 
-```{r }
-ml <- mlogit(choice ~ cost, data = RT)
-hl <- mlogit(choice ~ cost , data = RT, heterosc = TRUE)
-nl <- mlogit(formula = choice ~ cost, data = RT,
-             nests = list(fast = c("Helicopter", "Hovercraft"),
-                          slow = c("WaterTaxi", "Ferry")),
-             un.nest.el = TRUE)
-modelsummary::msummary(list(multinomial = ml, heteroscedastic = hl, nested =  nl))
+```{r}
+if (requireNamespace("mlogit")){
+    ml <- mlogit(choice ~ cost, data = RT)
+    hl <- mlogit(choice ~ cost , data = RT, heterosc = TRUE)
+    nl <- mlogit(formula = choice ~ cost, data = RT,
+                 nests = list(fast = c("Helicopter", "Hovercraft"),
+                              slow = c("WaterTaxi", "Ferry")),
+                 un.nest.el = TRUE)
+    xl <- mlogit(choice ~ cost, data = RT, rpar = c(cost = "zbt"))
+}
 ```
 
-Compared to ne multinomial model, the heteroscedastic model has 3
+<!-- The results are presented in @tbl-risk. -->
+
+<!-- ```{r} -->
+<!-- #| label: tbl-risk -->
+<!-- #| echo: false -->
+<!-- #| tbl-cap: "Risky transport modes" -->
+<!-- #| message: false -->
+<!-- if (requireNamespace("modelsummary")){ -->
+<!--     modelsummary::msummary(list(multinomial = ml, -->
+<!--                                 heteroskedastic = hl, -->
+<!--                                 nested =  nl, -->
+<!--                                 mixed = xl), -->
+<!--                            single.row = TRUE, digits = 3, gof_omit = "r2") -->
+<!-- } -->
+<!-- ``` -->
+
+
+Compared to the multinomial model, the heteroskedastic model has 3
 supplementary coefficients (the scale parameters for 3 modes, the one
 for the reference mode being set to 1) and the nested logit model has
 one supplementary parameter which is the nest elasticity (`iv` in the
 table). Both models reduce to the multinomial logit model if:
 
 - `sp.WaterTaxi` = `sp.Ferry` = `sp.Hovercraft` = 1 for the
-  heteroscedastic model,
+  heteroskedastic model,
 - `iv` = 1 for the nested logit model. 
 
 Therefore, the two models are over-lapping, as they reduce to the same
@@ -663,7 +697,8 @@ The first step of the test is the variance test. It can be performed
 using `ndvuong` by setting the argument `vartest` to `TRUE`:
 
 ```{r }
-ndvuong(nl, hl, vartest = TRUE)
+#| collapse: true
+ndvuong(nl, hl, vartest = TRUE) |> gaze()
 ```
 The null hypothesis that $\omega^2 = 0$ is rejected. We can then
 proceed to the second step, which is the test for non-nested models.
@@ -671,9 +706,21 @@ proceed to the second step, which is the test for non-nested models.
 ```{r }
 ndvuong(hl, nl)
 ```
-The classical and the non-degenerate Vuong tests both conclude that
-the two models are equivalent at the 5% level, but that the
-heteroscedastic model is better than the nested logit model at the 10% level.
+The classical Vuong test concludes that the heteroskedastic model is
+better than the nested logit model at the 5% level, although the
+non-degenerate version of the Vuong test share this same conclusion
+only at the 10% level.
+
+The relevance mixed model can be evaluated by comparing it with the
+multinomial logit model using a strictly non-nested Vuong test:
+
+
+```{r }
+ndvuong(xl, ml)
+```
+Once again, the equivalence of the two models is rejected at the 5%
+level using the classical Vuong test but is not using the
+non-degenerate version of the test.
 
 
 

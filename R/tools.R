@@ -121,8 +121,9 @@ stder.default <- function(x, vcov = NULL, subset = NA, fixed = FALSE, grep = NUL
             if (is.function(.vcov)){
                 std <- sqrt(diag(.vcov(x, ...)))
             }
+        } else {
+            std <- sqrt(diag(vcov(x, subset = subset, fixed = fixed, grep = grep, invert = invert)))
         }
-        else  std <- sqrt(diag(vcov(x)))
     }
     std
 }

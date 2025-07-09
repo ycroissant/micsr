@@ -134,6 +134,7 @@ coef.micsr <- function(object, ..., subset = NA, fixed = FALSE,
     .sel <- select_coef(object, subset = subset, fixed = fixed, grep = grep,
                         coef = coef, invert = invert)
     .coef <- object$coefficients[.sel]
+    if (length(subset) == 1 && is.na(subset)) subset <- attr(object$npar, "default")
     names(.coef) <- pretty_nms(names(.coef), subset)
     .coef
 }
