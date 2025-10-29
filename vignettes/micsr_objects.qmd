@@ -155,10 +155,10 @@ bank_msq <- ivldv(federiv ~ eqrat + optval +  mktbk +
                   data = federiv, method = "ml")
 ```
 
-fitted coefficients belongs to 4 different groups:
+fitted coefficients belong to 4 different groups:
 
 - the coefficients associated with covariates (the coefficients of
-  main interest,
+  main interest),
 - the coefficients of the residuals of the endogenous variables,
 - the coefficients of the instruments,
 - the parameters of the cholesky decomposition of the covariance

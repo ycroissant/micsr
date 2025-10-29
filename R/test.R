@@ -155,7 +155,7 @@ scoretest.default <- function(object, ...){
     new <- list(...)[[1]]
     cls <- class(object)[1]
     nmodels <- length(new)
-    if (! inherits(new, 'formula') | ! inherits(new, cls))
+    if (! inherits(new, 'formula') & ! inherits(new, cls))
         stop("the updating argument doesn't have a correct class")
     if (inherits(new, cls)){
         ncoefs <- names(coef(new))
@@ -215,7 +215,8 @@ scoretest.micsr <- function(object, ..., vcov = NULL){
         if (is.null(y$info)) stop("no information matrix estimate available")
         else information <- y$info
     }
-    .stat <- drop(crossprod(.gradient, solve(information, .gradient)))
+    .stat <- quad_form(.gradient, information)
+#    .stat <- drop(crossprod(.gradient, solve(information, .gradient)))
     structure(list(statistic = c(chisq = .stat),
                    p.value = pchisq(.stat, lower.tail = FALSE, df = L),
                    parameter = c(df = L),

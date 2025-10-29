@@ -29,6 +29,6 @@ factors, each modality being a level of this factor. Sometimes
 however, is is more convenient to use a set of dummy variables.
 }
 \examples{
-charitable \%>\% dummy(religion, education)
+charitable |> dummy(religion, education)
 }
 \keyword{misc}

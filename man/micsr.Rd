@@ -57,7 +57,7 @@ llobs(x, ...)
 \method{summary}{micsr}(
   object,
   ...,
-  vcov = c("hessian", "info", "opg"),
+  vcov = c("hessian", "info", "opg", "hc"),
   subset = NA,
   fixed = FALSE,
   grep = NULL,

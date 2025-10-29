@@ -148,7 +148,7 @@ vcov.micsr <- function(object, ..., vcov = NULL, subset = NA, fixed = FALSE,
     if (.est_method == "ml"){
         if (is.null(.vcov_method)){
             if (! is.null(object$info)){
-                .vcov_method = "hessian"
+                .vcov_method = "info"
             } else {
                 if (! is.null(object$hessian)){
                     .vcov_method = "hessian"
@@ -157,7 +157,7 @@ vcov.micsr <- function(object, ..., vcov = NULL, subset = NA, fixed = FALSE,
                 }
             }
         } else {
-            if (! .vcov_method %in% c("info", "hessian", "opg")){
+            if (! .vcov_method %in% c("info", "hessian", "opg", "hc")){
                 stop("irrelevant method")
             }
         }
@@ -176,6 +176,7 @@ vcov.micsr <- function(object, ..., vcov = NULL, subset = NA, fixed = FALSE,
             }
         }
         if (.vcov_method == "opg") .vcov <- crossprod(object$gradient)
+        if (.vcov_method == "hc") .vcov <- vcovHC(object)
     } else {
         .vcov <- object$vcov
     }
@@ -185,13 +186,16 @@ vcov.micsr <- function(object, ..., vcov = NULL, subset = NA, fixed = FALSE,
     nms <- nms[.sel]
     .vcov <- .vcov[.sel, .sel, drop = FALSE]
     colnames(.vcov) <- rownames(.vcov) <- pretty_nms(nms, subset)
-    solve(.vcov)
+    if (.vcov_method != "hc"){
+        .vcov <- solve(.vcov)
+    }
+    .vcov
 }
 
 #' @rdname micsr
 #' @export
 summary.micsr <- function(object, ...,
-                          vcov = c("hessian", "info", "opg"),
+                          vcov = c("hessian", "info", "opg", "hc"),
                           subset = NA, fixed = FALSE, grep = NULL, invert = FALSE, coef = NULL){
 
     .est_method <- object$est_method

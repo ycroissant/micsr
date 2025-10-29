@@ -1,5 +1,4 @@
 #' @importFrom stats sd
-
 check_gradient <- function(f, coefs){
     object <- f(coefs)
     anal_grad <- attr(object, "gradient")
@@ -128,32 +127,56 @@ stder.default <- function(x, vcov = NULL, subset = NA, fixed = FALSE, grep = NUL
     std
 }
 
-## #' Transform a factor in a set of dummy variables
-## #'
-## #' The normal way to store cathegorical variables in R is to use
-## #' factors, each modality being a level of this factor. Sometimes
-## #' however, is is more convenient to use a set of dummy variables.
-## #'
-## #' @name dummy
-## #' @param x a data frame
-## #' @param ...  series of the data frame, should be factors
-## #' @param keep a boolean, if `TRUE`, the original series is kept in
-## #'     the data frame,
-## #' @param prefix an optional prefix for the names of the computed
-## #'     dummies,
-## #' @param ref a boolean, if `TRUE`, a dummy is created for all the
-## #'     levels, including the reference level
-## #' @return a data frame
-## #' @importFrom dplyr pull
-## #' @importFrom tidyselect eval_select
-## #' @importFrom rlang expr
-## #' @keywords misc
-## #' @examples
-## #' charitable %>% dummy(religion, education)
-## #' @export
+#' Transform a factor in a set of dummy variables
+#'
+#' The normal way to store cathegorical variables in R is to use
+#' factors, each modality being a level of this factor. Sometimes
+#' however, is is more convenient to use a set of dummy variables.
+#'
+#' @name dummy
+#' @param x a data frame
+#' @param ...  series of the data frame, should be factors
+#' @param keep a boolean, if `TRUE`, the original series is kept in
+#'     the data frame,
+#' @param prefix an optional prefix for the names of the computed
+#'     dummies,
+#' @param ref a boolean, if `TRUE`, a dummy is created for all the
+#'     levels, including the reference level
+#' @return a data frame
+#' @keywords misc
+#' @examples
+#' charitable |> dummy(religion, education)
+#' @export
+dummy <- function (x, ..., keep = FALSE, prefix = NULL, ref = FALSE) {
+    cl <- match.call(expand.dots = FALSE)
+    fctrs <- cl$...
+    fctrs <- sapply(fctrs, deparse)
+    loc <- match(fctrs, names(x))
+    names(loc) <- fctrs
+    for (y in names(loc)){
+        if (inherits(x[[y]], "factor")){
+            levs <- levels(x[[y]])
+            if (! ref) levs <- levs[- 1]
+            for (i in rev(levs)){
+                if (! is.null(prefix)) nmi <- paste(prefix, i, sep = "") else nmi <- i
+                x[[nmi]] <- 0
+                x[[nmi]][x[[y]] == i] <- 1
+            }
+            if (! keep) x <- x[- match(y, names(x))]
+            x
+        }
+    }
+    x
+}
+
 ## dummy <- function (x, ..., keep = FALSE, prefix = NULL, ref = FALSE) {
 ## #    error_call <- dplyr:::dplyr_error_call()
-##     loc <- eval_select(expr(c(...)), data = x)
+##     cl <- match.call(expand.dots = FALSE)
+##     fctrs <- cl$...
+##     fctrs <- sapply(fctrs, deparse)
+##     loc <- print(match(fctrs, names(x)))
+##     names(loc) <- fctrs
+## #    loc <- eval_select(expr(c(...)), data = x)
 ##     for (y in names(loc)){
 ##         if (inherits(x[[y]], "factor")){
 ##             levs <- x %>% pull({{ y }}) %>% levels
@@ -214,6 +237,24 @@ compute_rank <- function(x){
 }
 
 
+#' Maximization of a function
+#'
+#' This function provides a unified interface to three optimization
+#' algorithms: the BFGS algorithm provided by `stats::optim`, the
+#' Newton-Ralphson algorithm provided by `stats::nlm` and a simple
+#' Newton-Ralphson algorithm provided by `micsr::newton`
+#' @name maximize
+#' @param x the function to maximize
+#' @param start a vector of starting values
+#' @param method the optimization method
+#' @param trace if positive or true, some information about the
+#'     computation is printed
+#' @param maxit maximum number of iterations
+#' @param ... further arguments, passed to the function
+#' @keywords misc
+#' @return a numeric vector, the parameters at the optimum of the
+#'     function.
+#' @export
 maximize <- function(x, start, method = c("bfgs", "nr", "newton"), trace = 0, maxit = 100, ...){
     .method <- match.arg(method)
     if (method == "bfgs"){
@@ -264,9 +305,11 @@ quad_form <- function(x, m = NULL, inv = TRUE, subset = NULL, vcov = NULL, ...){
             if (is.function(.vcov)) .vcov <- .vcov(x, ...)
         }
         else .vcov <- vcov(x)
-        if (is.null(.sub)) .sub <- 1:length(.coef)
-        x <- .coef[.sub]
-        m <- .vcov[.sub, .sub]
+        ## if (is.null(.sub)) .sub <- 1:length(.coef)
+        ## x <- .coef[.sub]
+        ## m <- .vcov[.sub, .sub]
+        x <- .coef
+        m <- .vcov
     }
     if (is.null(m)) stop("a matrix should be provided")
     if (length(m) == 1) m <- matrix(m, 1, 1)
