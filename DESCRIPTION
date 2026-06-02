@@ -1,6 +1,6 @@
 Package: micsr
-Version: 0.1-4
-Date: 2025-10-27
+Version: 0.1-5
+Date: 2026-06-01
 Title: Microeconometrics with R
 Authors@R: person("Yves",
                   "Croissant",
@@ -17,7 +17,7 @@ License: GPL (>=2)
 URL: https://www.r-project.org
 VignetteBuilder: quarto
 NeedsCompilation: yes
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.3
 Roxygen: list(markdown = TRUE)
 LazyData: true
 RdMacros: Rdpack

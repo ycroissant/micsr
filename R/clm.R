@@ -12,7 +12,7 @@
 #' @param object a `clm` object for the `summary` and the `vcov`
 #'     methods
 #' @param \dots further arguments
-#' @return an object of class `clm` which inherits from class `lm`
+#' @return an object of class `cstlm` which inherits from class `lm`
 #' @keywords models
 #' @examples
 #' # Cobb-Douglas production function for the apple data set
@@ -44,16 +44,16 @@ clm <- function(x, R, q = NULL){
                    residuals = .resid, fitted.values = .fitted,
                    df.residual = .df.residual,
                    call = .call, terms = terms(x), R = R, q = q),
-              class = c("clm", "lm"))
+              class = c("cstlm", "lm"))
 }
 
 #' @rdname clm
 #' @export
-vcov.clm <- function(object, ...) vcov(summary(object))
+vcov.cstlm <- function(object, ...) vcov(summary(object))
 
 #' @rdname clm
 #' @export
-summary.clm <- function(object, ...){
+summary.cstlm <- function(object, ...){
     .sigma <- sqrt(sum(object$residuals ^ 2) / object$df.residual)
     XpXm1 <- solve(crossprod(model.matrix(object$terms, object$model)))
     y <- model.response(model.frame(object))
@@ -91,5 +91,5 @@ summary.clm <- function(object, ...){
                    adj.r.squared = .adj.r.squared,
                    fstatistic = .fstatistic,
                    cov.unscaled = .cov.unscaled),
-              class = c("summary.lm", "lm"))
+              class = c("summary.cstlm", "lm"))
 }

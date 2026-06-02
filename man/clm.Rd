@@ -2,15 +2,15 @@
 % Please edit documentation in R/clm.R
 \name{clm}
 \alias{clm}
-\alias{vcov.clm}
-\alias{summary.clm}
+\alias{vcov.cstlm}
+\alias{summary.cstlm}
 \title{Constrained least squares}
 \usage{
 clm(x, R, q = NULL)
 
-\method{vcov}{clm}(object, ...)
+\method{vcov}{cstlm}(object, ...)
 
-\method{summary}{clm}(object, ...)
+\method{summary}{cstlm}(object, ...)
 }
 \arguments{
 \item{x}{a linear model fitted by \code{lm},}
@@ -27,7 +27,7 @@ methods}
 \item{\dots}{further arguments}
 }
 \value{
-an object of class \code{clm} which inherits from class \code{lm}
+an object of class \code{cstlm} which inherits from class \code{lm}
 }
 \description{
 Compute the least squares estimator using linear constrains on the
