@@ -1,6 +1,6 @@
 Package: micsr
-Version: 0.1-5
-Date: 2026-06-01
+Version: 0.1-6
+Date: 2026-09-09
 Title: Microeconometrics with R
 Authors@R: person("Yves",
                   "Croissant",
@@ -8,7 +8,7 @@ Authors@R: person("Yves",
 		  email = "yves.croissant@univ-reunion.fr",
 		  comment = c(ORCID = "0000-0002-4857-7736"))
 Depends: R (>= 4.1.0)
-Imports: Formula, Rdpack, sandwich, generics, numDeriv, survival, Rcpp, CompQuadForm, dfidx
+Imports: Formula, Rdpack, sandwich, generics, numDeriv, survival, Rcpp, dfidx
 Suggests: quarto, AER, censReg, sampleSelection, mlogit, MASS, lmtest, tinytest, ggplot2, modelsummary
 LinkingTo: Rcpp
 Description: Functions, data sets and examples for the book: Yves Croissant (2025) "Microeconometrics with R", Chapman and Hall/CRC The R Series <doi:10.1201/9781003100263>. The package includes a set of estimators for models used in microeconometrics, especially for count data and limited dependent variables. Test functions include score test, Hausman test, Vuong test, Sargan test and conditional moment test. A small subset of the data set used in the book is also included.

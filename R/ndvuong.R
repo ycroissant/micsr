@@ -18,8 +18,7 @@
 #' @param print.level the level of details to be printed
 #' @return an object of class `"htest"`.
 #' @importFrom Rdpack reprompt
-#' @importFrom CompQuadForm davies
-#' @importFrom stats pnorm
+#' @importFrom stats pnorm integrate
 #' @seealso the classical Vuong test is implemented in `pscl::vuong` and `nonnest2::vuongtest`.
 #' @references
 #'
@@ -39,6 +38,13 @@ ndvuong <- function(x, y, size = 0.05, pval = TRUE,
                     ndraws = 1E04, diffnorm = 0.1, seed = 1,
                     numbers = NULL, nd = TRUE,
                     print.level = 0){
+
+    pqfn <- function(q, ev){
+        thetau <- function(u) 0.5 * apply(atan(outer(ev, u)), 2, sum) - 0.5 * q * u
+        rhou <- function(u) apply( (1 + outer(ev, u) ^ 2) ^ 0.25, 2, prod)
+        fu <- function(u) sin(thetau(u)) / (u * rhou(u))
+        0.5 + integrate(fu, lower = 0, upper = Inf)$value / pi
+    }
     
     # if pval is TRUE, size is adjusted, otherwise it is fixed
     data.name <- c(
@@ -167,7 +173,8 @@ ndvuong <- function(x, y, size = 0.05, pval = TRUE,
         W <- eigen(crossprod(B, - solveA), only.values = TRUE)$values
         stat <- N * w2
 #        pvalue <- mydavies(stat, W ^ 2)$Qq
-        pvalue <- davies(stat, W ^ 2)$Qq
+#        pvalue <- davies(stat, W ^ 2)$Qq
+        pvalue <- pqfn(stat, W ^ 2)
         results <- list(statistic = c(w2 = w2),
                         p.value = pvalue,
                         data.name = data.name,
@@ -182,7 +189,8 @@ ndvuong <- function(x, y, size = 0.05, pval = TRUE,
             Tvuong <- 2 * LR * N
             W <- eigen(crossprod(B, - solveA), only.values = TRUE)$values
 #            pval_vuong <- mydavies(Tvuong, W)$Qq
-            pval_vuong <- davies(Tvuong, W)$Qq
+#            pval_vuong <- davies(Tvuong, W)$Qq
+            pval_vuong <- pqfn(Tvuong, W)
             if (nd){
                 # for the non-degenarate version, just modify the
                 # numerator, and compute the one sided p-value

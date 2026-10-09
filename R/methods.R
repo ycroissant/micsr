@@ -145,6 +145,7 @@ vcov.micsr <- function(object, ..., vcov = NULL, subset = NA, fixed = FALSE,
                        grep = NULL, invert = FALSE, coef = NULL){
     .vcov_method <- vcov
     .est_method <- object$est_method
+
     if (.est_method == "ml"){
         if (is.null(.vcov_method)){
             if (! is.null(object$info)){
@@ -186,7 +187,7 @@ vcov.micsr <- function(object, ..., vcov = NULL, subset = NA, fixed = FALSE,
     nms <- nms[.sel]
     .vcov <- .vcov[.sel, .sel, drop = FALSE]
     colnames(.vcov) <- rownames(.vcov) <- pretty_nms(nms, subset)
-    if (.vcov_method != "hc"){
+    if (! is.null(.vcov_method) && (.vcov_method != "hc" & .est_method == "ml")){
         .vcov <- solve(.vcov)
     }
     .vcov
@@ -284,21 +285,27 @@ print.summary.micsr <- function (x, digits = max(3, getOption("digits") - 2), wi
     }
 }
 
+
+# YC 21/07/2026 add an error argument, if TRUE an error is returned if no method is available, if FALSE, NULL is returned
+
 #' @rdname micsr
 #' @export
 logLik.micsr <- function(object, ..., type = c("model", "null", "saturated"), sum = TRUE){
-    .type <- match.arg(type)
-    if (sum){
-        .val <- object$logLik[.type]
-        if (is.na(.val)) stop(paste("the ", .type, " log-likelihood is not available", sep = ""))
-        .nobs <- nobs(object)
-        .df <- switch(.type,
-                      model = npar(object),
-                      null = 1,
-                      saturated = nobs(object))
-        structure(.val, nobs = .nobs, df = .df, class = "logLik")
+    if (object$est_method != "ml") numeric(0)
+    else{
+        .type <- match.arg(type)
+        if (sum){
+            .val <- object$logLik[.type]
+            # if (is.na(.val)) stop(paste("the ", .type, " log-likelihood is not available", sep = ""))
+            .nobs <- nobs(object)
+            .df <- switch(.type,
+                          model = npar(object),
+                          null = 1,
+                          saturated = nobs(object))
+            structure(.val, nobs = .nobs, df = .df, class = "logLik")
+        }
+        else object$value[, .type]
     }
-    else object$value[, .type]
 }
 
 
@@ -319,8 +326,8 @@ logLik.micsr <- function(object, ..., type = c("model", "null", "saturated"), su
 
 #' @rdname micsr
 #' @export
-BIC.micsr <- function(object, ..., type = c("model", "null")){
-    if (object$est_method != "ml") NULL
+BIC.micsr <- function(object, ..., type = c("model", "null"), error = TRUE){
+    if (object$est_method != "ml") result <- numeric(0)
     else{
         .type <- match.arg(type)
         ll <- logLik(object, type = .type)
@@ -334,7 +341,7 @@ BIC.micsr <- function(object, ..., type = c("model", "null")){
 #' @rdname micsr
 #' @export
 AIC.micsr <- function(object, ..., k = 2, type = c("model", "null")){
-    if (object$est_method != "ml") NULL
+    if (object$est_method != "ml") result <- numeric(0)
     else{
         .type <- match.arg(type)
         ll <- logLik(object, type = .type)
