@@ -17,7 +17,7 @@ License: GPL (>=2)
 URL: https://www.r-project.org
 VignetteBuilder: quarto
 NeedsCompilation: yes
-RoxygenNote: 7.3.3
 Roxygen: list(markdown = TRUE)
 LazyData: true
 RdMacros: Rdpack
+Config/roxygen2/version: 8.1.0

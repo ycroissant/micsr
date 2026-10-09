@@ -78,7 +78,7 @@ llobs(x, ...)
 
 \method{logLik}{micsr}(object, ..., type = c("model", "null", "saturated"), sum = TRUE)
 
-\method{BIC}{micsr}(object, ..., type = c("model", "null"))
+\method{BIC}{micsr}(object, ..., type = c("model", "null"), error = TRUE)
 
 \method{AIC}{micsr}(object, ..., k = 2, type = c("model", "null"))
 

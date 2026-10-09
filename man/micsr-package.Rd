@@ -153,5 +153,10 @@ Useful links:
 \author{
 \strong{Maintainer}: Yves Croissant \email{yves.croissant@univ-reunion.fr} (\href{https://orcid.org/0000-0002-4857-7736}{ORCID})
 
+Authors:
+\itemize{
+  \item Yves Croissant \email{yves.croissant@univ-reunion.fr} (\href{https://orcid.org/0000-0002-4857-7736}{ORCID})
+}
+
 }
 \keyword{internal}

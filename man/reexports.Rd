@@ -18,12 +18,12 @@ These objects are imported from other packages. Follow the links
 below to see their documentation.
 
 \describe{
-  \item{Formula}{\code{\link[Formula:model.frame.Formula]{model.part}}}
+  \item{Formula}{\code{\link[Formula:model.part]{model.part()}}}
 
-  \item{generics}{\code{\link[generics]{glance}}, \code{\link[generics]{tidy}}}
+  \item{generics}{\code{\link[generics:glance]{glance()}}, \code{\link[generics:tidy]{tidy()}}}
 
-  \item{sandwich}{\code{\link[sandwich]{bread}}, \code{\link[sandwich]{bread}}, \code{\link[sandwich]{estfun}}, \code{\link[sandwich]{estfun}}, \code{\link[sandwich]{meat}}, \code{\link[sandwich]{vcovHC}}}
+  \item{sandwich}{\code{\link[sandwich:bread]{bread()}}, \code{\link[sandwich:bread]{bread()}}, \code{\link[sandwich:estfun]{estfun()}}, \code{\link[sandwich:estfun]{estfun()}}, \code{\link[sandwich:meat]{meat()}}, \code{\link[sandwich:vcovHC]{vcovHC()}}}
 
-  \item{survival}{\code{\link[survival]{Surv}}}
+  \item{survival}{\code{\link[survival:Surv]{Surv()}}}
 }}
 
